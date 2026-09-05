@@ -1,0 +1,12 @@
+albiceleste:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('ALB_DB_HOST', 'localhost') }}"
+      port: "{{ env_var('ALB_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('ALB_DB_USER', 'alb') }}"
+      password: "{{ env_var('ALB_DB_PASSWORD', 'alb') }}"
+      dbname: "{{ env_var('ALB_DB_NAME', 'albiceleste') }}"
+      schema: public
+      threads: 4

@@ -1,0 +1,14 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    description: Versioned raw API payloads. `latest` is one row per (source, entity, source_record_id).
+    tables:
+      - name: latest
+        columns:
+          - name: source
+          - name: entity
+          - name: source_record_id
+          - name: payload
+          - name: ingested_at
+      - name: records

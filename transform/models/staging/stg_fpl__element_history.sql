@@ -1,0 +1,25 @@
+with src as ({{ latest('fpl', 'element_summary') }})
+select
+    (payload->>'_element_id')::int                   as element_id,
+    (h->>'round')::int                               as gameweek,
+    (h->>'fixture')::int                             as fixture_id,
+    (h->>'kickoff_time')::timestamptz                as kickoff_utc,
+    (h->>'kickoff_time')::timestamptz::date          as match_date,
+    (h->>'opponent_team')::int                       as opponent_team_id,
+    (h->>'was_home')::boolean                        as was_home,
+    (h->>'minutes')::int                             as minutes_played,
+    (h->>'starts')::int                              as starts,
+    (h->>'goals_scored')::int                        as goals,
+    (h->>'assists')::int                             as assists,
+    (h->>'expected_goals')::numeric                  as xg,
+    (h->>'expected_assists')::numeric                as xa,
+    (h->>'expected_goals_conceded')::numeric         as xg_conceded,
+    (h->>'clean_sheets')::int                        as clean_sheets,
+    (h->>'yellow_cards')::int                        as yellow_cards,
+    (h->>'red_cards')::int                           as red_cards,
+    (h->>'saves')::int                               as saves,
+    (h->>'tackles')::int                             as tackles,
+    (h->>'recoveries')::int                          as recoveries,
+    (h->>'total_points')::int                        as fpl_points,
+    ingested_at                                      as as_of
+from src, jsonb_array_elements(payload->'history') h

@@ -1,0 +1,8 @@
+espn_code,competition_name,country,confederation,tier,level_rank,fd_code,highlightly_league_id,is_argentina_domestic
+eng.1,Premier League,England,UEFA,1,1,PL,33973,false
+esp.1,La Liga,Spain,UEFA,1,1,PD,119924,false
+ita.1,Serie A,Italy,UEFA,1,1,SA,115669,false
+ger.1,Bundesliga,Germany,UEFA,1,1,BL1,67162,false
+fra.1,Ligue 1,France,UEFA,1,2,FL1,52695,false
+bra.1,Brasileirão Série A,Brazil,CONMEBOL,1,2,BSA,61205,false
+arg.1,Liga Profesional,Argentina,CONMEBOL,1,3,,109712,true

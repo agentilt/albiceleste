@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.venv/
+data/raw/
+transform/target/
+transform/dbt_packages/
+transform/logs/
+logs/

@@ -1,0 +1,25 @@
+version: 2
+seeds:
+  - name: competitions
+    description: >
+      The seven priority competitions with a hand-maintained level_rank (1 = strongest) used for
+      "moved to a stronger/weaker competition" signals. Extend, do not infer.
+    config:
+      column_types:
+        highlightly_league_id: integer
+        tier: integer
+        level_rank: integer
+        is_argentina_domestic: boolean
+    columns:
+      - name: espn_code
+        tests: [unique, not_null]
+  - name: team_xref_overrides
+    description: Hand-pinned team identities across ESPN / Highlightly / football-data.org where names differ too much for fuzzy matching. Overrides win over automatic matches.
+    config:
+      column_types:
+        espn_team_id: text
+        hl_team_id: bigint
+        fd_team_id: integer
+    columns:
+      - name: espn_team_id
+        tests: [unique, not_null]

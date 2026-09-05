@@ -1,0 +1,49 @@
+version: 2
+models:
+  - name: dim_player
+    description: One row per tracked player (Wikidata-eligible, or Argentine per ESPN/football-data squads), with senior-eligibility flags and current club.
+    columns:
+      - name: player_key
+        tests: [unique, not_null]
+      - name: eligibility_status
+        tests:
+          - accepted_values: {values: ['eligible', 'review', 'youth_only']}
+  - name: dim_team
+    columns:
+      - name: team_key
+        tests: [unique, not_null]
+  - name: dim_competition
+    columns:
+      - name: league
+        tests: [unique, not_null]
+  - name: fct_match
+    columns:
+      - name: match_key
+        tests: [unique, not_null]
+      - name: hl_match_id
+        tests: [unique]
+  - name: fct_player_match_stats
+    description: Per tracked player per match; Highlightly primary, ESPN fallback.
+    columns:
+      - name: player_match_key
+        tests: [unique, not_null]
+      - name: player_key
+        tests:
+          - relationships: {to: ref('dim_player'), field: player_key}
+      - name: match_key
+        tests:
+          - relationships: {to: ref('fct_match'), field: match_key}
+      - name: stats_source
+        tests:
+          - accepted_values: {values: ['highlightly', 'espn']}
+  - name: player_season_stats
+  - name: player_recent_form
+  - name: argentine_players_abroad
+  - name: argentine_league_presence
+  - name: dq_unmatched
+  - name: player_focus_set
+    description: Default attention set — everyone abroad plus Argentine-league players who meet an explicit rule; `reasons` explains each membership.
+    columns:
+      - name: player_key
+        tests: [unique, not_null]
+  - name: player_source_ids

@@ -1,0 +1,42 @@
+version: 2
+models:
+  - name: stg_wikidata__players
+    description: One row per Wikidata footballer with Argentine citizenship or any Argentina national-team spell.
+    columns:
+      - name: wikidata_qid
+        tests: [unique, not_null]
+  - name: stg_wikidata__memberships
+    description: One row per `member of sports team` statement (clubs and national teams) for those players.
+  - name: stg_espn__teams
+    columns:
+      - name: team_id
+        tests: [not_null]
+  - name: stg_espn__roster_players
+    description: Current squads from ESPN, one row per athlete per team roster snapshot.
+    columns:
+      - name: athlete_id
+        tests: [not_null]
+  - name: stg_espn__events
+    columns:
+      - name: event_id
+        tests: [unique, not_null]
+  - name: stg_espn__player_match_stats
+    description: Per-player match rows from ESPN summaries; minutes are derived from starter/substitution clocks (no stoppage time).
+  - name: stg_highlightly__matches
+    columns:
+      - name: hl_match_id
+        tests: [unique, not_null]
+  - name: stg_highlightly__player_match_stats
+    description: Per-player box scores from Highlightly (primary stats source).
+  - name: stg_fd__matches
+    columns:
+      - name: fd_match_id
+        tests: [unique, not_null]
+  - name: stg_fd__squad_players
+  - name: stg_fd__standings
+  - name: stg_fd__scorers
+  - name: stg_fpl__elements
+    columns:
+      - name: element_id
+        tests: [unique, not_null]
+  - name: stg_fpl__element_history

@@ -1,0 +1,8 @@
+league,espn_team_id,hl_team_id,fd_team_id,note
+arg.1,9744,403307,,Independiente Rivadavia — Highlightly abbreviates to "Independ. Rivadavia"
+fra.1,169,80778,,Stade Rennais — Highlightly calls it "Rennes FC"
+bra.1,7632,,1766,Atlético-MG — football-data uses "CA Mineiro"
+bra.1,3458,,1768,Athletico-PR — football-data uses "CA Paranaense"
+ger.1,122,164176,1,FC Cologne — Highlightly "FC Koln"; football-data "1. FC Köln"
+esp.1,96,,263,Alavés — football-data uses "Deportivo Alavés"
+esp.1,88,,80,Espanyol — football-data uses "RCD Espanyol de Barcelona"
