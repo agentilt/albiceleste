@@ -15,3 +15,5 @@ node_modules/
 apps/web/.next/
 apps/web/next-env.d.ts
 .vercel/
+.vercel
+.env*

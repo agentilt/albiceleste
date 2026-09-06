@@ -44,9 +44,17 @@ npx turbo run build --filter=web # ~15 s locally; Turborepo caches by inputs, in
 npm run dev --workspace=web      # http://localhost:3000
 ```
 
-Vercel: project `albiceleste`, root directory `apps/web`, framework Next.js. Vercel installs at the repository root (npm workspaces), runs the
-build inside the app, and the build reads `../../data/published`. Refreshing the site is `make refresh` (ingest → dbt → publish → build), then
-commit and push `data/published/`; Vercel rebuilds on push.
+Vercel: project `albiceleste` (team agentilts-projects), root directory `apps/web`, framework Next.js, Node 22, GitHub repo connected so
+every push to `main` deploys to production. Production alias: https://albiceleste-rho.vercel.app (the bare name was taken). Vercel installs at
+the repository root (npm workspaces), runs the build inside the app, and the build reads `../../data/published` ("include files outside the
+root directory" is on). Refreshing the site is `make refresh` (ingest → dbt → publish → build), then commit and push `data/published/`.
+
+Two things learned deploying from the CLI: run `vercel` from the repository root, not from `apps/web` (with a root directory set, the CLI
+resolves it relative to the current directory); and the CLI does not honour the `**/data/raw/` gitignore pattern, so `.vercelignore` lists the
+raw mirror, the virtualenv and build outputs explicitly (the first attempt tried to upload 27,594 raw JSON files).
+
+**Deployment protection is on** (`ssoProtection: all_except_custom_domains`): the site is only visible to people logged into the Vercel team
+until the design layer is done. Flip it to previews-only in Project Settings → Deployment Protection, or via the API, to make it public.
 
 CI builds the site on every push with `turbo run typecheck build`, so a query that no longer matches a mart column fails the build, not the site.
 

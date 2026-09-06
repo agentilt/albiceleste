@@ -1,0 +1,15 @@
+# Vercel CLI upload: only the source and the published snapshot are needed.
+.git
+.venv
+node_modules
+data/raw
+transform/target
+transform/logs
+transform/dbt_packages
+logs
+.turbo
+apps/web/.next
+.env
+.env.*
+!.env.example
+.DS_Store
