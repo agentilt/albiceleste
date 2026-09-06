@@ -6,7 +6,7 @@
 with w as (select * from {{ ref('int_wikidata_eligibility') }}),
 xe as (select * from {{ ref('int_player_xref_espn') }}),
 xf as (select * from {{ ref('int_player_xref_fd') }}),
-espn as (select * from {{ ref('int_espn_squad_current') }} where is_primary_roster),
+espn as (select * from {{ ref('int_espn_athletes') }}),
 
 a as (
     select

@@ -47,3 +47,32 @@ models:
       - name: player_key
         tests: [unique, not_null]
   - name: player_source_ids
+  - name: player_events
+    description: Detected events with evidence; match-based events carry the match date, window-based ones are as of the build date.
+    columns:
+      - name: event_key
+        tests: [unique, not_null]
+      - name: event_type
+        tests:
+          - accepted_values:
+              values: ['club_change', 'first_start_of_season', 'consecutive_starts', 'scoring_streak', 'multi_goal_match', 'return_after_absence', 'debut_in_league', 'minutes_surge', 'minutes_drop']
+      - name: severity
+        tests:
+          - accepted_values: {values: [1, 2, 3], quote: false}
+      - name: player_key
+        tests:
+          - relationships: {to: ref('dim_player'), field: player_key}
+  - name: watch_feed
+    description: Recent events for focus-set players, newest and most severe first.
+  - name: player_career_history
+    description: Transfermarkt transfers for tracked players with competition/country on both ends and age at transfer.
+  - name: player_season_history
+    description: Per-season club statistics from Transfermarkt appearances (all competitions), frozen at June 2026.
+  - name: player_market_values
+  - name: argentine_export_pipeline
+    description: First move abroad from an Argentine club, for every Argentine in the Transfermarkt snapshot.
+    columns:
+      - name: tm_player_id
+        tests: [unique, not_null]
+  - name: argentine_export_summary
+  - name: argentine_exporting_clubs

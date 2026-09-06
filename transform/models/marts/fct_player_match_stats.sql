@@ -1,6 +1,7 @@
 {#- One row per tracked player per match. Highlightly is the primary source (minutes, xG, passing,
     duels, rating); ESPN fills matches without a box score. `stats_source` records which one. -#}
-with players as (select player_key, espn_athlete_id, hl_player_id from {{ ref('dim_player') }}),
+with players as (select player_key, espn_athlete_id from {{ ref('dim_player') }} where espn_athlete_id is not null),
+hlx as (select hl_player_id, athlete_id from {{ ref('int_player_xref_hl') }}),
 matches as (select match_key, espn_event_id, hl_match_id, league, season_year, match_date, kickoff_utc, home_espn_team_id, away_espn_team_id from {{ ref('fct_match') }}),
 tx as (select * from {{ ref('int_team_xref') }}),
 
@@ -8,7 +9,8 @@ hl as (
     select
         m.match_key, p.player_key, h.*
     from {{ ref('stg_highlightly__player_match_stats') }} h
-    join players p on p.hl_player_id = h.hl_player_id
+    join hlx on hlx.hl_player_id = h.hl_player_id
+    join players p on p.espn_athlete_id = hlx.athlete_id
     join matches m on m.hl_match_id = h.hl_match_id
 ),
 es as (

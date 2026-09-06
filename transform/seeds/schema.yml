@@ -23,3 +23,12 @@ seeds:
     columns:
       - name: espn_team_id
         tests: [unique, not_null]
+  - name: player_xref_overrides
+    description: Hand-pinned Highlightly player → ESPN athlete identities (nicknames, spellings, transliterations, mid-window moves). Overrides win over automatic matching.
+    config:
+      column_types:
+        hl_player_id: bigint
+        espn_athlete_id: text
+    columns:
+      - name: hl_player_id
+        tests: [unique, not_null]

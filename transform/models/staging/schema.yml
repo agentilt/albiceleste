@@ -35,8 +35,22 @@ models:
   - name: stg_fd__squad_players
   - name: stg_fd__standings
   - name: stg_fd__scorers
+  - name: stg_espn__athletes
+    columns:
+      - name: athlete_id
+        tests: [unique, not_null]
   - name: stg_fpl__elements
     columns:
       - name: element_id
         tests: [unique, not_null]
   - name: stg_fpl__element_history
+  - name: stg_tm__players
+    columns:
+      - name: tm_player_id
+        tests: [unique, not_null]
+  - name: stg_tm__clubs
+  - name: stg_tm__competitions
+  - name: stg_tm__games
+  - name: stg_tm__appearances
+  - name: stg_tm__transfers
+  - name: stg_tm__player_valuations

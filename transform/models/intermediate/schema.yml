@@ -34,4 +34,14 @@ models:
       - name: hl_player_id
         tests: [unique, not_null]
       - name: athlete_id
-        tests: [unique]
+        tests: [not_null]
+  - name: int_player_match_sequence
+    columns:
+      - name: player_match_key
+        tests: [unique, not_null]
+  - name: int_player_xref_tm
+    columns:
+      - name: player_key
+        tests: [unique, not_null]
+      - name: tm_player_id
+        tests: [unique, not_null]

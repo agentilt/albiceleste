@@ -3,7 +3,7 @@
     One-to-one enforced by mutual best rank. Precision matters more than recall: an unresolved Argentine
     still enters the population under an 'espn:' key, while a wrong merge corrupts two players. -#}
 with e as (
-    select distinct athlete_id, full_name, name_norm, dob, citizenship from {{ ref('int_espn_squad_current') }}
+    select distinct athlete_id, full_name, name_norm, dob, citizenship from {{ ref('int_espn_athletes') }}
 ),
 w as (
     select wikidata_qid, name_norm, dob, espn_id,

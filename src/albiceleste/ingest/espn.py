@@ -128,3 +128,46 @@ def ingest_summaries(ctx: Context, leagues: list[str], limit: int = 500) -> int:
             log.info("espn summaries: %d/%d", i, len(pending))
     log.info("espn summaries: fetched %d (pending was %d)", total, len(pending))
     return total
+
+
+ATHLETE_BASE = "https://site.web.api.espn.com/apis/common/v3/sports/soccer"
+
+
+def ingest_athletes(ctx: Context, leagues: list[str], limit: int = 5000) -> int:
+    """Profiles (citizenship, DOB) for athletes who appear in match summaries but are on no current roster,
+    so players who have since left the seven leagues still get identified."""
+    pending = ctx.query(
+        """
+        with roster_ids as (
+            select distinct x->>'id' as athlete_id
+              from raw.latest ro, jsonb_array_elements(ro.payload->'athletes') x
+             where ro.source='espn' and ro.entity='roster'
+        ),
+        seen as (
+            select r->'athlete'->>'id' as athlete_id, payload->>'_league' as league,
+                   row_number() over (partition by r->'athlete'->>'id' order by payload->'header'->'competitions'->0->>'date' desc) as rn
+              from raw.latest, jsonb_array_elements(payload->'rosters') t, jsonb_array_elements(coalesce(t->'roster','[]')) r
+             where source='espn' and entity='summary' and payload->>'_league' = any(%s)
+        )
+        select s.athlete_id, s.league
+          from seen s
+         where s.rn = 1 and s.athlete_id is not null
+           and not exists (select 1 from roster_ids ri where ri.athlete_id = s.athlete_id)
+           and not exists (select 1 from raw.latest a where a.source='espn' and a.entity='athlete' and a.source_record_id = s.athlete_id)
+         limit %s
+        """,
+        (leagues, limit),
+    )
+    total = 0
+    for i, row in enumerate(pending, 1):
+        url = f"{ATHLETE_BASE}/{row['league']}/athletes/{row['athlete_id']}"
+        body = _get(ctx, url)
+        if not body:
+            continue
+        athlete = body.get("athlete", body)
+        athlete["_league"] = row["league"]
+        total += ctx.save([RawRecord(SOURCE, "athlete", str(athlete.get("id") or row["athlete_id"]), athlete, url)])
+        if i % 200 == 0:
+            log.info("espn athletes: %d/%d", i, len(pending))
+    log.info("espn athletes: fetched %d (pending was %d)", total, len(pending))
+    return total

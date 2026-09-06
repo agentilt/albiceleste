@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -11,7 +11,7 @@ from rich.table import Table
 
 from . import db as dbmod
 from .config import get_settings
-from .ingest import espn, footballdata, fpl, highlightly, wikidata
+from .ingest import espn, footballdata, fpl, highlightly, transfermarkt, wikidata
 from .ingest.base import make_context
 
 app = typer.Typer(no_args_is_help=True, help="Argentina football intelligence platform — data pipeline")
@@ -27,13 +27,14 @@ espn_app = typer.Typer(no_args_is_help=True, help="ESPN")
 hl_app = typer.Typer(no_args_is_help=True, help="Highlightly (100 req/day)")
 fd_app = typer.Typer(no_args_is_help=True, help="football-data.org")
 fpl_app = typer.Typer(no_args_is_help=True, help="Fantasy Premier League")
-for name, sub in [("wikidata", wd_app), ("espn", espn_app), ("highlightly", hl_app), ("fd", fd_app), ("fpl", fpl_app)]:
+tm_app = typer.Typer(no_args_is_help=True, help="Transfermarkt CC0 snapshot (frozen history)")
+for name, sub in [("wikidata", wd_app), ("espn", espn_app), ("highlightly", hl_app), ("fd", fd_app), ("fpl", fpl_app), ("transfermarkt", tm_app)]:
     ingest_app.add_typer(sub, name=name)
 
 console = Console()
 SQL_INIT = Path(__file__).resolve().parents[2] / "sql" / "001_init.sql"
 
-DateOpt = Annotated[Optional[str], typer.Option(help="YYYY-MM-DD")]
+DateOpt = Annotated[str | None, typer.Option(help="YYYY-MM-DD")]
 
 
 def _d(s: str | None, default: date) -> date:
@@ -86,19 +87,19 @@ def db_status() -> None:
 
 # ---------------------------------------------------------------- wikidata
 @wd_app.command("players")
-def wd_players(year_from: Optional[int] = None, year_to: Optional[int] = None) -> None:
+def wd_players(year_from: int | None = None, year_to: int | None = None) -> None:
     with make_context("ingest wikidata players") as ctx:
         wikidata.ingest_players(ctx, year_from, year_to)
 
 
 @wd_app.command("memberships")
-def wd_memberships(year_from: Optional[int] = None, year_to: Optional[int] = None) -> None:
+def wd_memberships(year_from: int | None = None, year_to: int | None = None) -> None:
     with make_context("ingest wikidata memberships") as ctx:
         wikidata.ingest_memberships(ctx, year_from, year_to)
 
 
 # ---------------------------------------------------------------- espn
-LeaguesOpt = Annotated[Optional[list[str]], typer.Option("--league", "-l", help="ESPN league code, repeatable")]
+LeaguesOpt = Annotated[list[str] | None, typer.Option("--league", "-l", help="ESPN league code, repeatable")]
 
 
 @espn_app.command("teams")
@@ -125,6 +126,32 @@ def espn_summaries(leagues: LeaguesOpt = None, limit: int = 500) -> None:
         espn.ingest_summaries(ctx, leagues or ctx.settings.espn_leagues, limit)
 
 
+@espn_app.command("athletes")
+def espn_athletes(leagues: LeaguesOpt = None, limit: int = 5000) -> None:
+    """Profiles for athletes seen in summaries but not on any current roster."""
+    with make_context("ingest espn athletes") as ctx:
+        espn.ingest_athletes(ctx, leagues or ctx.settings.espn_leagues, limit)
+
+
+@espn_app.command("backfill")
+def espn_backfill(date_from: DateOpt = None, date_to: DateOpt = None) -> None:
+    """History: scoreboards, summaries, then athlete profiles for a date range (default: two seasons back)."""
+    d0 = _d(date_from, date(2024, 7, 1))
+    d1 = _d(date_to, date(2026, 6, 30))
+    with make_context(f"ingest espn backfill {d0}..{d1}") as ctx:
+        espn.ingest_scoreboard(ctx, ctx.settings.espn_leagues, d0, d1)
+        espn.ingest_summaries(ctx, ctx.settings.espn_leagues, limit=20000)
+        espn.ingest_athletes(ctx, ctx.settings.espn_leagues, limit=20000)
+
+
+# ---------------------------------------------------------------- transfermarkt
+@tm_app.command("load")
+def tm_load(tables: Annotated[list[str] | None, typer.Option("--table", "-t")] = None) -> None:
+    """Download the CC0 snapshot CSVs and bulk-load them into raw_tm.* (one-off)."""
+    with make_context("ingest transfermarkt load") as ctx:
+        transfermarkt.load(ctx, tables)
+
+
 # ---------------------------------------------------------------- highlightly
 @hl_app.command("leagues")
 def hl_leagues(leagues: LeaguesOpt = None) -> None:
@@ -134,7 +161,7 @@ def hl_leagues(leagues: LeaguesOpt = None) -> None:
 
 
 @hl_app.command("matches")
-def hl_matches(date_from: DateOpt = None, date_to: DateOpt = None, max_requests: Optional[int] = None) -> None:
+def hl_matches(date_from: DateOpt = None, date_to: DateOpt = None, max_requests: int | None = None) -> None:
     """Fetch match lists for league-days where ESPN shows completed matches."""
     with make_context("ingest highlightly matches") as ctx:
         plan = highlightly.plan_match_days(ctx, _d(date_from, date.today() - timedelta(days=7)), _d(date_to, date.today()))
@@ -143,7 +170,7 @@ def hl_matches(date_from: DateOpt = None, date_to: DateOpt = None, max_requests:
 
 
 @hl_app.command("season")
-def hl_season(leagues: LeaguesOpt = None, season: Optional[int] = None) -> None:
+def hl_season(leagues: LeaguesOpt = None, season: int | None = None) -> None:
     """Whole-season match lists (fixtures + results) via pagination, ~5 requests per league."""
     with make_context("ingest highlightly season") as ctx:
         highlightly.ingest_season_matches(ctx, leagues or ctx.settings.espn_leagues, season or ctx.settings.highlightly_season)
@@ -156,7 +183,7 @@ def hl_boxscores(limit: int = 60) -> None:
 
 
 # ---------------------------------------------------------------- football-data.org
-CompsOpt = Annotated[Optional[list[str]], typer.Option("--competition", "-c", help="fd.org code, repeatable")]
+CompsOpt = Annotated[list[str] | None, typer.Option("--competition", "-c", help="fd.org code, repeatable")]
 
 
 @fd_app.command("competitions")
@@ -197,7 +224,7 @@ def fpl_bootstrap() -> None:
 
 
 @fpl_app.command("history")
-def fpl_history(region: Optional[int] = None) -> None:
+def fpl_history(region: int | None = None) -> None:
     with make_context("ingest fpl history") as ctx:
         fpl.ingest_history(ctx, region)
 

@@ -29,20 +29,27 @@ prev as (
     left join f on f.player_key = d.player_key and f.match_date > current_date - 2 * w.window_days and f.match_date <= current_date - w.window_days
     group by 1, 2
 ),
+-- denominator: matches played by any team the player appeared for in the last 2×84 days (or his current club)
+player_teams as (
+    select distinct player_key, espn_team_id from f where match_date > current_date - 168 and espn_team_id is not null
+    union
+    select player_key, current_espn_team_id from d where current_espn_team_id is not null
+),
 team_matches as (
     select d.player_key, w.window_days,
-           count(*) filter (where m.match_date > current_date - w.window_days) as team_matches,
-           count(*) filter (where m.match_date > current_date - 2 * w.window_days and m.match_date <= current_date - w.window_days) as team_matches_prev
+           count(distinct m.match_key) filter (where m.match_date > current_date - w.window_days) as team_matches,
+           count(distinct m.match_key) filter (where m.match_date > current_date - 2 * w.window_days and m.match_date <= current_date - w.window_days) as team_matches_prev
     from d cross join windows w
-    left join m on d.current_espn_team_id in (m.home_espn_team_id, m.away_espn_team_id) and m.match_date > current_date - 2 * w.window_days
+    join player_teams pt on pt.player_key = d.player_key
+    left join m on pt.espn_team_id in (m.home_espn_team_id, m.away_espn_team_id) and m.match_date > current_date - 2 * w.window_days
     group by 1, 2
 )
 select
     c.player_key, d.full_name, d.current_league, c.window_days,
     tm.team_matches, c.apps, c.starts, c.minutes, c.goals, c.assists, c.xg, c.xa, c.avg_rating,
     tm.team_matches_prev, p.apps as prev_apps, p.starts as prev_starts, p.minutes as prev_minutes, p.goals as prev_goals, p.assists as prev_assists,
-    case when tm.team_matches > 0 then round(100.0 * c.minutes / (90 * tm.team_matches), 1) end        as minutes_share_pct,
-    case when tm.team_matches_prev > 0 then round(100.0 * p.minutes / (90 * tm.team_matches_prev), 1) end as prev_minutes_share_pct,
+    case when tm.team_matches > 0 then least(100.0, round(100.0 * c.minutes / (90 * tm.team_matches), 1)) end as minutes_share_pct,
+    case when tm.team_matches_prev > 0 then least(100.0, round(100.0 * p.minutes / (90 * tm.team_matches_prev), 1)) end as prev_minutes_share_pct,
     case when p.minutes > 0 then round(100.0 * (c.minutes - p.minutes) / p.minutes, 1) end            as minutes_change_pct,
     c.starts - p.starts                                                                                as starts_change
 from cur c

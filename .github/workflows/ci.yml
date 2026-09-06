@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-parse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install
+        run: uv sync --frozen
+      - name: Ruff
+        run: uv run ruff check src
+      - name: dbt parse (no database needed)
+        working-directory: transform
+        run: uv run dbt parse
+      - name: CLI smoke
+        run: uv run alb --help

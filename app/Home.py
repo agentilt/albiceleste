@@ -1,0 +1,62 @@
+import streamlit as st
+from lib import fmt_int, hbar, page, player_link, q
+
+page("Argentina Football Intelligence", "🇦🇷")
+st.caption("Who is eligible for the senior national team, where they play, and what has changed. Free data only; every number traces to a source row.")
+
+kpi = q(
+    """
+    select
+      (select count(*) from marts.dim_player where eligibility_status in ('eligible','review')) as eligible,
+      (select count(*) from marts.dim_player where in_tracked_squad) as in_squads,
+      (select count(*) from marts.dim_player where is_abroad) as abroad,
+      (select count(*) from marts.player_focus_set where in_focus) as in_focus,
+      (select count(*) from marts.player_events where event_date >= current_date - 7) as events_7d,
+      (select count(*) from marts.fct_match where is_completed) as matches
+    """
+).iloc[0]
+
+c = st.columns(6)
+c[0].metric("Eligible players known", fmt_int(kpi["eligible"]))
+c[1].metric("In tracked squads", fmt_int(kpi["in_squads"]))
+c[2].metric("Playing abroad", fmt_int(kpi["abroad"]))
+c[3].metric("In focus set", fmt_int(kpi["in_focus"]))
+c[4].metric("Events, last 7 days", fmt_int(kpi["events_7d"]))
+c[5].metric("Matches in data", fmt_int(kpi["matches"]))
+
+left, right = st.columns([1, 1])
+with left:
+    pres = q("select competition, players, players_u23, senior_internationals from marts.argentine_league_presence order by players desc")
+    hbar(pres, "competition", "players", "Eligible players in current squads, by competition")
+with right:
+    st.subheader("Latest on the watch feed")
+    feed = q(
+        """
+        select event_date, severity, headline, player_key, full_name
+        from marts.watch_feed order by event_date desc, severity desc limit 12
+        """
+    )
+    if feed.empty:
+        st.caption("No events yet.")
+    for _, r in feed.iterrows():
+        sev = "🔴" if r["severity"] == 3 else "🟠" if r["severity"] == 2 else "🟡"
+        st.markdown(f"{sev} **{r['event_date']}** · {r['headline'].replace(r['full_name'], player_link(r['player_key'], r['full_name']), 1)}")
+    st.page_link("pages/1_Watch_Feed.py", label="Open the full feed →")
+
+st.subheader("Biggest movers, last 28 days (players abroad)")
+movers = q(
+    """
+    select d.full_name, d.current_team_name as team, d.current_competition as competition, f.minutes, f.prev_minutes,
+           f.minutes_change_pct, f.starts, f.prev_starts, f.minutes_share_pct, d.player_key
+    from marts.player_recent_form f join marts.dim_player d using (player_key)
+    where f.window_days = 28 and d.is_abroad and (f.minutes >= 90 or f.prev_minutes >= 90)
+    order by abs(coalesce(f.minutes_change_pct, 0)) desc nulls last limit 15
+    """
+)
+if not movers.empty:
+    movers["player"] = [player_link(k, n) for k, n in zip(movers["player_key"], movers["full_name"], strict=True)]
+    st.markdown(
+        movers[["player", "team", "competition", "minutes", "prev_minutes", "minutes_change_pct", "starts", "prev_starts", "minutes_share_pct"]]
+        .rename(columns={"prev_minutes": "minutes (prev 28d)", "minutes_change_pct": "change %", "prev_starts": "starts (prev)", "minutes_share_pct": "share of team minutes %"})
+        .to_markdown(index=False)
+    )

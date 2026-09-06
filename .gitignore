@@ -4,7 +4,7 @@
 __pycache__/
 *.pyc
 .venv/
-data/raw/
+**/data/raw/
 transform/target/
 transform/dbt_packages/
 transform/logs/

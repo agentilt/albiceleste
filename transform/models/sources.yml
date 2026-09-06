@@ -12,3 +12,14 @@ sources:
           - name: payload
           - name: ingested_at
       - name: records
+  - name: raw_tm
+    schema: raw_tm
+    description: transfermarkt-datasets CC0 snapshot (frozen 2026-07-06), bulk-loaded as text columns.
+    tables:
+      - name: players
+      - name: clubs
+      - name: competitions
+      - name: games
+      - name: appearances
+      - name: transfers
+      - name: player_valuations

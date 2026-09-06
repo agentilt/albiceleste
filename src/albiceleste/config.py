@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     database_url: str = "postgresql://alb:alb@localhost:5432/albiceleste"
-    raw_dir: Path = Path("data/raw")
+    # Raw-file mirror, anchored at the repo root so it does not depend on the working directory.
+    raw_dir: Path = Path(__file__).resolve().parents[2] / "data" / "raw"
     write_raw_files: bool = True
 
     highlightly_api_key: str = ""

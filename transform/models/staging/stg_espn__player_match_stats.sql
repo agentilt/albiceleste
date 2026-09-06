@@ -48,13 +48,14 @@ select
     event_id, league, team_id, home_away, athlete_id, full_name, name_norm, position_code,
     is_starter, subbed_in, subbed_out, sub_in_minute, sub_out_minute, formation_place,
     coalesce((st->>'appearances')::numeric, 0) >= 1                   as played,
-    case
+    -- clamped to [0, 120]: substitution clocks are occasionally mis-parsed (e.g. "45'+2'" attached to the wrong player)
+    greatest(0, least(120, case
         when is_starter and not subbed_out then 90
         when is_starter and subbed_out     then sub_out_minute
         when subbed_in  and not subbed_out then 90 - sub_in_minute
         when subbed_in  and subbed_out     then sub_out_minute - sub_in_minute
         else 0
-    end                                                               as minutes_played,
+    end))                                                             as minutes_played,
     (st->>'totalGoals')::numeric::int                                 as goals,
     (st->>'goalAssists')::numeric::int                                as assists,
     (st->>'totalShots')::numeric::int                                 as shots,

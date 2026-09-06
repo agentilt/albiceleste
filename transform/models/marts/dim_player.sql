@@ -2,11 +2,13 @@ with p as (select * from {{ ref('int_players') }}),
 squad as (select * from {{ ref('int_espn_squad_current') }} where is_primary_roster),
 teams as (select * from {{ ref('dim_team') }}),
 comps as (select * from {{ ref('dim_competition') }}),
-hl as (select athlete_id, hl_player_id from {{ ref('int_player_xref_hl') }}),
-fpl as (select player_key, element_id from {{ ref('int_player_xref_fpl') }})
+hl as (select athlete_id, min(hl_player_id) as hl_player_id from {{ ref('int_player_xref_hl') }} group by athlete_id),
+fpl as (select player_key, element_id from {{ ref('int_player_xref_fpl') }}),
+tmx as (select x.player_key, x.tm_player_id, t.market_value_eur, t.highest_market_value_eur, t.international_caps as tm_international_caps, t.contract_expiration_date from {{ ref('int_player_xref_tm') }} x join {{ ref('stg_tm__players') }} t using (tm_player_id))
 select
     p.player_key,
-    p.full_name,
+    coalesce(s.full_name, ath.full_name, p.full_name)                as full_name,
+    p.full_name                                                       as source_name,
     p.dob,
     case when p.dob is not null then extract(year from age(current_date, p.dob))::int end as age,
     p.citizenships,
@@ -43,12 +45,18 @@ select
     p.fd_person_id,
     hl.hl_player_id,
     fpl.element_id                                                as fpl_element_id,
-    p.transfermarkt_id,
+    coalesce(tmx.tm_player_id::text, p.transfermarkt_id) as transfermarkt_id,
+    tmx.market_value_eur,
+    tmx.highest_market_value_eur,
+    tmx.tm_international_caps,
+    tmx.contract_expiration_date,
     p.fbref_id,
     p.soccerway_id
 from p
 left join squad s on s.athlete_id = p.espn_athlete_id
+left join {{ ref('int_espn_athletes') }} ath on ath.athlete_id = p.espn_athlete_id
 left join teams t on t.league = s.league and t.espn_team_id = s.team_id
 left join comps c on c.league = s.league
 left join hl on hl.athlete_id = p.espn_athlete_id
 left join fpl on fpl.player_key = p.player_key
+left join tmx on tmx.player_key = p.player_key

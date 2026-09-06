@@ -49,3 +49,12 @@ CREATE TABLE IF NOT EXISTS meta.api_calls (
   ratelimit_remaining integer
 );
 CREATE INDEX IF NOT EXISTS api_calls_source_time ON meta.api_calls (source, called_at DESC);
+
+-- Parse a day-first "D/M/YYYY" string; returns NULL instead of raising on garbage.
+CREATE OR REPLACE FUNCTION public.safe_dmy_date(s text) RETURNS date
+LANGUAGE plpgsql IMMUTABLE AS $$
+BEGIN
+  IF s IS NULL OR s !~ '^\d{1,2}/\d{1,2}/\d{4}$' THEN RETURN NULL; END IF;
+  RETURN make_date(split_part(s, '/', 3)::int, split_part(s, '/', 2)::int, split_part(s, '/', 1)::int);
+EXCEPTION WHEN OTHERS THEN RETURN NULL;
+END $$;

@@ -1,6 +1,6 @@
 {#- Normalise a person/team name for matching: strip accents, lowercase, drop punctuation, squeeze spaces. -#}
 {% macro norm_name(expr) -%}
-    regexp_replace(regexp_replace(lower(unaccent({{ expr }})), '[^a-z0-9 ]', ' ', 'g'), '\s+', ' ', 'g')
+    regexp_replace(regexp_replace(lower(unaccent(translate({{ expr }}, 'ĐđŁłØøÞþÐðĦħŦŧ', 'DdLlOoTtDdHhTt'))), '[^a-z0-9 ]', ' ', 'g'), '\s+', ' ', 'g')
 {%- endmacro %}
 
 {#- Last whitespace token of a normalised name (surname heuristic). -#}
@@ -49,4 +49,14 @@
 {#- Overall similarity score used for ranking candidates. -#}
 {% macro name_score(a, b) -%}
     greatest(similarity({{ a }}, {{ b }}), word_similarity({{ a }}, {{ b }}), word_similarity({{ b }}, {{ a }}))
+{%- endmacro %}
+
+{#- Text → numeric, tolerating blanks and stray symbols. -#}
+{% macro safe_numeric(expr) -%}
+    nullif(regexp_replace({{ expr }}, '[^0-9.\-]', '', 'g'), '')::numeric
+{%- endmacro %}
+
+{#- Text → date, tolerating blanks and trailing times. -#}
+{% macro safe_date(expr) -%}
+    nullif(left({{ expr }}, 10), '')::date
 {%- endmacro %}
