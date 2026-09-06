@@ -1,13 +1,17 @@
 import type { ReactNode } from "react";
 
-/** Server-rendered table for small, fixed datasets. Formatters are plain functions, so use only from server components. */
 export interface Col<T> {
   label: string;
   render: (row: T) => ReactNode;
+  /** 'r' right-aligns with tabular figures; use it for every numeric column. */
   align?: "l" | "r";
   key?: string;
 }
 
+/**
+ * Server-rendered data table for fixed datasets. Columns carry a render function each, so any cell can hold a link,
+ * a formatted number or a composed value. Wrap in a scrolling container yourself if the table can get wide.
+ */
 export function StaticTable<T>({ rows, cols, rowKey, empty = "No data." }: { rows: T[]; cols: Col<T>[]; rowKey: (r: T, i: number) => string; empty?: string }) {
   return (
     <div className="overflow-x-auto">

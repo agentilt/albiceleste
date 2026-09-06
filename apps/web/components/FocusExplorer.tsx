@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Chip, type ColumnSpec, FilterBar, FilterRow, type Row, SortableTable } from "@albiceleste/ui";
 import type { FocusRow } from "@albiceleste/data";
-import { type ColumnSpec, type Row, SortableTable } from "@/components/SortableTable";
+import { useMemo, useState } from "react";
+import { playerHref } from "@/lib/format";
+import { AppLink } from "@/lib/link";
 
 const REASONS: Record<string, string> = {
   abroad: "abroad",
@@ -14,7 +16,7 @@ const REASONS: Record<string, string> = {
 const GROUPS = ["GK", "DEF", "MID", "FWD"];
 
 const COLUMNS: ColumnSpec[] = [
-  { key: "full_name", label: "Player", kind: "player" },
+  { key: "full_name", label: "Player", kind: "link" },
   { key: "age", label: "Age", kind: "int" },
   { key: "pos_group", label: "Pos" },
   { key: "team", label: "Club" },
@@ -51,30 +53,34 @@ export function FocusExplorer({ rows }: { rows: FocusRow[] }) {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Reason</span>
+      <FilterBar>
+        <FilterRow label="Reason">
           {Object.entries(REASONS).map(([k, v]) => (
-            <button key={k} type="button" className="chip" aria-pressed={reasons.includes(k)} onClick={() => toggle(reasons, setReasons, k)}>
+            <Chip key={k} pressed={reasons.includes(k)} onClick={() => toggle(reasons, setReasons, k)}>
               {v}
-            </button>
+            </Chip>
           ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Position</span>
+        </FilterRow>
+        <FilterRow label="Position">
           {GROUPS.map((g) => (
-            <button key={g} type="button" className="chip" aria-pressed={groups.includes(g)} onClick={() => toggle(groups, setGroups, g)}>
+            <Chip key={g} pressed={groups.includes(g)} onClick={() => toggle(groups, setGroups, g)}>
               {g}
-            </button>
+            </Chip>
           ))}
           <label className="ml-4 flex items-center gap-2">
             <input type="checkbox" checked={homeOnly} onChange={(e) => setHomeOnly(e.target.checked)} />
             <span>Argentine league only</span>
           </label>
           <span className="ml-2 text-muted">{shown.length} players</span>
-        </div>
-      </div>
-      <SortableTable columns={COLUMNS} rows={shown.map((r) => ({ ...r, reasons: r.reasons.map((x) => REASONS[x] ?? x) })) as unknown as Row[]} initialSort="minutes" />
+        </FilterRow>
+      </FilterBar>
+      <SortableTable
+        columns={COLUMNS}
+        rows={shown.map((r) => ({ ...r, reasons: r.reasons.map((x) => REASONS[x] ?? x) })) as unknown as Row[]}
+        initialSort="minutes"
+        hrefFor={playerHref}
+        LinkComponent={AppLink}
+      />
     </>
   );
 }

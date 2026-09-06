@@ -17,3 +17,11 @@ apps/web/next-env.d.ts
 .vercel/
 .vercel
 .env*
+
+# design-sync machine state (never committed)
+.ds-sync/
+ds-bundle/
+.design-sync/.cache/
+.design-sync/learnings/
+.design-sync/node_modules
+packages/ui/dist/

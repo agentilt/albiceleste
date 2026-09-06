@@ -1,0 +1,21 @@
+/* albiceleste design tokens. `@theme static` so every token is emitted as a CSS variable, used or not. */
+@theme static {
+  --color-paper: #f8f7f3;
+  --color-surface: #ffffff;
+  --color-ink: #17191c;
+  --color-ink-2: #45494f;
+  --color-muted: #7a7f86;
+  --color-rule: #e1dfd7;
+  --color-rule-strong: #c9c6bb;
+  --color-celeste: #75aadb;
+  --color-celeste-deep: #2d6fa8;
+  --color-celeste-tint: #eaf2f9;
+  --color-gold: #b8860b;
+  --color-danger: #a83a2e;
+
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius-xs: 2px;
+}

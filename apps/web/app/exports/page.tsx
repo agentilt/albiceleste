@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { getExportingClubs, getExportsByCountry, getExportsByYear, getPresence } from "@albiceleste/data";
-import { Bars, LineChart } from "@/components/charts";
-import { StaticTable } from "@/components/StaticTable";
-import { Note, PageTitle, Section } from "@/components/ui";
+import { Bars, LineChart } from "@albiceleste/ui";
+import { StaticTable } from "@albiceleste/ui";
+import { Note, PageTitle, Section } from "@albiceleste/ui";
 import { dec1, eur, int } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Presence and exports" };

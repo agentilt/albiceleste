@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { manifest } from "@albiceleste/data";
-import { PageTitle, Section } from "@/components/ui";
+import { PageTitle, Section } from "@albiceleste/ui";
 import { date } from "@/lib/format";
 import { REPO_URL } from "@/lib/site";
 

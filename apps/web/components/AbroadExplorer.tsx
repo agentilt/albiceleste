@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Chip, type ColumnSpec, Field, FilterBar, FilterRow, type Row, SortableTable } from "@albiceleste/ui";
 import type { AbroadRow } from "@albiceleste/data";
-import { type ColumnSpec, type Row, SortableTable } from "@/components/SortableTable";
+import { useMemo, useState } from "react";
+import { playerHref } from "@/lib/format";
+import { AppLink } from "@/lib/link";
 
 const POSITIONS = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
 
 const COLUMNS: ColumnSpec[] = [
-  { key: "full_name", label: "Player", kind: "player" },
+  { key: "full_name", label: "Player", kind: "link" },
   { key: "age", label: "Age", kind: "int" },
   { key: "primary_position", label: "Position" },
   { key: "team", label: "Club" },
@@ -52,40 +54,36 @@ export function AbroadExplorer({ rows }: { rows: AbroadRow[] }) {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Competition</span>
+      <FilterBar>
+        <FilterRow label="Competition">
           {competitions.map((c) => (
-            <button key={c} type="button" className="chip" aria-pressed={comps.includes(c)} onClick={() => toggle(comps, setComps, c)}>
+            <Chip key={c} pressed={comps.includes(c)} onClick={() => toggle(comps, setComps, c)}>
               {c}
-            </button>
+            </Chip>
           ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Position</span>
+        </FilterRow>
+        <FilterRow label="Position">
           {POSITIONS.map((p) => (
-            <button key={p} type="button" className="chip" aria-pressed={positions.includes(p)} onClick={() => toggle(positions, setPositions, p)}>
+            <Chip key={p} pressed={positions.includes(p)} onClick={() => toggle(positions, setPositions, p)}>
               {p}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </FilterRow>
         <div className="flex flex-wrap items-center gap-5">
-          <label className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-muted">Max age</span>
+          <Field label="Max age">
             <input type="number" min={16} max={45} value={maxAge} onChange={(e) => setMaxAge(Number(e.target.value))} className="w-16" />
-          </label>
-          <label className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-muted">Min minutes</span>
+          </Field>
+          <Field label="Min minutes">
             <input type="number" min={0} step={90} value={minMinutes} onChange={(e) => setMinMinutes(Number(e.target.value))} className="w-20" />
-          </label>
+          </Field>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={review} onChange={(e) => setReview(e.target.checked)} />
             <span>include players under review</span>
           </label>
           <span className="text-muted">{shown.length} players</span>
         </div>
-      </div>
-      <SortableTable columns={COLUMNS} rows={shown as unknown as Row[]} initialSort="minutes" />
+      </FilterBar>
+      <SortableTable columns={COLUMNS} rows={shown as unknown as Row[]} initialSort="minutes" hrefFor={playerHref} LinkComponent={AppLink} />
     </>
   );
 }

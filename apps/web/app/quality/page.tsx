@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getAgreement, getCoverage, getPipelineRuns, getRawSummary, getStatsBySource, getUnmatched, manifest } from "@albiceleste/data";
-import { StaticTable } from "@/components/StaticTable";
-import { Note, PageTitle, Section } from "@/components/ui";
+import { StaticTable } from "@albiceleste/ui";
+import { Note, PageTitle, Section } from "@albiceleste/ui";
 import { datetime, dec1, dec2, int, pct } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Data quality" };

@@ -16,8 +16,22 @@ typographic baseline and design tokens; the visual design is applied on top afte
 package.json            npm workspaces + turbo scripts
 turbo.json              build / typecheck / dev tasks; build inputs include ../../data/published/**
 packages/data/          @albiceleste/data: DuckDB (@duckdb/node-api) over data/published, typed queries per page
-apps/web/               Next.js 16 (App Router, Turbopack), Tailwind v4 tokens, hand-rolled SVG charts
+packages/ui/            @albiceleste/ui: the design system (tokens, base rules, 24 React components, SVG charts); tsc + Tailwind CLI
+apps/web/               Next.js 16 (App Router, Turbopack) composing the two packages
 ```
+
+## Design system and Claude Design
+
+The presentational layer lives in `packages/ui` with no framework dependency beyond React: tokens (`src/tokens.css`, `@theme static`),
+base rules (`src/base.css`), and components that take a `LinkComponent` so the site can pass Next's Link. The compiled stylesheet ships
+the utilities the components use plus a safelisted layout vocabulary (`@source inline(...)` in `src/styles.css`) so consumers that
+compose with the components have something to build with. The site imports the package's tokens and base rules into its own Tailwind
+build and overrides the font tokens with next/font families.
+
+`/design-sync` publishes the package to the Claude Design project **albiceleste** (https://claude.ai/design/p/258940e4-0637-42f1-a336-70af2b3104a6):
+every component with an authored, rendered and graded preview, the stylesheet, and a conventions header for the design agent.
+Sync inputs are committed under `.design-sync/` (config, notes, conventions, previews); machine state (`.ds-sync/`, `ds-bundle/`,
+`.design-sync/.cache/`) is not.
 
 - **Everything is static.** Every page is prerendered at build time (`○` static or `●` SSG). The player route uses `generateStaticParams`
   with `dynamicParams = false`, so 1,176 player pages exist as HTML and unknown keys 404 without executing code. DuckDB runs only during

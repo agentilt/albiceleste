@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Chip, EVENT_LABELS, EventList, Field, FilterBar, FilterRow } from "@albiceleste/ui";
 import type { Competition, FeedItem } from "@albiceleste/data";
-import { EventList } from "@/components/EventList";
-import { EVENT_LABELS } from "@/components/ui";
+import { useMemo, useState } from "react";
+import { playerHref } from "@/lib/format";
+import { AppLink } from "@/lib/link";
 
 export function FeedExplorer({ items, competitions, asOf }: { items: FeedItem[]; competitions: Competition[]; asOf: string }) {
   const [leagues, setLeagues] = useState<string[]>([]);
@@ -36,34 +37,30 @@ export function FeedExplorer({ items, competitions, asOf }: { items: FeedItem[];
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 text-sm">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Competition</span>
+      <FilterBar>
+        <FilterRow label="Competition">
           {competitions.map((c) => (
-            <button key={c.league} type="button" className="chip" aria-pressed={leagues.includes(c.league)} onClick={() => toggle(leagues, setLeagues, c.league)}>
+            <Chip key={c.league} pressed={leagues.includes(c.league)} onClick={() => toggle(leagues, setLeagues, c.league)}>
               {c.competition_name}
-            </button>
+            </Chip>
           ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="w-24 text-xs uppercase tracking-wide text-muted">Event</span>
+        </FilterRow>
+        <FilterRow label="Event">
           {typeOptions.map((t) => (
-            <button key={t} type="button" className="chip" aria-pressed={types.includes(t)} onClick={() => toggle(types, setTypes, t)}>
+            <Chip key={t} pressed={types.includes(t)} onClick={() => toggle(types, setTypes, t)}>
               {EVENT_LABELS[t] ?? t}
-            </button>
+            </Chip>
           ))}
-        </div>
+        </FilterRow>
         <div className="flex flex-wrap items-center gap-4">
-          <label className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-muted">Min severity</span>
+          <Field label="Min severity">
             <select value={minSev} onChange={(e) => setMinSev(Number(e.target.value))}>
               <option value={1}>1</option>
               <option value={2}>2</option>
               <option value={3}>3</option>
             </select>
-          </label>
-          <label className="flex items-center gap-2">
-            <span className="text-xs uppercase tracking-wide text-muted">Days back</span>
+          </Field>
+          <Field label="Days back">
             <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
               {[7, 14, 30, 60].map((d) => (
                 <option key={d} value={d}>
@@ -71,11 +68,11 @@ export function FeedExplorer({ items, competitions, asOf }: { items: FeedItem[];
                 </option>
               ))}
             </select>
-          </label>
+          </Field>
           <span className="text-muted">{shown.length} events</span>
         </div>
-      </div>
-      <EventList events={shown} />
+      </FilterBar>
+      <EventList events={shown} hrefFor={playerHref} LinkComponent={AppLink} />
     </>
   );
 }

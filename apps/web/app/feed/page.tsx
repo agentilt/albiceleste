@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getCompetitions, getFeed, manifest } from "@albiceleste/data";
 import { FeedExplorer } from "@/components/FeedExplorer";
-import { PageTitle } from "@/components/ui";
+import { PageTitle } from "@albiceleste/ui";
 
 export const metadata: Metadata = { title: "Watch feed" };
 

@@ -1,61 +1,29 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
-import { date, dec1, dec2, eur, int, pct, playerHref } from "@/lib/format";
+import { date, dec1, dec2, eur, int, pct } from "./format";
+import { DefaultLink, type LinkLike } from "./link";
 
-/** Serializable column spec so server pages can hand a client table its layout. */
+/** Serializable column spec, so a server page can hand a client table its layout. */
 export interface ColumnSpec {
   key: string;
   label: string;
-  kind?: "text" | "int" | "dec1" | "dec2" | "pct" | "pctSigned" | "eur" | "date" | "bool" | "list" | "player";
-  /** for kind 'player': which column holds the player key (default 'player_key') */
+  kind?: "text" | "int" | "dec1" | "dec2" | "pct" | "pctSigned" | "eur" | "date" | "bool" | "list" | "link";
+  /** for kind 'link': which field holds the id passed to `hrefFor` (default 'player_key') */
   keyField?: string;
   width?: string;
 }
 
 export type Row = Record<string, string | number | boolean | string[] | null>;
 
-function cell(spec: ColumnSpec, row: Row) {
-  const v = row[spec.key];
-  switch (spec.kind) {
-    case "int":
-      return int(v as number | null);
-    case "dec1":
-      return dec1(v as number | null);
-    case "dec2":
-      return dec2(v as number | null);
-    case "pct":
-      return pct(v as number | null);
-    case "pctSigned":
-      return pct(v as number | null, true);
-    case "eur":
-      return eur(v as number | null);
-    case "date":
-      return date(v as string | null);
-    case "bool":
-      return v ? "yes" : "";
-    case "list":
-      return Array.isArray(v) ? v.join(", ") : (v ?? "");
-    case "player": {
-      const key = row[spec.keyField ?? "player_key"];
-      return typeof key === "string" ? (
-        <Link className="link" href={playerHref(key)}>
-          {String(v ?? "")}
-        </Link>
-      ) : (
-        String(v ?? "")
-      );
-    }
-    default:
-      return v === null || v === undefined ? "" : String(v);
-  }
-}
-
 function numeric(kind: ColumnSpec["kind"]): boolean {
   return kind === "int" || kind === "dec1" || kind === "dec2" || kind === "pct" || kind === "pctSigned" || kind === "eur";
 }
 
+/**
+ * Client-side sortable table. Click a header to sort; numeric kinds sort descending first. `kind: "link"` renders the
+ * cell as a link built by `hrefFor(row[keyField])`, using `LinkComponent` (a plain anchor by default).
+ */
 export function SortableTable({
   columns,
   rows,
@@ -63,6 +31,8 @@ export function SortableTable({
   initialDir = "desc",
   sticky = true,
   emptyText = "Nothing matches these filters.",
+  hrefFor,
+  LinkComponent = DefaultLink,
 }: {
   columns: ColumnSpec[];
   rows: Row[];
@@ -70,6 +40,8 @@ export function SortableTable({
   initialDir?: "asc" | "desc";
   sticky?: boolean;
   emptyText?: string;
+  hrefFor?: (key: string) => string;
+  LinkComponent?: LinkLike;
 }) {
   const [sort, setSort] = useState<string | undefined>(initialSort);
   const [dir, setDir] = useState<"asc" | "desc">(initialDir);
@@ -84,9 +56,7 @@ export function SortableTable({
       const bv = b[sort];
       if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
-      let c: number;
-      if (num || (typeof av === "number" && typeof bv === "number")) c = Number(av) - Number(bv);
-      else c = String(av).localeCompare(String(bv), "es");
+      const c = num || (typeof av === "number" && typeof bv === "number") ? Number(av) - Number(bv) : String(av).localeCompare(String(bv), "es");
       return dir === "asc" ? c : -c;
     });
     return copy;
@@ -97,6 +67,42 @@ export function SortableTable({
     else {
       setSort(key);
       setDir(numeric(kind) ? "desc" : "asc");
+    }
+  }
+
+  function cell(spec: ColumnSpec, row: Row) {
+    const v = row[spec.key];
+    switch (spec.kind) {
+      case "int":
+        return int(v as number | null);
+      case "dec1":
+        return dec1(v as number | null);
+      case "dec2":
+        return dec2(v as number | null);
+      case "pct":
+        return pct(v as number | null);
+      case "pctSigned":
+        return pct(v as number | null, true);
+      case "eur":
+        return eur(v as number | null);
+      case "date":
+        return date(v as string | null);
+      case "bool":
+        return v ? "yes" : "";
+      case "list":
+        return Array.isArray(v) ? v.join(", ") : (v ?? "");
+      case "link": {
+        const key = row[spec.keyField ?? "player_key"];
+        return typeof key === "string" && hrefFor ? (
+          <LinkComponent className="link" href={hrefFor(key)}>
+            {String(v ?? "")}
+          </LinkComponent>
+        ) : (
+          String(v ?? "")
+        );
+      }
+      default:
+        return v === null || v === undefined ? "" : String(v);
     }
   }
 
@@ -126,7 +132,7 @@ export function SortableTable({
           {sorted.map((r, i) => (
             <tr key={(r.player_key as string) ?? (r.event_key as string) ?? i}>
               {columns.map((c) => (
-                <td key={c.key} className={numeric(c.kind) ? "r" : c.kind === "player" ? "whitespace-nowrap" : ""}>
+                <td key={c.key} className={numeric(c.kind) ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""}>
                   {cell(c, r)}
                 </td>
               ))}

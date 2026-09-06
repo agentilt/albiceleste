@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getFocus } from "@albiceleste/data";
 import { FocusExplorer } from "@/components/FocusExplorer";
-import { Note, PageTitle } from "@/components/ui";
+import { Note, PageTitle } from "@albiceleste/ui";
 
 export const metadata: Metadata = { title: "Focus set" };
 

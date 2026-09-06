@@ -1,0 +1,71 @@
+{
+  "projectId": "258940e4-0637-42f1-a336-70af2b3104a6",
+  "shape": "package",
+  "pkg": "@albiceleste/ui",
+  "globalName": "AlbicelesteUI",
+  "buildCmd": "npx turbo run build --filter=@albiceleste/ui",
+  "cssEntry": "dist/styles.css",
+  "tokensGlob": "src/tokens.css",
+  "tsconfig": "tsconfig.json",
+  "componentSrcMap": {
+    "DefaultLink": null,
+    "Wordmark": "src/Header.tsx",
+    "Nav": "src/Header.tsx",
+    "MetaLine": "src/Header.tsx",
+    "Footer": "src/Header.tsx",
+    "Page": "src/Header.tsx",
+    "Hero": "src/text.tsx",
+    "PageTitle": "src/text.tsx",
+    "Section": "src/text.tsx",
+    "Note": "src/text.tsx",
+    "Stat": "src/text.tsx",
+    "StatRow": "src/text.tsx",
+    "Chip": "src/filters.tsx",
+    "FilterRow": "src/filters.tsx",
+    "FilterBar": "src/filters.tsx",
+    "Field": "src/filters.tsx",
+    "Severity": "src/EventList.tsx",
+    "Bars": "src/charts.tsx",
+    "MinutesTimeline": "src/charts.tsx",
+    "LineChart": "src/charts.tsx"
+  },
+  "overrides": {
+    "Header": {
+      "cardMode": "column"
+    },
+    "Page": {
+      "cardMode": "column"
+    },
+    "Hero": {
+      "cardMode": "column"
+    },
+    "StatRow": {
+      "cardMode": "column"
+    },
+    "Footer": {
+      "cardMode": "column"
+    },
+    "StaticTable": {
+      "cardMode": "column"
+    },
+    "SortableTable": {
+      "cardMode": "column"
+    },
+    "MinutesTimeline": {
+      "cardMode": "column"
+    },
+    "EventList": {
+      "cardMode": "column"
+    },
+    "FilterBar": {
+      "cardMode": "column"
+    },
+    "FilterRow": {
+      "cardMode": "column"
+    },
+    "Nav": {
+      "cardMode": "column"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

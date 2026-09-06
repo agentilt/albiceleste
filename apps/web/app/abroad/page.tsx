@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { getAbroad } from "@albiceleste/data";
 import { AbroadExplorer } from "@/components/AbroadExplorer";
-import { Note, PageTitle } from "@/components/ui";
+import { Note, PageTitle } from "@albiceleste/ui";
 
 export const metadata: Metadata = { title: "Players abroad" };
 

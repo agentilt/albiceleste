@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getPlayerKeys, getPlayerPage } from "@albiceleste/data";
-import { LineChart, MinutesTimeline } from "@/components/charts";
-import { EventList } from "@/components/EventList";
-import { StaticTable } from "@/components/StaticTable";
-import { Note, Section } from "@/components/ui";
+import { LineChart, MinutesTimeline } from "@albiceleste/ui";
+import { EventList } from "@albiceleste/ui";
+import { StaticTable } from "@albiceleste/ui";
+import { Note, Section } from "@albiceleste/ui";
 import { DASH, date, dec1, dec2, eur, int, pct } from "@/lib/format";
 
 export const dynamicParams = false;
