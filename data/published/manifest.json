@@ -1,0 +1,104 @@
+{
+  "exported_at": "2026-09-06T09:25:00+00:00",
+  "git_commit": "b2b104b",
+  "tables": {
+    "marts.argentine_export_pipeline": {
+      "rows": 665,
+      "bytes": 32826
+    },
+    "marts.argentine_export_summary": {
+      "rows": 160,
+      "bytes": 4167
+    },
+    "marts.argentine_exporting_clubs": {
+      "rows": 32,
+      "bytes": 3524
+    },
+    "marts.argentine_league_presence": {
+      "rows": 7,
+      "bytes": 2962
+    },
+    "marts.argentine_players_abroad": {
+      "rows": 122,
+      "bytes": 14550
+    },
+    "marts.dim_competition": {
+      "rows": 7,
+      "bytes": 3065
+    },
+    "marts.dim_player": {
+      "rows": 5476,
+      "bytes": 316647
+    },
+    "marts.dim_team": {
+      "rows": 180,
+      "bytes": 11049
+    },
+    "marts.dq_minutes_agreement": {
+      "rows": 1,
+      "bytes": 1501
+    },
+    "marts.dq_unmatched": {
+      "rows": 717,
+      "bytes": 13099
+    },
+    "marts.fct_match": {
+      "rows": 5709,
+      "bytes": 144950
+    },
+    "marts.fct_player_match_stats": {
+      "rows": 53789,
+      "bytes": 708377
+    },
+    "marts.player_career_history": {
+      "rows": 7811,
+      "bytes": 133290
+    },
+    "marts.player_events": {
+      "rows": 11121,
+      "bytes": 379446
+    },
+    "marts.player_focus_set": {
+      "rows": 1046,
+      "bytes": 35891
+    },
+    "marts.player_market_values": {
+      "rows": 23479,
+      "bytes": 95863
+    },
+    "marts.player_recent_form": {
+      "rows": 3465,
+      "bytes": 65538
+    },
+    "marts.player_season_history": {
+      "rows": 4603,
+      "bytes": 79779
+    },
+    "marts.player_season_stats": {
+      "rows": 3190,
+      "bytes": 81211
+    },
+    "marts.player_source_ids": {
+      "rows": 17749,
+      "bytes": 161238
+    },
+    "marts.watch_feed": {
+      "rows": 620,
+      "bytes": 40775
+    },
+    "meta.raw_summary": {
+      "rows": 19,
+      "bytes": 2188
+    },
+    "meta.pipeline_runs": {
+      "rows": 16,
+      "bytes": 2698
+    },
+    "meta.highlightly_quota": {
+      "rows": 1,
+      "bytes": 914
+    }
+  },
+  "data_as_of": "2026-09-05",
+  "squad_as_of": "2026-09-05T18:25:33+00:00"
+}

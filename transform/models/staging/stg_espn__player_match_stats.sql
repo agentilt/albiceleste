@@ -1,4 +1,6 @@
 {#- One row per player listed in a match summary roster (incl. unused subs), with derived minutes. -#}
+{{ config(materialized='table') }}
+{#- Materialized: the JSON expansion and window functions are expensive, and several models and the export read it. -#}
 with src as ({{ latest('espn', 'summary') }}),
 rosters as (
     select

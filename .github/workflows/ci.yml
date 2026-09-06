@@ -21,3 +21,5 @@ jobs:
         run: uv run dbt parse
       - name: CLI smoke
         run: uv run alb --help
+      - name: Dashboard pages against the published snapshot
+        run: uv run python scripts/check_app.py

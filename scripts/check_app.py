@@ -1,4 +1,4 @@
-"""Run every Streamlit page headlessly and report exceptions. Needs the database up and models built."""
+"""Run every Streamlit page headlessly and report exceptions. Needs data/published/ (see `alb publish`); no database."""
 from __future__ import annotations
 
 import sys

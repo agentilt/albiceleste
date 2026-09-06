@@ -9,5 +9,5 @@ from {{ ref('player_events') }} e
 join {{ ref('dim_player') }} d using (player_key)
 left join {{ ref('player_focus_set') }} fs using (player_key)
 where coalesce(fs.in_focus, d.is_abroad, false)
-  and e.event_date >= current_date - 60
+  and e.event_date >= {{ data_horizon() }} - 60
 order by e.event_date desc, e.severity desc

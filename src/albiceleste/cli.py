@@ -13,6 +13,7 @@ from . import db as dbmod
 from .config import get_settings
 from .ingest import espn, footballdata, fpl, highlightly, transfermarkt, wikidata
 from .ingest.base import make_context
+from .publish import export as publish_export
 
 app = typer.Typer(no_args_is_help=True, help="Argentina football intelligence platform — data pipeline")
 db_app = typer.Typer(no_args_is_help=True, help="Database bootstrap and inspection")
@@ -285,6 +286,13 @@ def run_weekly() -> None:
         footballdata.ingest_scorers(ctx, ctx.settings.fd_competitions)
         fpl.ingest_bootstrap(ctx)
         fpl.ingest_history(ctx)
+
+
+# ---------------------------------------------------------------- publish
+@app.command("publish")
+def publish_cmd(out: Annotated[Path | None, typer.Option(help="Output directory (default data/published)")] = None) -> None:
+    """Export marts and provenance summaries to Parquet so the dashboard runs without the database."""
+    publish_export(out, log=console.print)
 
 
 if __name__ == "__main__":

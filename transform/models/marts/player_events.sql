@@ -80,7 +80,7 @@ match_events as (
       and s.match_date > (select first_date from data_start) + interval '45 days'
 ),
 window_events as (
-    select f.player_key, 'minutes_surge' as event_type, current_date as event_date, null::text as match_key, f.current_league as league,
+    select f.player_key, 'minutes_surge' as event_type, {{ data_horizon() }} as event_date, null::text as match_key, f.current_league as league,
            case when f.minutes_change_pct >= 100 then 3 else 2 end as severity,
            jsonb_build_object('window_days', 28, 'minutes', f.minutes, 'prev_minutes', f.prev_minutes, 'change_pct', f.minutes_change_pct,
                               'starts', f.starts, 'prev_starts', f.prev_starts, 'minutes_share_pct', f.minutes_share_pct) as evidence,
@@ -89,7 +89,7 @@ window_events as (
     where f.minutes >= 180 and f.prev_minutes >= 45 and f.minutes_change_pct >= 50
 
     union all
-    select f.player_key, 'minutes_drop', current_date, null, f.current_league,
+    select f.player_key, 'minutes_drop', {{ data_horizon() }}, null, f.current_league,
            case when f.minutes_change_pct <= -75 then 3 else 2 end,
            jsonb_build_object('window_days', 28, 'minutes', f.minutes, 'prev_minutes', f.prev_minutes, 'change_pct', f.minutes_change_pct,
                               'starts', f.starts, 'prev_starts', f.prev_starts, 'team_matches', f.team_matches),

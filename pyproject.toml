@@ -17,6 +17,8 @@ dependencies = [
   "pandas>=3.0.5",
   "altair>=6.2.2",
   "tabulate>=0.10.0",
+  "duckdb>=1.5.5",
+  "pyarrow>=25.0.1",
 ]
 
 [project.scripts]

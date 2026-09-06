@@ -4,3 +4,5 @@ primaryColor = "#2a78d6"
 headless = true
 [browser]
 gatherUsageStats = false
+[client]
+toolbarMode = "minimal"

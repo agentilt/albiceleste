@@ -15,7 +15,7 @@ cur as (
            sum(f.xa)                             as xa,
            avg(f.match_rating) filter (where f.played) as avg_rating
     from d cross join windows w
-    left join f on f.player_key = d.player_key and f.match_date > current_date - w.window_days and f.match_date <= current_date
+    left join f on f.player_key = d.player_key and f.match_date > {{ data_horizon() }} - w.window_days and f.match_date <= {{ data_horizon() }}
     group by 1, 2
 ),
 prev as (
@@ -26,22 +26,22 @@ prev as (
            coalesce(sum(f.goals), 0)             as goals,
            coalesce(sum(f.assists), 0)           as assists
     from d cross join windows w
-    left join f on f.player_key = d.player_key and f.match_date > current_date - 2 * w.window_days and f.match_date <= current_date - w.window_days
+    left join f on f.player_key = d.player_key and f.match_date > {{ data_horizon() }} - 2 * w.window_days and f.match_date <= {{ data_horizon() }} - w.window_days
     group by 1, 2
 ),
 -- denominator: matches played by any team the player appeared for in the last 2×84 days (or his current club)
 player_teams as (
-    select distinct player_key, espn_team_id from f where match_date > current_date - 168 and espn_team_id is not null
+    select distinct player_key, espn_team_id from f where match_date > {{ data_horizon() }} - 168 and espn_team_id is not null
     union
     select player_key, current_espn_team_id from d where current_espn_team_id is not null
 ),
 team_matches as (
     select d.player_key, w.window_days,
-           count(distinct m.match_key) filter (where m.match_date > current_date - w.window_days) as team_matches,
-           count(distinct m.match_key) filter (where m.match_date > current_date - 2 * w.window_days and m.match_date <= current_date - w.window_days) as team_matches_prev
+           count(distinct m.match_key) filter (where m.match_date > {{ data_horizon() }} - w.window_days) as team_matches,
+           count(distinct m.match_key) filter (where m.match_date > {{ data_horizon() }} - 2 * w.window_days and m.match_date <= {{ data_horizon() }} - w.window_days) as team_matches_prev
     from d cross join windows w
     join player_teams pt on pt.player_key = d.player_key
-    left join m on pt.espn_team_id in (m.home_espn_team_id, m.away_espn_team_id) and m.match_date > current_date - 2 * w.window_days
+    left join m on pt.espn_team_id in (m.home_espn_team_id, m.away_espn_team_id) and m.match_date > {{ data_horizon() }} - 2 * w.window_days
     group by 1, 2
 )
 select

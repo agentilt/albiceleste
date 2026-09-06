@@ -60,3 +60,10 @@
 {% macro safe_date(expr) -%}
     nullif(left({{ expr }}, 10), '')::date
 {%- endmacro %}
+
+
+{#- Last completed match date in the data. Window-based marts anchor to this rather than the wall clock,
+    so a rebuild on a quiet day does not shift the windows and the published snapshot is self-consistent. -#}
+{% macro data_horizon() -%}
+(select max(match_date) from {{ ref('fct_match') }} where is_completed)
+{%- endmacro %}

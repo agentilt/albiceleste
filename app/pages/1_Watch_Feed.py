@@ -1,5 +1,5 @@
 import streamlit as st
-from lib import page, player_link, q
+from lib import fmt_date, page, player_link, q, sev_icon
 
 page("Watch feed", "📡")
 st.caption("Detected changes for players abroad and for Argentine-league players in the focus set. Facts are computed in SQL; the headline is a template.")
@@ -20,10 +20,10 @@ feed = q(
     """
     select w.event_date, w.severity, w.event_type, w.headline, w.full_name, w.current_team_name, w.current_league, w.player_key, w.focus_reasons
     from marts.watch_feed w
-    where w.event_date >= current_date - %s and w.severity >= %s
+    where w.event_date >= as_of() - ? and w.severity >= ?
       and coalesce(w.current_league, w.headline) is not null
-      and (w.current_league = any(%s) or w.current_league is null)
-      and w.event_type = any(%s)
+      and (list_contains(?, w.current_league) or w.current_league is null)
+      and list_contains(?, w.event_type)
     order by w.event_date desc, w.severity desc
     limit 500
     """,
@@ -31,10 +31,9 @@ feed = q(
 )
 st.write(f"{len(feed):,} events")
 for _, r in feed.iterrows():
-    sev = "🔴" if r["severity"] == 3 else "🟠" if r["severity"] == 2 else "🟡"
     reasons = ", ".join(r["focus_reasons"]) if isinstance(r["focus_reasons"], list) else ""
     st.markdown(
-        f"{sev} **{r['event_date']}** · `{r['event_type']}` · "
+        f"{sev_icon(r['severity'])} **{fmt_date(r['event_date'])}** · `{r['event_type']}` · "
         + r["headline"].replace(r["full_name"], player_link(r["player_key"], r["full_name"]), 1)
         + (f"  \n<span style='color:#9a9992'>focus: {reasons}</span>" if reasons else ""),
         unsafe_allow_html=True,

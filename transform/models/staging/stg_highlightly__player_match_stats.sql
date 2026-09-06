@@ -1,3 +1,5 @@
+{{ config(materialized='table') }}
+{#- Materialized: the JSON expansion and window functions are expensive, and several models and the export read it. -#}
 with src as ({{ latest('highlightly', 'boxscore') }}),
 teams as (
     select
