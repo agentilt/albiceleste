@@ -32,7 +32,9 @@ minutes as (
     select
         *,
         case when subbed_in  then first_play_minute end as sub_in_minute,
-        case when subbed_out then last_play_minute  end as sub_out_minute
+        case when subbed_out then last_play_minute  end as sub_out_minute,
+        -- match length: 120 when any substitution clock in this match runs past 90 (extra time), else 90
+        case when max(last_play_minute) over (partition by event_id) > 90 then 120 else 90 end as match_length
     from parsed
 ),
 -- ESPN occasionally lists one athlete id in both teams' lineups; keep the row on the athlete's rostered team.
@@ -50,12 +52,13 @@ select
     coalesce((st->>'appearances')::numeric, 0) >= 1                   as played,
     -- clamped to [0, 120]: substitution clocks are occasionally mis-parsed (e.g. "45'+2'" attached to the wrong player)
     greatest(0, least(120, case
-        when is_starter and not subbed_out then 90
+        when is_starter and not subbed_out then match_length
         when is_starter and subbed_out     then sub_out_minute
-        when subbed_in  and not subbed_out then 90 - sub_in_minute
+        when subbed_in  and not subbed_out then match_length - sub_in_minute
         when subbed_in  and subbed_out     then sub_out_minute - sub_in_minute
         else 0
     end))                                                             as minutes_played,
+    match_length,
     (st->>'totalGoals')::numeric::int                                 as goals,
     (st->>'goalAssists')::numeric::int                                as assists,
     (st->>'totalShots')::numeric::int                                 as shots,
