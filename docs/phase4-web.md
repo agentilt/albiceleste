@@ -53,8 +53,11 @@ Two things learned deploying from the CLI: run `vercel` from the repository root
 resolves it relative to the current directory); and the CLI does not honour the `**/data/raw/` gitignore pattern, so `.vercelignore` lists the
 raw mirror, the virtualenv and build outputs explicitly (the first attempt tried to upload 27,594 raw JSON files).
 
-**Deployment protection is on** (`ssoProtection: all_except_custom_domains`): the site is only visible to people logged into the Vercel team
-until the design layer is done. Flip it to previews-only in Project Settings → Deployment Protection, or via the API, to make it public.
+Deployment protection is Vercel's default "standard" setting: unique deployment URLs and previews require a Vercel login, the production alias
+is public. To hide the site while the design is being finished, switch Project Settings → Deployment Protection to "all deployments".
+
+Page weight to revisit in the design phase: `/feed` (398 KB HTML, 620 events embedded) and `/quality` (504 KB, 717 unmatched rows) should be
+paginated or split.
 
 CI builds the site on every push with `turbo run typecheck build`, so a query that no longer matches a mart column fails the build, not the site.
 
