@@ -21,5 +21,15 @@ jobs:
         run: uv run dbt parse
       - name: CLI smoke
         run: uv run alb --help
-      - name: Dashboard pages against the published snapshot
-        run: uv run python scripts/check_app.py
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck and build the site against the committed snapshot
+        run: npx turbo run typecheck build --filter=web

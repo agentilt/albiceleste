@@ -13,11 +13,6 @@ dependencies = [
   "rich>=13",
   "dbt-core>=1.9",
   "dbt-postgres>=1.9",
-  "streamlit>=1.63.0",
-  "pandas>=3.0.5",
-  "altair>=6.2.2",
-  "tabulate>=0.10.0",
-  "duckdb>=1.5.5",
   "pyarrow>=25.0.1",
 ]
 

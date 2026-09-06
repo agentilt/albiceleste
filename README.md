@@ -2,9 +2,9 @@
 
 Argentina football intelligence platform. Tracks every player eligible for the senior
 Argentina national team across Europe's top five leagues, Brazil and Argentina, and
-surfaces what has meaningfully changed. Free data only, local-first, cloud-portable.
+surfaces what has meaningfully changed. Free data only, local-first, static site on Vercel.
 
-Docs: `docs/phase0-data-sources.md` (sources), `docs/phase1-local-platform.md` (platform), `docs/phase2-analytics-product.md` (history, change detection, dashboard), `docs/phase3-publishing.md` (snapshot export, serverless dashboard, deployment).
+Docs: `docs/phase0-data-sources.md` (sources), `docs/phase1-local-platform.md` (platform), `docs/phase2-analytics-product.md` (history, change detection), `docs/phase3-publishing.md` (Parquet snapshot), `docs/phase4-web.md` (the Next.js site, Turborepo, Vercel).
 
 ## Quick start
 
@@ -20,26 +20,31 @@ uv run alb ingest transfermarkt load   # optional: frozen Transfermarkt history 
 make dbt-run && make dbt-test    # build analytical models
 make verify                      # headline numbers
 make publish                     # export marts to data/published/ (2 MB of parquet)
-make app                         # Streamlit dashboard on http://localhost:8501, reads the snapshot, no database needed
 make status
 ```
 
-To look at the dashboard only, skip everything above `make app`: the repo ships the latest snapshot in `data/published/`.
+## The site
+
+```bash
+npm install                      # npm workspaces: apps/web (Next.js) + packages/data (DuckDB over the snapshot)
+make web                         # dev server on http://localhost:3000, reads data/published, no database needed
+make web-build                   # production build through turborepo (~15 s; 1,176 static player pages)
+```
+
+To look at the site only, skip the pipeline: the repo ships the latest snapshot in `data/published/`.
 
 ## Refresh and publish
 
 ```bash
-make refresh                     # daily ingest → dbt run → dbt test → publish → page check
-git add data/published && git commit -m "data: refresh snapshot" && git push
+make refresh                     # daily ingest → dbt run → dbt test → publish → site build
+git add data/published && git commit -m "data: refresh snapshot" && git push   # Vercel rebuilds on push
 ```
-
-The dashboard is deployable as-is on Streamlit Community Cloud (main file `app/Home.py`, Python 3.12, no secrets); it
-installs from `app/requirements.txt` and reads the committed snapshot. See `docs/phase3-publishing.md`.
 
 ## Layout
 
 ```
-app/                    Streamlit dashboard over data/published (Home, Watch Feed, Players Abroad, Player, Focus Set, Presence & Exports, Data Quality, About)
+apps/web/               Next.js site (App Router, static generation) over data/published
+packages/data/          @albiceleste/data: typed DuckDB queries used at build time
 data/published/         Parquet snapshot of the marts + manifest.json, written by `alb publish`, committed
 src/albiceleste/        ingestion package (`alb` CLI)
   publish.py            marts → parquet exporter

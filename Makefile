@@ -1,4 +1,4 @@
-.PHONY: up down init sync status bootstrap daily weekly dbt-run dbt-test dbt-docs psql verify publish app app-check refresh
+.PHONY: up down init sync status bootstrap daily weekly dbt-run dbt-test dbt-docs psql verify publish web web-build refresh
 
 up:            ## start postgres
 	docker compose up -d
@@ -26,10 +26,10 @@ psql:          ## psql inside the container
 	docker compose exec postgres psql -U alb -d albiceleste
 publish:       ## export marts to data/published/ (parquet snapshot the app reads)
 	uv run alb publish
-app:           ## streamlit dashboard on :8501 (reads data/published, no database needed)
-	uv run streamlit run app/Home.py
-app-check:     ## run every page headlessly against the snapshot
-	uv run python scripts/check_app.py
-refresh: daily dbt-run dbt-test publish app-check  ## ingest, rebuild, re-export, check
+web:           ## next.js dev server on :3000 (reads data/published, no database needed)
+	npm run dev --workspace=web
+web-build:     ## production build of the site through turborepo
+	npx turbo run build --filter=web
+refresh: daily dbt-run dbt-test publish web-build  ## ingest, rebuild, re-export, build the site
 verify:        ## headline sanity checks
 	docker compose exec -T postgres psql -U alb -d albiceleste -f - < sql/verify.sql

@@ -10,3 +10,8 @@ transform/dbt_packages/
 transform/logs/
 logs/
 .DS_Store
+node_modules/
+.turbo/
+apps/web/.next/
+apps/web/next-env.d.ts
+.vercel/

@@ -1,7 +1,0 @@
-# Streamlit Community Cloud installs from this file (entrypoint directory wins over the root uv.lock).
-# The app only needs the published Parquet snapshot plus these libraries; no database, no pipeline code.
-streamlit>=1.63
-duckdb>=1.5
-pandas>=3.0
-pyarrow>=25
-altair>=6.2
