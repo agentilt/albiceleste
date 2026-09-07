@@ -12,6 +12,7 @@
     "web": "npm run dev --workspace=web"
   },
   "devDependencies": {
+    "tsx": "^4.23.13",
     "turbo": "^2.10.12",
     "typescript": "^5.9.3"
   },

@@ -1,19 +1,13 @@
 import { one, rows } from "./db";
 import type {
-  AbroadRow,
   Agreement,
   Competition,
   Coverage,
   EventRow,
   ExportByCountry,
   ExportByYear,
-  ExportingClub,
-  FeedItem,
-  FocusRow,
   FormWindow,
-  Kpis,
   MatchLine,
-  Mover,
   PipelineRun,
   Player,
   PlayerIndexEntry,
@@ -38,57 +32,8 @@ export function getCompetitions() {
   );
 }
 
-export async function getKpis(): Promise<Kpis> {
-  const k = await one<Kpis>(`
-    select
-      (select count(*) from marts.dim_player where eligibility_status in ('eligible','review')) as eligible,
-      (select count(*) from marts.dim_player where in_tracked_squad) as in_squads,
-      (select count(*) from marts.dim_player where is_abroad) as abroad,
-      (select count(*) from marts.player_focus_set where in_focus) as in_focus,
-      (select count(*) from marts.player_events where event_date >= as_of() - 7) as events_7d,
-      (select count(*) from marts.fct_match where is_completed) as matches
-  `);
-  if (!k) throw new Error("kpis");
-  return k;
-}
-
 export function getPresence() {
   return rows<Presence>(`select * from marts.argentine_league_presence order by players desc`);
-}
-
-export function getFeed(limit = 1000) {
-  return rows<FeedItem>(
-    `select event_key, event_date, severity, event_type, headline, full_name, player_key, current_team_name, current_league, current_country, focus_reasons
-     from marts.watch_feed order by event_date desc, severity desc, full_name limit ${Number(limit)}`,
-  );
-}
-
-export function getMovers(limit = 15) {
-  return rows<Mover>(`
-    select d.player_key, d.full_name, d.current_team_name as team, d.current_competition as competition, f.minutes, f.prev_minutes,
-           f.minutes_change_pct, f.starts, f.prev_starts, f.minutes_share_pct
-    from marts.player_recent_form f join marts.dim_player d using (player_key)
-    where f.window_days = 28 and d.is_abroad and (f.minutes >= 90 or f.prev_minutes >= 90)
-    order by abs(coalesce(f.minutes_change_pct, 0)) desc nulls last, f.minutes desc limit ${Number(limit)}
-  `);
-}
-
-export function getAbroad() {
-  return rows<AbroadRow>(`
-    select player_key, full_name, age, primary_position, current_team_name as team, current_competition as competition, current_country as country,
-           appearances, starts, minutes, goals, assists, xg, xa, avg_rating, eligibility_status, has_arg_senior_cap, is_injured
-    from marts.argentine_players_abroad
-    order by minutes desc nulls last, full_name
-  `);
-}
-
-export function getFocus() {
-  return rows<FocusRow>(`
-    select player_key, full_name, age, pos_group, current_team_name as team, current_competition as competition, current_league,
-           starts, minutes, goals, assists, starts_last5, starts_prev5, minutes_rank_in_position, reasons
-    from marts.player_focus_set where in_focus
-    order by minutes desc nulls last, full_name
-  `);
 }
 
 export function getPlayerIndex() {
@@ -137,7 +82,7 @@ export async function getPlayerPage(key: string): Promise<PlayerPage | null> {
       [key],
     ),
     rows<EventRow>(
-      `select event_key, event_date, severity, event_type, headline from marts.player_events where player_key = ? order by event_date desc, severity desc`,
+      `select event_key, event_date, severity, event_type, headline, evidence, league from marts.player_events where player_key = ? order by event_date desc, severity desc`,
       [key],
     ),
     rows<SeasonHistory>(
@@ -169,13 +114,6 @@ export function getExportsByYear(yearFrom: number) {
     `select transfer_year, sum(players_exported)::bigint as players_exported, round(avg(avg_age_at_export), 1) as avg_age
      from marts.argentine_export_summary where transfer_year >= ? group by 1 order by 1`,
     [yearFrom],
-  );
-}
-
-export function getExportingClubs(limit = 25) {
-  return rows<ExportingClub>(
-    `select from_club_name as club, players_exported, exported_last_10y, to_europe, avg_age_at_export, total_fees_eur
-     from marts.argentine_exporting_clubs limit ${Number(limit)}`,
   );
 }
 
