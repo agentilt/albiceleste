@@ -27,7 +27,22 @@
     "Severity": "src/EventList.tsx",
     "Bars": "src/charts.tsx",
     "MinutesTimeline": "src/charts.tsx",
-    "LineChart": "src/charts.tsx"
+    "LineChart": "src/charts.tsx",
+    "RankArrow": "src/Rank.tsx",
+    "StateWord": "src/Rank.tsx",
+    "Tag": "src/Rank.tsx",
+    "RankList": "src/Rank.tsx",
+    "Line": "src/Rank.tsx",
+    "CallStrip": "src/Selection.tsx",
+    "FollowButton": "src/Follow.tsx",
+    "NoteMark": "src/Follow.tsx",
+    "NoteComposer": "src/Notes.tsx",
+    "NoteList": "src/Notes.tsx",
+    "Segmented": "src/filters.tsx",
+    "Radar": "src/charts.tsx",
+    "Sparkline": "src/charts.tsx",
+    "RankHistory": "src/charts.tsx",
+    "AgeScatter": "src/charts.tsx"
   },
   "overrides": {
     "Header": {
@@ -64,6 +79,24 @@
       "cardMode": "column"
     },
     "Nav": {
+      "cardMode": "column"
+    },
+    "RankList": {
+      "cardMode": "column"
+    },
+    "Line": {
+      "cardMode": "column"
+    },
+    "RankHistory": {
+      "cardMode": "column"
+    },
+    "NoteList": {
+      "cardMode": "column"
+    },
+    "NoteComposer": {
+      "cardMode": "column"
+    },
+    "Sparkline": {
       "cardMode": "column"
     }
   },

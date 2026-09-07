@@ -27,6 +27,19 @@ Repo-specific facts a re-sync needs. Config lives in `.design-sync/config.json`;
   EventList, FilterBar, FilterRow, Nav).
 - States that need pointer interaction (hover on table rows, dropdown keyboard navigation) are not captured.
 
+## Phase 6 additions (2026-09-07, not yet synced)
+
+- New components for the briefs' pages: `RankArrow`, `StateWord`, `Tag`, `RankList`, `Line` (src/Rank.tsx); `CallStrip`
+  (src/Selection.tsx); `FollowButton`, `NoteMark` (src/Follow.tsx); `NoteComposer`, `NoteList` (src/Notes.tsx); `Segmented`
+  (src/filters.tsx); `Radar`, `Sparkline`, `RankHistory`, `AgeScatter` (src/charts.tsx). Previews written for all of them.
+- `SortableTable` gained `render`/`sortValue`/`align`/`title`/`sortable` on columns, controlled `sort`/`dir`/`onSortChange`,
+  `rowKey` and `rowClassName`. `MinutesTimeline` gained `markers`. `Header` gained `homeHref`. `table.data td` is `white-space:
+  nowrap` now (`td.wrap` opts out).
+- Tokens used by the new parts: `--color-gold` (Recién llegado, dual nationals) and `--color-danger` (out, remove actions).
+  Conventions table updated; the safelist in `src/styles.css` did not need new entries because these utilities are used in the
+  package source itself.
+- The next `/design-sync` run should re-verify everything (new components, changed table CSS).
+
 ## Known render warns
 
 - none as of 2026-09-06 (24/24 clean).

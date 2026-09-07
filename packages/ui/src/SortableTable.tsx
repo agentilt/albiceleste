@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { date, dec1, dec2, eur, int, pct } from "./format";
 import { DefaultLink, type LinkLike } from "./link";
 
@@ -12,6 +12,15 @@ export interface ColumnSpec {
   /** for kind 'link': which field holds the id passed to `hrefFor` (default 'player_key') */
   keyField?: string;
   width?: string;
+  /** custom cell (client tables only); sorting still uses `row[key]` unless `sortValue` is given */
+  render?: (row: Row) => ReactNode;
+  sortValue?: (row: Row) => string | number | boolean | null;
+  /** right-align without a numeric kind */
+  align?: "l" | "r";
+  /** a longer explanation shown on hover of the header */
+  title?: string;
+  /** header text when the label is an abbreviation that needs no sort affordance change */
+  sortable?: boolean;
 }
 
 export type Row = Record<string, string | number | boolean | string[] | null>;
@@ -29,31 +38,46 @@ export function SortableTable({
   rows,
   initialSort,
   initialDir = "desc",
+  sort: sortProp,
+  dir: dirProp,
+  onSortChange,
   sticky = true,
   emptyText = "Nothing matches these filters.",
   hrefFor,
   LinkComponent = DefaultLink,
+  rowKey,
+  rowClassName,
 }: {
   columns: ColumnSpec[];
   rows: Row[];
   initialSort?: string;
   initialDir?: "asc" | "desc";
+  /** controlled sorting (the host keeps it in the URL); omit for internal state */
+  sort?: string;
+  dir?: "asc" | "desc";
+  onSortChange?: (sort: string | undefined, dir: "asc" | "desc") => void;
   sticky?: boolean;
   emptyText?: string;
   hrefFor?: (key: string) => string;
   LinkComponent?: LinkLike;
+  rowKey?: (row: Row, i: number) => string;
+  rowClassName?: (row: Row) => string | undefined;
 }) {
-  const [sort, setSort] = useState<string | undefined>(initialSort);
-  const [dir, setDir] = useState<"asc" | "desc">(initialDir);
+  const [sortState, setSortState] = useState<string | undefined>(initialSort);
+  const [dirState, setDirState] = useState<"asc" | "desc">(initialDir);
+  const controlled = sortProp !== undefined || onSortChange !== undefined;
+  const sort = controlled ? sortProp : sortState;
+  const dir = controlled ? (dirProp ?? "desc") : dirState;
 
   const sorted = useMemo(() => {
     if (!sort) return rows;
     const spec = columns.find((c) => c.key === sort);
     const num = spec ? numeric(spec.kind) : false;
+    const val = (r: Row) => (spec?.sortValue ? spec.sortValue(r) : r[sort]);
     const copy = [...rows];
     copy.sort((a, b) => {
-      const av = a[sort];
-      const bv = b[sort];
+      const av = val(a);
+      const bv = val(b);
       if (av === null || av === undefined) return 1;
       if (bv === null || bv === undefined) return -1;
       const c = num || (typeof av === "number" && typeof bv === "number") ? Number(av) - Number(bv) : String(av).localeCompare(String(bv), "es");
@@ -63,14 +87,16 @@ export function SortableTable({
   }, [rows, sort, dir, columns]);
 
   function toggle(key: string, kind: ColumnSpec["kind"]) {
-    if (sort === key) setDir(dir === "asc" ? "desc" : "asc");
+    const next: [string | undefined, "asc" | "desc"] = sort === key ? [key, dir === "asc" ? "desc" : "asc"] : [key, numeric(kind) ? "desc" : "asc"];
+    if (controlled) onSortChange?.(next[0], next[1]);
     else {
-      setSort(key);
-      setDir(numeric(kind) ? "desc" : "asc");
+      setSortState(next[0]);
+      setDirState(next[1]);
     }
   }
 
   function cell(spec: ColumnSpec, row: Row) {
+    if (spec.render) return spec.render(row);
     const v = row[spec.key];
     switch (spec.kind) {
       case "int":
@@ -112,11 +138,15 @@ export function SortableTable({
         <thead>
           <tr>
             {columns.map((c) => (
-              <th key={c.key} className={numeric(c.kind) ? "r" : ""} style={c.width ? { width: c.width } : undefined}>
-                <button type="button" onClick={() => toggle(c.key, c.kind)} aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}>
-                  {c.label}
-                  {sort === c.key ? (dir === "asc" ? " ↑" : " ↓") : ""}
-                </button>
+              <th key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : ""} style={c.width ? { width: c.width } : undefined} title={c.title}>
+                {c.sortable === false ? (
+                  c.label
+                ) : (
+                  <button type="button" onClick={() => toggle(c.key, c.kind)} aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}>
+                    {c.label}
+                    {sort === c.key ? (dir === "asc" ? " ↑" : " ↓") : ""}
+                  </button>
+                )}
               </th>
             ))}
           </tr>
@@ -130,9 +160,9 @@ export function SortableTable({
             </tr>
           )}
           {sorted.map((r, i) => (
-            <tr key={(r.player_key as string) ?? (r.event_key as string) ?? i}>
+            <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
               {columns.map((c) => (
-                <td key={c.key} className={numeric(c.kind) ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""}>
+                <td key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""}>
                   {cell(c, r)}
                 </td>
               ))}

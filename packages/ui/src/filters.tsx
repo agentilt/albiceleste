@@ -35,3 +35,16 @@ export function Field({ label, children }: { label: string; children: ReactNode 
     </label>
   );
 }
+
+/** Single-choice switch (depth chart / flat list, importance / date): chips where exactly one is pressed. */
+export function Segmented<T extends string>({ options, value, onChange, label }: { options: { value: T; label: string }[]; value: T; onChange: (v: T) => void; label?: string }) {
+  return (
+    <div className="inline-flex flex-wrap items-center gap-1" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button key={o.value} type="button" role="radio" aria-checked={value === o.value} className="chip" aria-pressed={value === o.value} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}

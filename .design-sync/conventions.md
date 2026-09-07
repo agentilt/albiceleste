@@ -19,7 +19,7 @@ these (or inline styles) for your own layout glue; other Tailwind class names wi
 
 | Family | Available values |
 |---|---|
-| Colours (`text-`, `bg-`, `border-`) | `paper`, `surface`, `ink`, `ink-2`, `muted`, `rule`, `rule-strong`, `celeste`, `celeste-deep`, `celeste-tint` |
+| Colours (`text-`, `bg-`, `border-`) | `paper`, `surface`, `ink`, `ink-2`, `muted`, `rule`, `rule-strong`, `celeste`, `celeste-deep`, `celeste-tint`; `text-gold` and `text-danger` for the two semantic accents (new arrival, out) |
 | Type | `font-sans`, `font-serif`, `font-mono`, `font-medium`, `text-xs` … `text-5xl`, `uppercase`, `tracking-wide`, `tracking-tight`, `leading-tight`, `leading-relaxed`, `truncate`, `whitespace-nowrap` |
 | Layout | `flex`, `inline-flex`, `grid`, `block`, `hidden`, `flex-wrap`, `flex-col`, `items-*`, `justify-*` (start, center, end, between, baseline), `grid-cols-{1,2,3,4,6}`, `sm:`/`lg:` grid variants, `mx-auto`, `ml-auto`, `max-w-{xl,3xl,6xl}`, `w-{16,20,56,80,full}` |
 | Spacing | `gap-{1,2,3,4,5,6,8,10}`, `gap-x-*`, `gap-y-*`, `mt/mb/my/mx/pt/pb/py/px/p-{0,1,2,3,4,5,6,8,10,12}`, `space-y-{1,2,3,4}` |

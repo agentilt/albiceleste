@@ -49,18 +49,21 @@ export function Header({
   current,
   right,
   meta,
+  homeHref = "/",
   LinkComponent = DefaultLink,
 }: {
   nav: NavItem[];
   current: string;
   right?: ReactNode;
   meta?: ReactNode;
+  /** where the wordmark links (the locale's home) */
+  homeHref?: string;
   LinkComponent?: LinkLike;
 }) {
   return (
     <header className="border-b border-rule bg-paper">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-8 gap-y-2 px-5 py-3">
-        <Wordmark LinkComponent={LinkComponent} />
+        <Wordmark href={homeHref} LinkComponent={LinkComponent} />
         <Nav items={nav} current={current} LinkComponent={LinkComponent} />
         {right && <div className="ml-auto">{right}</div>}
       </div>
