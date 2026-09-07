@@ -1,0 +1,18 @@
+name,value,description
+window_matches,10,team matches in the scoring window (the last N completed matches of the player's team as of the date)
+min_team_matches,3,minimum team matches for a score to exist
+competition_weight_rank1,1.00,multiplier on the whole score for level_rank 1 competitions
+competition_weight_rank2,0.80,multiplier on the whole score for level_rank 2 competitions
+competition_weight_rank3,0.60,multiplier on the whole score for level_rank 3 competitions
+production_ref_fwd,0.60,goals plus 0.7 assists per 90 that scores full production for forwards
+production_ref_mid,0.35,goals plus 0.7 assists per 90 that scores full production for midfielders
+conceded_ref,2.00,goals conceded per 90 at which the defensive production component reaches zero
+form_delta_days,28,days back for the score change that drives the state
+rising_delta,8,score change (points) for En alza / En baja
+on_fire_score,55,score at or above which a rising player is En racha
+established_score,50,score at or above which a stable player is Titular fijo
+short_minutes_share,0.40,minutes share below which a player is Poco rodaje
+absent_team_matches,3,team matches without minutes that put a player in the infirmary as absent
+just_moved_days,30,days after a club change during which the state is Recién llegado
+back_days,14,days after a return from absence during which the state is Volvió
+arrow_default_days,28,days back for the rank arrow when no squad announcement date is earlier than the horizon

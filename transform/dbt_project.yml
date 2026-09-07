@@ -26,3 +26,9 @@ models:
 seeds:
   albiceleste:
     +schema: seeds
+    squad_calls:
+      +column_types: {window_id: text, player_key: text}
+    fifa_windows:
+      +column_types: {window_id: text, announcement_date: date, starts: date, ends: date}
+    national_team_status:
+      +column_types: {player_key: text, since: date}

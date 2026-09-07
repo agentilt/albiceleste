@@ -1,0 +1,13 @@
+pos_group,component,weight
+GK,minutes_share,0.60
+GK,starts_share,0.20
+GK,production,0.20
+DEF,minutes_share,0.55
+DEF,starts_share,0.20
+DEF,production,0.25
+MID,minutes_share,0.50
+MID,starts_share,0.20
+MID,production,0.30
+FWD,minutes_share,0.45
+FWD,starts_share,0.20
+FWD,production,0.35

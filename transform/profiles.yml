@@ -9,4 +9,4 @@ albiceleste:
       password: "{{ env_var('ALB_DB_PASSWORD', 'alb') }}"
       dbname: "{{ env_var('ALB_DB_NAME', 'albiceleste') }}"
       schema: public
-      threads: 4
+      threads: 2

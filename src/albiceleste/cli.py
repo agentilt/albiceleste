@@ -135,14 +135,15 @@ def espn_athletes(leagues: LeaguesOpt = None, limit: int = 5000) -> None:
 
 
 @espn_app.command("backfill")
-def espn_backfill(date_from: DateOpt = None, date_to: DateOpt = None) -> None:
+def espn_backfill(date_from: DateOpt = None, date_to: DateOpt = None, leagues: LeaguesOpt = None) -> None:
     """History: scoreboards, summaries, then athlete profiles for a date range (default: two seasons back)."""
     d0 = _d(date_from, date(2024, 7, 1))
     d1 = _d(date_to, date(2026, 6, 30))
     with make_context(f"ingest espn backfill {d0}..{d1}") as ctx:
-        espn.ingest_scoreboard(ctx, ctx.settings.espn_leagues, d0, d1)
-        espn.ingest_summaries(ctx, ctx.settings.espn_leagues, limit=20000)
-        espn.ingest_athletes(ctx, ctx.settings.espn_leagues, limit=20000)
+        lg = leagues or ctx.settings.espn_leagues
+        espn.ingest_scoreboard(ctx, lg, d0, d1)
+        espn.ingest_summaries(ctx, lg, limit=20000)
+        espn.ingest_athletes(ctx, lg, limit=20000)
 
 
 # ---------------------------------------------------------------- transfermarkt
@@ -265,7 +266,8 @@ def run_daily(days_back: int = 3, boxscore_limit: int = 70) -> None:
     today = date.today()
     start = today - timedelta(days=days_back)
     with make_context("run daily") as ctx:
-        espn.ingest_scoreboard(ctx, ctx.settings.espn_leagues, start, today)
+        # results for the last few days plus fixtures a week ahead (the site shows next matches)
+        espn.ingest_scoreboard(ctx, ctx.settings.espn_leagues, start, today + timedelta(days=7))
         espn.ingest_summaries(ctx, ctx.settings.espn_leagues, limit=300)
         footballdata.ingest_matches(ctx, ctx.settings.fd_competitions, start, today + timedelta(days=7))
         footballdata.ingest_standings(ctx, ctx.settings.fd_competitions)

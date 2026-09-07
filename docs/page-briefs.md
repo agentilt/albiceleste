@@ -24,8 +24,9 @@ the international windows are the heartbeat; "what changed" is the briefing befo
   and defenders. Ratings and expected goals are shown as supporting columns when present but are not score inputs until box-score
   coverage improves. Age is a filter and a display, never a score input. The score is computed as of any date, so movement between
   windows is real. Every player page shows the components of the score.
-- **Availability.** Three kinds of absence: injured (club listing), suspended (red card in the last match), absent (no minutes for
-  three team matches with no listed reason). "Since" is the last match played. Return dates are shown only when a source gives one.
+- **Availability.** Three kinds of absence: injured (club listing, which ESPN does not provide for soccer, so this stays empty
+  until a source exists), suspended (red card in the last match), absent (a regular with no minutes for three team matches).
+  "Since" is the last match played. Return dates are shown only when a source gives one.
 - **Follow list.** Stored in the browser; follow buttons on player pages and on every list row; a share link encodes the list in the
   URL (replace or merge on open); a "followed" filter on Pool, Movers and Next cycle; the compare page can be seeded from it.
   One compact JSON of every pool player is generated at build so the follow block renders client-side from a single file.

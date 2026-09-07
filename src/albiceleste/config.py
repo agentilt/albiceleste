@@ -6,8 +6,11 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# ESPN league codes for the seven priority competitions.
-ESPN_LEAGUES = ["arg.1", "bra.1", "eng.1", "esp.1", "ger.1", "ita.1", "fra.1"]
+# ESPN league codes: the seven priority competitions plus the leagues where pool players actually are (added 2026-09-06).
+ESPN_LEAGUES = [
+    "arg.1", "bra.1", "eng.1", "esp.1", "ger.1", "ita.1", "fra.1",
+    "usa.1", "por.1", "mex.1", "ksa.1", "tur.1", "ned.1", "bel.1",
+]
 
 # Highlightly league ids, keyed by ESPN code. All seven verified/discovered on 2026-09-05
 # (`alb ingest highlightly leagues` re-discovers them if they ever change).
@@ -20,10 +23,11 @@ HIGHLIGHTLY_LEAGUE_IDS: dict[str, int] = {
 HIGHLIGHTLY_COUNTRY_CODES = {
     "arg.1": "AR", "bra.1": "BR", "eng.1": "GB-ENG", "esp.1": "ES",
     "ger.1": "DE", "ita.1": "IT", "fra.1": "FR",
+    "usa.1": "US", "por.1": "PT", "mex.1": "MX", "ksa.1": "SA", "tur.1": "TR", "ned.1": "NL", "bel.1": "BE",
 }
 
 # football-data.org competition codes on the free tier that matter to us.
-FD_COMPETITIONS = ["PL", "PD", "BL1", "SA", "FL1", "BSA", "CL"]
+FD_COMPETITIONS = ["PL", "PD", "BL1", "SA", "FL1", "BSA", "CL", "PPL", "DED"]
 
 
 class Settings(BaseSettings):

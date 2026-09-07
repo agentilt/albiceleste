@@ -10,7 +10,7 @@ Docs: `docs/phase0-data-sources.md` (sources), `docs/phase1-local-platform.md` (
 
 ```bash
 cp .env.example .env            # add HIGHLIGHTLY_API_KEY and FOOTBALL_DATA_API_KEY
-make up                          # postgres 16 in docker
+make up                          # postgres 16 from Homebrew (brew install postgresql@16); `make up-docker` for the compose alternative
 make sync                        # python 3.12 + deps via uv
 make init                        # raw/meta schemas
 uv run alb run bootstrap --skip-wikidata   # first load (~15 min, rate-limited)

@@ -67,3 +67,19 @@
 {% macro data_horizon() -%}
 (select max(match_date) from {{ ref('fct_match') }} where is_completed)
 {%- endmacro %}
+
+{#- Position group from an ESPN/Wikidata position label. One definition, used by the focus set, the score and the pool. -#}
+{% macro pos_group(col) -%}
+case
+    when {{ col }} ilike 'goal%' or {{ col }} in ('G', 'GK') then 'GK'
+    when {{ col }} ilike 'def%' or {{ col }} ~ '^(CD|LB|RB|D)' then 'DEF'
+    when {{ col }} ilike 'mid%' or {{ col }} ~ '^(CM|DM|AM|LM|RM|M)' then 'MID'
+    when {{ col }} ilike 'forw%' or {{ col }} ilike 'att%' or {{ col }} ~ '^(F|CF|LW|RW|ST)' then 'FWD'
+    else 'UNK'
+end
+{%- endmacro %}
+
+{#- A named number from the score_thresholds seed, usable inline. -#}
+{% macro threshold(name) -%}
+(select value from {{ ref('score_thresholds') }} where name = '{{ name }}')
+{%- endmacro %}

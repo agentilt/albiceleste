@@ -103,7 +103,9 @@ def ingest_matches(ctx: Context, league_days: list[tuple[str, date]], max_reques
     for i, (league, d) in enumerate(league_days):
         if max_requests is not None and i >= max_requests:
             break
-        lid = ctx.settings.highlightly_league_ids[league]
+        lid = ctx.settings.highlightly_league_ids.get(league)
+        if lid is None:
+            continue  # league tracked on ESPN only; Highlightly box scores stay a bonus for the original seven
         params = {"leagueId": lid, "date": d.isoformat(), "limit": 100}
         try:
             data, url = _get(ctx, "/matches", params)
