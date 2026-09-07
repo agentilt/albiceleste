@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-09-07T07:38:16+00:00",
-  "git_commit": "d4562b2",
+  "exported_at": "2026-09-07T12:43:31+00:00",
+  "git_commit": "28eefea",
   "tables": {
     "marts.argentine_export_pipeline": {
       "rows": 665,
@@ -20,7 +20,7 @@
     },
     "marts.argentine_players_abroad": {
       "rows": 219,
-      "bytes": 18977
+      "bytes": 19121
     },
     "marts.dim_competition": {
       "rows": 14,
@@ -28,7 +28,7 @@
     },
     "marts.dim_player": {
       "rows": 5482,
-      "bytes": 319512
+      "bytes": 320939
     },
     "marts.dim_team": {
       "rows": 345,
@@ -39,78 +39,78 @@
       "bytes": 1501
     },
     "marts.dq_unmatched": {
-      "rows": 901,
-      "bytes": 15715
+      "rows": 970,
+      "bytes": 17757
     },
     "marts.fct_match": {
-      "rows": 10498,
-      "bytes": 276858
+      "rows": 11098,
+      "bytes": 291600
     },
     "marts.fct_player_match_stats": {
-      "rows": 59704,
-      "bytes": 795897
+      "rows": 60556,
+      "bytes": 809583
     },
     "marts.player_career_history": {
       "rows": 7818,
       "bytes": 133845
     },
     "marts.player_events": {
-      "rows": 12750,
-      "bytes": 441740
+      "rows": 13029,
+      "bytes": 452105
     },
     "marts.player_focus_set": {
       "rows": 1141,
-      "bytes": 39147
+      "bytes": 39359
     },
     "marts.player_market_values": {
       "rows": 23483,
-      "bytes": 95910
+      "bytes": 96870
     },
     "marts.player_next_match": {
-      "rows": 283,
-      "bytes": 4928
+      "rows": 1143,
+      "bytes": 14438
     },
     "marts.player_rank_history": {
-      "rows": 138713,
-      "bytes": 1130444
+      "rows": 88438,
+      "bytes": 869540
     },
     "marts.player_recent_form": {
-      "rows": 3741,
-      "bytes": 69740
+      "rows": 3729,
+      "bytes": 73233
     },
     "marts.player_season_history": {
       "rows": 4603,
       "bytes": 79745
     },
     "marts.player_season_stats": {
-      "rows": 3465,
-      "bytes": 86914
+      "rows": 3530,
+      "bytes": 91951
     },
     "marts.player_source_ids": {
-      "rows": 17821,
-      "bytes": 160598
+      "rows": 18083,
+      "bytes": 161887
     },
     "marts.player_state": {
       "rows": 1141,
-      "bytes": 50068
+      "bytes": 51201
     },
     "marts.watch_feed": {
-      "rows": 627,
-      "bytes": 41549
+      "rows": 854,
+      "bytes": 53082
     },
     "meta.raw_summary": {
       "rows": 19,
-      "bytes": 2194
+      "bytes": 2218
     },
     "meta.pipeline_runs": {
-      "rows": 24,
-      "bytes": 2863
+      "rows": 26,
+      "bytes": 2974
     },
     "meta.highlightly_quota": {
       "rows": 1,
-      "bytes": 914
+      "bytes": 926
     }
   },
-  "data_as_of": "2026-09-05",
-  "squad_as_of": "2026-09-06T19:14:03+00:00"
+  "data_as_of": "2026-09-07",
+  "squad_as_of": "2026-09-06T21:14:03+02:00"
 }

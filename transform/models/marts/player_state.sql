@@ -11,7 +11,8 @@ arrow_date as (
 now_rank as (select * from {{ ref('player_rank_history') }} where is_horizon),
 prev_rank as (select player_key, pos_rank as prev_rank from {{ ref('player_rank_history') }} r where r.as_of = (select as_of from arrow_date)),
 d as (
-    select player_key, full_name, current_espn_team_id, current_team_name, current_league, is_injured, injury_status, in_tracked_squad, eligibility_status, is_abroad
+    select player_key, full_name, current_espn_team_id, current_team_name, current_league, is_injured, injury_status, in_tracked_squad, eligibility_status, is_abroad,
+           {{ pos_group('primary_position') }} as pos_group_from_profile
     from {{ ref('dim_player') }}
 ),
 last_app as (
@@ -22,12 +23,14 @@ last_app as (
     where f.played
     group by 1
 ),
+-- team matches since the player's last appearance, counted for his CURRENT club (a new signing is measured against the club he joined)
 missed as (
     select la.player_key,
            count(m.match_key) as team_matches_missed
     from last_app la
+    join d on d.player_key = la.player_key
     join {{ ref('fct_match') }} m
-      on la.last_team_id in (m.home_espn_team_id, m.away_espn_team_id) and m.is_completed and m.match_date > la.last_match_date
+      on coalesce(d.current_espn_team_id, la.last_team_id) in (m.home_espn_team_id, m.away_espn_team_id) and m.is_completed and m.match_date > la.last_match_date
     group by 1
 ),
 pre_absence as (
@@ -49,12 +52,13 @@ recent_events as (
 nt as (select player_key, status as nt_status, since as nt_since from {{ ref('int_nt_status') }} where player_key is not null),
 base as (
     select d.player_key, d.full_name, nt.nt_status, nt.nt_since, d.current_team_name, d.current_league, d.in_tracked_squad, d.eligibility_status, d.is_abroad,
-           r.pos_group, r.score, r.score_prev, r.pos_rank, r.pos_size, pr.prev_rank,
+           coalesce(r.pos_group, d.pos_group_from_profile) as pos_group, r.score, r.score_prev, r.pos_rank, r.pos_size, pr.prev_rank,
            r.minutes_share, r.starts_share, r.competition, r.production, r.team_matches,
            la.last_match_date, coalesce(mi.team_matches_missed, 0) as team_matches_missed,
            d.is_injured, d.injury_status,
            (la.red_cards_last > 0 and coalesce(mi.team_matches_missed, 0) = 0) as suspended,
            (not coalesce(d.is_injured, false)
+            and not coalesce(re.just_moved, false)
             and coalesce(mi.team_matches_missed, 0) >= {{ threshold('absent_team_matches') }}
             and coalesce(pa.pre_minutes_share, 0) >= {{ threshold('short_minutes_share') }}) as absent,
            coalesce(re.just_moved, false) as just_moved,
@@ -81,7 +85,9 @@ select b.*,
            when b.is_injured or b.suspended or b.absent then 'out'
            when b.just_moved then 'just_moved'
            when b.came_back  then 'back'
-           when b.score is null then null
+           when b.pos_group is null or b.pos_group = 'UNK' then 'no_position'
+           when b.score is null and b.last_match_date is null then 'no_minutes'
+           when b.score is null then 'short_minutes'
            when b.score >= {{ threshold('on_fire_score') }} and b.score - coalesce(b.score_prev, b.score) >= {{ threshold('rising_delta') }} then 'on_fire'
            when b.score - coalesce(b.score_prev, b.score) >= {{ threshold('rising_delta') }} then 'rising'
            when b.score - coalesce(b.score_prev, b.score) <= -{{ threshold('rising_delta') }} then 'declining'

@@ -18,47 +18,52 @@ m as (
     select match_key, match_date, home_espn_team_id, away_espn_team_id, home_score, away_score, competition_level_rank
     from {{ ref('fct_match') }} where is_completed
 ),
--- the team the player belongs to as of each date: the team of his last match at or before it, else his current club
+-- spells: a new spell starts whenever the player's match team changes; spell_start is its first match.
+-- The scoring window only counts team matches from the spell start, so a summer signing is not scored on matches he was not at.
+seq0 as (
+    select player_key, match_key, match_date, espn_team_id,
+           case when espn_team_id is distinct from lag(espn_team_id) over (partition by player_key order by match_date, match_key) then 1 else 0 end as new_spell
+    from f where espn_team_id is not null
+),
+seq as (
+    select player_key, match_date, espn_team_id,
+           sum(new_spell) over (partition by player_key order by match_date, match_key rows unbounded preceding) as spell_id
+    from seq0
+),
+spells as (
+    select player_key, spell_id, espn_team_id as team_id, min(match_date) as spell_start
+    from seq group by 1, 2, 3
+),
+-- the team the player belongs to as of each date: the team of his last match at or before it (with its spell), else his current club
 last_team as (
     select p.player_key, dt.as_of,
-           (array_agg(f.espn_team_id order by f.match_date desc))[1] as team_id,
-           max(f.match_date) as last_match_date
+           (array_agg(s.espn_team_id order by s.match_date desc))[1] as team_id,
+           (array_agg(s.spell_id order by s.match_date desc))[1]     as spell_id,
+           max(s.match_date) as last_match_date
     from players p
     cross join dates dt
-    join f on f.player_key = p.player_key and f.match_date <= dt.as_of and f.espn_team_id is not null
+    join seq s on s.player_key = p.player_key and s.match_date <= dt.as_of
     group by 1, 2
 ),
 team_asof as (
     select p.player_key, p.pos_group, dt.as_of,
            coalesce(lt.team_id, case when dt.as_of >= {{ data_horizon() }} - 60 then p.current_espn_team_id end) as team_id,
-           lt.last_match_date
+           lt.last_match_date,
+           sp.spell_start
     from players p
     cross join dates dt
     left join last_team lt on lt.player_key = p.player_key and lt.as_of = dt.as_of
-),
--- the current spell at that team: the player's first match for it after his last match for any other team.
--- The scoring window only counts team matches from that date on, so a summer signing is not scored on matches he was not at.
-spell as (
-    select ta.player_key, ta.as_of, ta.team_id,
-           min(f.match_date) filter (where f.espn_team_id = ta.team_id
-                                      and f.match_date > coalesce((select max(f2.match_date) from f f2
-                                                                   where f2.player_key = ta.player_key and f2.espn_team_id <> ta.team_id
-                                                                     and f2.match_date <= ta.as_of), date '1900-01-01')) as spell_start
-    from team_asof ta
-    join f on f.player_key = ta.player_key and f.match_date <= ta.as_of
-    where ta.team_id is not null
-    group by 1, 2, 3
+    left join spells sp on sp.player_key = lt.player_key and sp.spell_id = lt.spell_id
 ),
 team_window as (
-    select ta.player_key, ta.pos_group, ta.as_of, ta.team_id, ta.last_match_date, sp.spell_start,
+    select ta.player_key, ta.pos_group, ta.as_of, ta.team_id, ta.last_match_date, ta.spell_start,
            m.match_key, m.match_date, m.competition_level_rank,
            case when m.home_espn_team_id = ta.team_id then m.away_score else m.home_score end as conceded,
            row_number() over (partition by ta.player_key, ta.as_of order by m.match_date desc) as rn
     from team_asof ta
-    join spell sp on sp.player_key = ta.player_key and sp.as_of = ta.as_of and sp.spell_start is not null
     join m on ta.team_id in (m.home_espn_team_id, m.away_espn_team_id)
-          and m.match_date <= ta.as_of and m.match_date > ta.as_of - 150 and m.match_date >= sp.spell_start
-    where ta.team_id is not null
+          and m.match_date <= ta.as_of and m.match_date > ta.as_of - 150 and m.match_date >= ta.spell_start
+    where ta.team_id is not null and ta.spell_start is not null
 ),
 tw as (select * from team_window where rn <= {{ threshold('window_matches') }}),
 agg as (
