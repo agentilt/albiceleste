@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-09-07T12:51:38+00:00",
-  "git_commit": "eef063d",
+  "exported_at": "2026-09-07T13:08:48+00:00",
+  "git_commit": "0d0f1c5",
   "tables": {
     "marts.argentine_export_pipeline": {
       "rows": 665,
@@ -50,9 +50,17 @@
       "rows": 60556,
       "bytes": 809583
     },
+    "marts.method_parameters": {
+      "rows": 41,
+      "bytes": 3567
+    },
     "marts.movers": {
       "rows": 9888,
       "bytes": 404640
+    },
+    "marts.nt_status": {
+      "rows": 3,
+      "bytes": 2033
     },
     "marts.player_career_history": {
       "rows": 7818,
@@ -102,9 +110,21 @@
       "rows": 504,
       "bytes": 36698
     },
+    "marts.selection_windows": {
+      "rows": 3,
+      "bytes": 4395
+    },
+    "marts.squad_lists": {
+      "rows": 26,
+      "bytes": 3899
+    },
     "marts.watch_feed": {
       "rows": 800,
       "bytes": 51572
+    },
+    "marts.youth_events": {
+      "rows": 3,
+      "bytes": 2643
     },
     "meta.raw_summary": {
       "rows": 19,

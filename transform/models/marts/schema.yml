@@ -76,3 +76,18 @@ models:
         tests: [unique, not_null]
   - name: argentine_export_summary
   - name: argentine_exporting_clubs
+  - name: selection_windows
+    description: Hand-kept FIFA windows with the size of each published list.
+    columns:
+      - name: window_id
+        tests: [unique, not_null]
+  - name: squad_lists
+    description: Every row of every published squad list, resolved to a player key where possible.
+  - name: youth_events
+  - name: nt_status
+  - name: method_parameters
+    description: Score thresholds, position weights and Movers importance weights, for About the data.
+    columns:
+      - name: kind
+        tests:
+          - accepted_values: {values: ['threshold', 'weight', 'event_weight']}
