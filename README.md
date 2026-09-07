@@ -1,10 +1,11 @@
 # albiceleste
 
-Argentina football intelligence platform. Tracks every player eligible for the senior
-Argentina national team across Europe's top five leagues, Brazil and Argentina, and
-surfaces what has meaningfully changed. Free data only, local-first, static site on Vercel.
+Argentina football intelligence platform. Follows every player eligible for the senior
+Argentina national team across fourteen leagues, match by match, and answers one question:
+who is in form for the next squad, who is falling out of it, and who is knocking on the door.
+Free data only, local-first, bilingual static site on Vercel (https://albiceleste-rho.vercel.app).
 
-Docs: `docs/phase0-data-sources.md` (sources), `docs/phase1-local-platform.md` (platform), `docs/phase2-analytics-product.md` (history, change detection), `docs/phase3-publishing.md` (Parquet snapshot), `docs/phase4-web.md` (the Next.js site, Turborepo, Vercel).
+Docs: `docs/phase0-data-sources.md` (sources), `docs/phase1-local-platform.md` (platform), `docs/phase2-analytics-product.md` (history, change detection), `docs/phase3-publishing.md` (Parquet snapshot), `docs/phase4-web.md` (Next.js, Turborepo, Vercel), `docs/page-briefs.md` (the product spec), `docs/phase5-data.md` (ranking, states, windows, movers, trajectory), `docs/phase6-site.md` (the eight pages).
 
 ## Quick start
 
@@ -28,7 +29,7 @@ make status
 ```bash
 npm install                      # npm workspaces: apps/web (Next.js) + packages/data (DuckDB over the snapshot)
 make web                         # dev server on http://localhost:3000, reads data/published, no database needed
-make web-build                   # production build through turborepo (~15 s; 1,176 static player pages)
+make web-build                   # production build through turborepo (~25 s; 3,691 static pages in es and en)
 ```
 
 To look at the site only, skip the pipeline: the repo ships the latest snapshot in `data/published/`.
@@ -43,8 +44,9 @@ git add data/published && git commit -m "data: refresh snapshot" && git push   #
 ## Layout
 
 ```
-apps/web/               Next.js site (App Router, static generation) over data/published
+apps/web/               Next.js site (App Router, /es and /en, static generation) over data/published
 packages/data/          @albiceleste/data: typed DuckDB queries used at build time
+packages/ui/            @albiceleste/ui: design system (tokens, tables, charts, rank rows); synced to Claude Design
 data/published/         Parquet snapshot of the marts + manifest.json, written by `alb publish`, committed
 src/albiceleste/        ingestion package (`alb` CLI)
   publish.py            marts → parquet exporter
@@ -65,7 +67,9 @@ docs/                   specs and decisions
 Every API response lands in `raw.records` with a content hash, so history is never
 overwritten. dbt staging views parse the latest version; marts build `dim_player`,
 `fct_player_match_stats`, `player_recent_form`, `player_events` (change detection),
-`player_focus_set`, `argentine_players_abroad`, and the Transfermarkt history marts.
+`player_rank_history` and `player_state` (the ranking and the form states), `movers`,
+`player_trajectory` (the under-23 cohort), `player_next_match`, the hand-kept windows and
+squad lists, and the Transfermarkt history marts.
 
 Data attribution: fixtures and standings for European competitions provided by
 football-data.org.

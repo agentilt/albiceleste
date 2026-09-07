@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   // DuckDB is a native module used only at build time (every page is static). Keep it out of the bundle.
   serverExternalPackages: ["@duckdb/node-api"],
   typedRoutes: true,
+  async redirects() {
+    return [
+      { source: "/", destination: "/es", permanent: false },
+      // Anything outside a locale (and outside the static data routes) goes to the Spanish edition.
+      { source: "/:path((?!es(?:/|$)|en(?:/|$)|data/|_next/|favicon).*)", destination: "/es/:path", permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;
