@@ -55,7 +55,7 @@ models:
       - name: event_type
         tests:
           - accepted_values:
-              values: ['club_change', 'first_start_of_season', 'consecutive_starts', 'scoring_streak', 'multi_goal_match', 'return_after_absence', 'debut_in_league', 'minutes_surge', 'minutes_drop']
+              values: ['club_change', 'first_start_of_season', 'consecutive_starts', 'scoring_streak', 'multi_goal_match', 'return_after_absence', 'debut_in_league', 'minutes_surge', 'minutes_drop', rank_move, selection_called, selection_left_out]
       - name: severity
         tests:
           - accepted_values: {values: [1, 2, 3], quote: false}

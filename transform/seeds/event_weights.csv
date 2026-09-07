@@ -1,0 +1,13 @@
+event_type,base_weight,description
+selection_called,70,called up in a published squad list
+selection_left_out,70,in the previous list but not this one
+club_change,55,first match for a new club (+20 when the competition tier is stronger or weaker)
+rank_move,40,rank within position moved by five or more places (+ up to 30 with the size of the move)
+debut_in_league,45,first appearance in a league in our data
+return_after_absence,45,played again after 60+ days and 5+ team matches missed
+multi_goal_match,40,two goals in a match (hat-trick +15)
+scoring_streak,35,goals in 3 (5: +15) consecutive appearances
+minutes_surge,25,28-day minutes up 50%+ against the previous 28 days
+minutes_drop,25,28-day minutes down 50%+ against the previous 28 days
+consecutive_starts,15,streak of starts reaching 5 or 10 (10: +15); streaks of 3 at season start are suppressed
+first_start_of_season,15,first start of a league season

@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-09-07T12:43:31+00:00",
-  "git_commit": "28eefea",
+  "exported_at": "2026-09-07T12:51:38+00:00",
+  "git_commit": "eef063d",
   "tables": {
     "marts.argentine_export_pipeline": {
       "rows": 665,
@@ -50,13 +50,17 @@
       "rows": 60556,
       "bytes": 809583
     },
+    "marts.movers": {
+      "rows": 9888,
+      "bytes": 404640
+    },
     "marts.player_career_history": {
       "rows": 7818,
       "bytes": 133845
     },
     "marts.player_events": {
-      "rows": 13029,
-      "bytes": 452105
+      "rows": 11817,
+      "bytes": 422470
     },
     "marts.player_focus_set": {
       "rows": 1141,
@@ -92,11 +96,15 @@
     },
     "marts.player_state": {
       "rows": 1141,
-      "bytes": 51201
+      "bytes": 52204
+    },
+    "marts.player_trajectory": {
+      "rows": 504,
+      "bytes": 36698
     },
     "marts.watch_feed": {
-      "rows": 854,
-      "bytes": 53082
+      "rows": 800,
+      "bytes": 51572
     },
     "meta.raw_summary": {
       "rows": 19,

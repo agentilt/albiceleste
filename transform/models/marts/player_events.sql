@@ -40,7 +40,7 @@ match_events as (
            format('%s: %s consecutive starts for %s', d.full_name, s.consecutive_starts, coalesce(ct.team_name, s.espn_team_id))
     from seqm s join d using (player_key)
     left join teams ct on ct.league = s.league and ct.espn_team_id = s.espn_team_id
-    where s.consecutive_starts in (3, 5, 10)
+    where s.consecutive_starts in (5, 10) or (s.consecutive_starts = 3 and s.seq_in_season > 5)
 
     union all
     -- scoring streaks reaching 3 and 5 consecutive appearances with a goal
@@ -86,7 +86,7 @@ window_events as (
                               'starts', f.starts, 'prev_starts', f.prev_starts, 'minutes_share_pct', f.minutes_share_pct) as evidence,
            format('%s: %s minutes in the last 28 days vs %s before (+%s%%), starts %s vs %s', f.full_name, f.minutes, f.prev_minutes, f.minutes_change_pct, f.starts, f.prev_starts) as headline
     from form f
-    where f.minutes >= 180 and f.prev_minutes >= 45 and f.minutes_change_pct >= 50
+    where f.minutes >= 180 and f.prev_minutes >= 45 and f.minutes_change_pct >= 50 and f.team_matches_prev >= 4
 
     union all
     select f.player_key, 'minutes_drop', {{ data_horizon() }}, null, f.current_league,
@@ -95,7 +95,7 @@ window_events as (
                               'starts', f.starts, 'prev_starts', f.prev_starts, 'team_matches', f.team_matches),
            format('%s: %s minutes in the last 28 days vs %s before (%s%%), starts %s vs %s', f.full_name, f.minutes, f.prev_minutes, f.minutes_change_pct, f.starts, f.prev_starts)
     from form f
-    where f.prev_minutes >= 180 and f.team_matches >= 3 and f.minutes_change_pct <= -50
+    where f.prev_minutes >= 180 and f.team_matches >= 3 and f.team_matches_prev >= 4 and f.minutes_change_pct <= -50
 ),
 club_changes as (
     select e.*,
@@ -113,12 +113,67 @@ pingpong as (
            or (prev_from_team = evidence->>'to_team' and event_date - prev_change_date <= 30)
     ) event_key_parts
 ),
+-- rank moves within the position: since the last squad announcement (the national-team clock) and over 28 days
+rank_now as (select * from {{ ref('player_rank_history') }} where is_horizon),
+arrow_date as (
+    select coalesce(
+        (select max(as_of) from {{ ref('int_score_dates') }} where is_window and as_of < {{ data_horizon() }}),
+        (select max(as_of) from {{ ref('int_score_dates') }} where as_of <= {{ data_horizon() }} - 28)
+    ) as as_of
+),
+day28 as (select max(as_of) as as_of from {{ ref('int_score_dates') }} where as_of <= {{ data_horizon() }} - 28),
+bases as (
+    select 'window' as basis, as_of from arrow_date where as_of >= {{ data_horizon() }} - 60
+    union all
+    select '28d', as_of from day28
+),
+rank_candidates as (
+    select n.player_key, n.pos_group, n.pos_rank as to_rank, p.pos_rank as from_rank, b.basis, b.as_of,
+           row_number() over (partition by n.player_key order by case b.basis when 'window' then 0 else 1 end) as rn
+    from rank_now n
+    join bases b on b.as_of is not null
+    join {{ ref('player_rank_history') }} p on p.player_key = n.player_key and p.as_of = b.as_of
+    where abs(p.pos_rank - n.pos_rank) >= 5 and least(p.pos_rank, n.pos_rank) <= 15
+),
+rank_events as (
+    select c.player_key, 'rank_move' as event_type, {{ data_horizon() }} as event_date, null::text as match_key, d.current_league as league,
+           case when abs(c.from_rank - c.to_rank) >= 15 then 3 else 2 end as severity,
+           jsonb_build_object('basis', c.basis, 'pos_group', c.pos_group, 'from_rank', c.from_rank, 'to_rank', c.to_rank,
+                              'change', c.from_rank - c.to_rank, 'since', c.as_of) as evidence,
+           format('%s: %s in the %s ranking, %s to %s since %s', d.full_name,
+                  case when c.from_rank > c.to_rank then 'up' else 'down' end, c.pos_group, c.from_rank, c.to_rank, c.as_of) as headline
+    from rank_candidates c
+    join d using (player_key)
+    where c.rn = 1
+),
+-- selection: called in a published list, or in the previous list but not this one
+windows as (select window_id, announcement_date, label_en from {{ ref('fifa_windows') }} where announcement_date <= {{ data_horizon() }}),
+calls as (select c.*, w.announcement_date, w.label_en from {{ ref('int_squad_calls') }} c join windows w using (window_id) where c.player_key is not null),
+selection_events as (
+    select c.player_key, 'selection_called', c.announcement_date, null::text, d.current_league, 3,
+           jsonb_build_object('window_id', c.window_id, 'window', c.label_en, 'status', c.status, 'club_at_call', c.club_at_call),
+           format('%s: called up for the %s (%s)', d.full_name, c.label_en, c.status)
+    from calls c join d using (player_key)
+    union all
+    select prev.player_key, 'selection_left_out', w.announcement_date, null::text, d.current_league, 3,
+           jsonb_build_object('window_id', w.window_id, 'window', w.label_en, 'previous_window_id', pw.window_id),
+           format('%s: left out of the %s list after being in the previous one', d.full_name, w.label_en)
+    from windows w
+    join lateral (select window_id from windows w2 where w2.announcement_date < w.announcement_date order by w2.announcement_date desc limit 1) pw on true
+    join calls prev on prev.window_id = pw.window_id
+    join d on d.player_key = prev.player_key
+    where not exists (select 1 from calls cur where cur.window_id = w.window_id and cur.player_key = prev.player_key)
+),
 all_events as (
     select m.* from match_events m
     where not (m.event_type = 'club_change'
                and exists (select 1 from pingpong p where p.player_key = m.player_key and p.match_key = m.match_key))
     union all
     select * from window_events
+    union all
+    select * from rank_events
+    union all
+    select * from selection_events
 )
 select
     md5(player_key || '|' || event_type || '|' || event_date::text || '|' || coalesce(match_key, '')) as event_key,

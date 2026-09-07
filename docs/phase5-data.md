@@ -65,6 +65,34 @@ eligible players, else surname plus first initial with a unique hit, else a pinn
 First-build check after the multiplier fix is recorded in the session notes; the pool at a glance must show top-league regulars
 at the top of each position.
 
+## 5. Infirmary
+
+`player_state` carries `infirmary_reason`: `suspended` (red card in the last match and the club has not played since), `absent`
+(a regular, minutes share of 40% or more at the last anchor before the absence, with three or more of his current club's
+matches without minutes, and not a new signing), `injured` (never fires: ESPN has no soccer injury listings). "Since" is the
+last match played; "missed" counts the current club's matches.
+
+## 6. Trajectory (Next cycle)
+
+- `int_age_reference`: at every anchor date, the activity index (minutes share × competition weight) of every scored player,
+  grouped by the player's age on that date: observations, players, p25, p50, p75 per age from 16 to 40. This is the reference
+  band for the age-against-minutes chart.
+- `player_trajectory`: the cohort (aged 23 or under at the horizon, eligible, in a tracked squad, the Argentine league in full),
+  with the index now and a year ago, competition tier now and a year ago, minutes this season and last, first senior season
+  and first move abroad from the Transfermarkt history, the dual-national-untied flag, and `trajectory` = index now divided by
+  the median index at the same age (median floored at 0.05).
+
+## 7. Movers
+
+- `player_events` gained rank moves (five or more places within the position since the last squad announcement, and over 28
+  days, labelled by basis) and selection events (`selection_called` from the squad lists; `selection_left_out` for players in
+  the previous list but not the next). Season-start suppression: streaks of three only once a player is past his fifth match
+  of the season; minute surges and drops only when the previous 28-day window held at least four team matches.
+- `movers`: every event with an importance weight from `event_weights.csv` plus modifiers (stronger or weaker tier on a club
+  change, size of a rank move, hat-trick, five-match scoring streak, ten straight starts, last-squad membership, top-ten rank),
+  scaled by competition tier, and the filter columns the page needs (position, league, direction, last squad, age, 7 and 28
+  day flags). `player_state` now carries `in_last_squad`.
+
 ## Operations note
 
 Building `stg_espn__player_match_stats` (now over ten thousand summaries, 444k rows) crashed Postgres inside the Docker VM
