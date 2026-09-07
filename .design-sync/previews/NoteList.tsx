@@ -1,5 +1,18 @@
-import { NoteList } from "@albiceleste/ui";
-import { LABELS } from "./NoteComposer";
+import { NoteList, type NoteLabels } from "@albiceleste/ui";
+
+const LABELS: NoteLabels = {
+  placeholder: "Escribí una nota…",
+  save: "Guardar",
+  cancel: "Cancelar",
+  edit: "Editar",
+  remove: "Borrar",
+  verdictNone: "sin veredicto",
+  verdicts: [
+    { value: "convocar", label: "Convocar" },
+    { value: "seguir", label: "Seguir" },
+    { value: "no", label: "No" },
+  ],
+};
 
 const NOTES = [
   { id: "n1", date: "2026-09-07T10:12:00Z", text: "Muy bien contra el Everton: 90 minutos, líder de la línea. Ver cómo responde ante el City.", verdict: "convocar" },

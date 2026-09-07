@@ -22,11 +22,9 @@ export const WithStates = () => (
 
 export const Empty = () => <RankList title="Arqueros" rows={[]} empty="Nadie con ranking." />;
 
-export const FourColumns = () => (
-  <div className="grid gap-6 grid-cols-4">
+export const TwoColumns = () => (
+  <div className="grid gap-6 grid-cols-2">
     <RankList title="Arqueros" rows={ROWS.slice(0, 2)} />
     <RankList title="Defensores" rows={ROWS} />
-    <RankList title="Mediocampistas" rows={ROWS.slice(1, 4)} />
-    <RankList title="Delanteros" rows={ROWS.slice(0, 3)} />
   </div>
 );

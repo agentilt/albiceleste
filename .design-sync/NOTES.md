@@ -27,7 +27,7 @@ Repo-specific facts a re-sync needs. Config lives in `.design-sync/config.json`;
   EventList, FilterBar, FilterRow, Nav).
 - States that need pointer interaction (hover on table rows, dropdown keyboard navigation) are not captured.
 
-## Phase 6 additions (2026-09-07, not yet synced)
+## Phase 6 additions (synced 2026-09-07: 39 components, render check 39/39, 15 new previews graded good)
 
 - New components for the briefs' pages: `RankArrow`, `StateWord`, `Tag`, `RankList`, `Line` (src/Rank.tsx); `CallStrip`
   (src/Selection.tsx); `FollowButton`, `NoteMark` (src/Follow.tsx); `NoteComposer`, `NoteList` (src/Notes.tsx); `Segmented`
@@ -38,7 +38,18 @@ Repo-specific facts a re-sync needs. Config lives in `.design-sync/config.json`;
 - Tokens used by the new parts: `--color-gold` (Recién llegado, dual nationals) and `--color-danger` (out, remove actions).
   Conventions table updated; the safelist in `src/styles.css` did not need new entries because these utilities are used in the
   package source itself.
-- The next `/design-sync` run should re-verify everything (new components, changed table CSS).
+- A preview `.tsx` compiles alone: importing a value from another preview file (`import { LABELS } from "./NoteComposer"`)
+  compiles but arrives `undefined` at runtime (NoteList rendered an empty root with `Cannot read properties of undefined`).
+  Keep every preview self-contained; duplicate small fixtures instead of sharing them.
+- Cards are narrower than the site's 1152 px container: a four-column `RankList` grid wrapped every name, so the preview shows
+  two columns (`TwoColumns`); the site itself renders four.
+- The 24 first-sync components were carried forward by the anchor (0 changed); only `Header`, `SortableTable`,
+  `MinutesTimeline` and `Note` re-uploaded because their `.d.ts`/`.prompt.md` changed (new props), not their renders.
+- `conventions.md` validated against this build (colours, utilities, tokens, helpers, components all resolve). It does not yet
+  name the fifteen new components in its composition guidance; proposed addition, not applied by the sync: "Rank rows with
+  `RankList` (+ `RankArrow`, `StateWord`, `Tag`), dense records with `Line`, call-ups with `CallStrip`, the personal layer with
+  `FollowButton`, `NoteMark`, `NoteComposer`, `NoteList`, single-choice switches with `Segmented`, and the new charts `Radar`,
+  `Sparkline`, `RankHistory`, `AgeScatter`."
 
 ## Known render warns
 
