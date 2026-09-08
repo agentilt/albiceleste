@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-09-08T11:55:39+00:00",
-  "git_commit": "228a310",
+  "exported_at": "2026-09-08T16:59:11+00:00",
+  "git_commit": "8a1da12",
   "tables": {
     "marts.argentine_export_pipeline": {
       "rows": 665,
@@ -28,7 +28,7 @@
     },
     "marts.dim_player": {
       "rows": 5482,
-      "bytes": 320939
+      "bytes": 323300
     },
     "marts.dim_team": {
       "rows": 345,

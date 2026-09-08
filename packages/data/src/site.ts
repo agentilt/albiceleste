@@ -99,7 +99,7 @@ export function getPool(): Promise<PoolRow[]> {
           co.conceded as season_conceded, co.clean_sheets as season_clean_sheets,
           case when co.minutes >= 90 then round(co.conceded * 90.0 / co.minutes, 2) end as conceded_per90,
           fm.minutes as min_28, fm.prev_minutes as min_prev_28, fm.minutes_change_pct as min_change_pct, fm.starts as starts_28, fm.prev_starts as starts_prev_28,
-          se.avg_rating, se.xg, se.xa, d.market_value_eur,
+          se.avg_rating, se.xg, se.xa, d.market_value_eur, d.sub_position, d.role,
           nm.opponent as next_opponent, nm.is_home as next_is_home, nm.kickoff_utc as next_kickoff, nm.competition_name as next_competition,
           lm.opponent as last_opponent, lm.is_home as last_is_home, lm.minutes_played as last_minutes, lm.is_starter as last_started,
           lm.goals_for as last_for, lm.goals_against as last_against,

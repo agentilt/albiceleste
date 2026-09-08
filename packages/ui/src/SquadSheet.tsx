@@ -25,75 +25,35 @@ export interface SheetColumn {
   hint?: string;
 }
 
-/**
- * The position columns. One column on a phone, two on a tablet, four from `lg`. Every column is ruled to the same depth
- * (blank lines under a short position) so the sheet reads as one filled box; the fillers vanish on a phone where the
- * columns stack.
- */
-function Columns({ columns, dense, small, offset, LinkComponent }: { columns: SheetColumn[]; dense: boolean; small: boolean; offset: number; LinkComponent: LinkLike }) {
-  let i = offset;
-  const row = dense ? "h-9 text-[15px]" : "py-1 text-sm";
-  const depth = Math.max(0, ...columns.map((c) => c.slots));
-  const marks = columns.some((c) => c.names.some((n) => n.marked));
-  const cols = marks ? "grid-cols-[1.25rem_minmax(0,1fr)_auto_auto]" : "grid-cols-[1.25rem_minmax(0,1fr)_auto]";
+function Cell({ n, small, LinkComponent }: { n: SheetName; small: boolean; LinkComponent: LinkLike }) {
   return (
-    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
-      {columns.map((col) => (
-        <div key={col.title} className="min-w-0">
-          {!small && (
-            <div className="mb-1 flex items-baseline justify-between gap-2 border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted">
-              <span className="whitespace-nowrap">
-                {col.title} <span className="num">{col.slots}</span>
-              </span>
-              {col.hint && <span className="whitespace-nowrap normal-case tracking-normal">{col.hint}</span>}
-            </div>
-          )}
-          <ol>
-            {Array.from({ length: depth }, (_, k) => {
-              const filler = k >= col.slots;
-              const n = filler ? undefined : col.names[k];
-              const delay = `${Math.min(i++, 40) * 20}ms`;
-              return (
-                <li
-                  key={n ? n.key : `empty-${k}`}
-                  className={`sheet-row ${filler ? "hidden sm:grid" : "grid"} ${cols} items-center gap-x-2 border-b border-rule ${row}`}
-                  style={{ animationDelay: delay }}
-                  aria-hidden={filler || undefined}
-                >
-                  <span className="num font-mono text-[11px] text-muted">{n?.rank ?? ""}</span>
-                  {n ? (
-                    <span className={`condensed min-w-0 leading-tight ${dense ? "flex items-baseline gap-1.5" : ""}`}>
-                      {n.href ? (
-                        <LinkComponent href={n.href} className="min-w-0 truncate font-medium text-ink hover:text-celeste-deep">
-                          {n.name}
-                        </LinkComponent>
-                      ) : (
-                        <span className="min-w-0 truncate font-medium">{n.name}</span>
-                      )}
-                      {n.club && (dense ? <span className="min-w-0 shrink-[3] truncate text-xs text-muted">{n.club}</span> : <span className="block truncate text-[11px] text-muted">{n.club}</span>)}
-                    </span>
-                  ) : (
-                    <span className="text-rule-strong">{filler ? "" : "—"}</span>
-                  )}
-                  <span className="num whitespace-nowrap font-mono text-xs text-ink-2">{n?.note ?? n?.stats ?? ""}</span>
-                  {marks && (
-                    <span className="text-[10px] text-gold" title={n?.marked ? "last squad" : undefined} aria-hidden={!n?.marked}>
-                      {n?.marked ? "●" : ""}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      ))}
-    </div>
+    <li className={`sheet-row grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-rule ${small ? "h-8 text-sm" : "h-9 text-[15px]"}`}>
+      <span className="num font-mono text-[11px] text-muted">{n.rank ?? ""}</span>
+      <span className="condensed flex min-w-0 items-baseline gap-1.5 leading-tight">
+        {n.href ? (
+          <LinkComponent href={n.href} className="min-w-0 truncate font-medium text-ink hover:text-celeste-deep">
+            {n.name}
+          </LinkComponent>
+        ) : (
+          <span className="min-w-0 truncate font-medium">{n.name}</span>
+        )}
+        {n.club && <span className="min-w-0 shrink-[3] truncate text-xs text-muted">{n.club}</span>}
+        {n.marked && (
+          <span className="shrink-0 text-[10px] text-gold" aria-hidden="true">
+            ●
+          </span>
+        )}
+      </span>
+      <span className="num whitespace-nowrap font-mono text-xs text-ink-2">{n.note ?? n.stats ?? ""}</span>
+    </li>
   );
 }
 
 /**
- * The squad sheet: the list as the coach would write it, one column per position, the slot count fixed by the list size.
- * A `secondary` block (the challengers) sits under a firm rule in a smaller register; one caption covers both.
+ * The squad sheet: one row per position, as the official list reads. The names flow left to right in cells of equal
+ * width, so a position with three players takes three cells and one with eight takes two lines; nothing is blank. When a
+ * `secondary` block is given (the challengers), its names for the same position follow on the row after a hairline, in a
+ * smaller register.
  */
 export function SquadSheet({
   columns,
@@ -103,24 +63,22 @@ export function SquadSheet({
   hint,
   hintHref,
   secondary,
-  dense = false,
   LinkComponent = DefaultLink,
 }: {
   columns: SheetColumn[];
   caption?: ReactNode;
-  /** header strip above the columns */
+  /** header strip above the rows */
   title?: string;
   aside?: ReactNode;
   /** explanation on hover of a "?" after the title */
   hint?: string;
   hintHref?: string;
-  /** a second, smaller block under a rule: title, its own columns, an optional right-hand note */
+  /** a second, smaller block per position: title, its own columns (paired with `columns` by order), an optional note */
   secondary?: { title: string; aside?: ReactNode; hint?: string; columns: SheetColumn[] };
-  /** one line per name, club on hover: fits a screen */
+  /** kept for callers; the sheet is dense by design */
   dense?: boolean;
   LinkComponent?: LinkLike;
 }) {
-  const primaryCount = columns.reduce((s, c) => s + c.slots, 0);
   return (
     <figure className="m-0 min-w-0 border-2 border-ink bg-surface">
       {title && (
@@ -130,22 +88,45 @@ export function SquadSheet({
             {title}
             {hint && <Hint text={hint} href={hintHref} />}
           </h2>
-          {aside && <div className="hidden min-w-0 truncate text-sm text-muted sm:block">{aside}</div>}
+          <div className="flex min-w-0 items-center gap-3 text-xs text-muted">
+            {secondary && (
+              <span className="hidden items-center gap-1.5 font-mono uppercase tracking-wide sm:flex">
+                <span className="inline-block h-2 w-2 border-b border-rule-strong" aria-hidden="true" />
+                {secondary.title}
+                {secondary.hint && <Hint text={secondary.hint} href={hintHref} />}
+              </span>
+            )}
+            {aside && <span className="hidden min-w-0 truncate sm:block">{aside}</span>}
+          </div>
         </div>
       )}
-      <Columns columns={columns} dense={dense} small={false} offset={0} LinkComponent={LinkComponent} />
-      {secondary && (
-        <>
-          <div className="mx-3 mt-1 flex items-center justify-between gap-3 border-t border-rule-strong px-1 pt-3">
-            <h3 className="flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-muted">
-              {secondary.title}
-              {secondary.hint && <Hint text={secondary.hint} href={hintHref} />}
-            </h3>
-            {secondary.aside && <div className="min-w-0 truncate text-xs text-muted">{secondary.aside}</div>}
-          </div>
-          <Columns columns={secondary.columns} dense={dense} small offset={primaryCount} LinkComponent={LinkComponent} />
-        </>
-      )}
+      <div className="px-3 pb-2">
+        {columns.map((col, ci) => {
+          const sec = secondary?.columns[ci];
+          return (
+            <div key={col.title} className="border-b border-rule-strong py-2 last:border-b-0">
+              <div className="flex items-baseline justify-between gap-3 font-mono text-xs uppercase tracking-wide text-muted">
+                <span className="whitespace-nowrap">
+                  {col.title} <span className="num">{col.slots}</span>
+                </span>
+                {col.hint && <span className="whitespace-nowrap normal-case tracking-normal">{col.hint}</span>}
+              </div>
+              <ol className="grid gap-x-5 sm:grid-cols-2 lg:grid-cols-4">
+                {col.names.slice(0, col.slots).map((n) => (
+                  <Cell key={n.key} n={n} small={false} LinkComponent={LinkComponent} />
+                ))}
+              </ol>
+              {sec && sec.names.length > 0 && (
+                <ol className="mt-1.5 grid gap-x-5 border-t border-rule-strong pt-1 sm:grid-cols-2 lg:grid-cols-4">
+                  {sec.names.slice(0, sec.slots).map((n) => (
+                    <Cell key={n.key} n={n} small LinkComponent={LinkComponent} />
+                  ))}
+                </ol>
+              )}
+            </div>
+          );
+        })}
+      </div>
       {caption && <figcaption className="border-t border-rule px-4 py-2 text-xs text-muted">{caption}</figcaption>}
     </figure>
   );

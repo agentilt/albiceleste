@@ -5,6 +5,7 @@ import type { Competition, PoolRow } from "@albiceleste/data";
 import { useMemo } from "react";
 import { CompetitionChips } from "@/components/CompetitionChips";
 import { FollowStar } from "@/components/FollowStar";
+import { PitchDepth } from "@/components/PitchDepth";
 import { useCompetitionFilter } from "@/lib/compfilter";
 import { downloadText, toCsv } from "@/lib/download";
 import { fmtDate, fmtDec, fmtEur, fmtInt, fmtKickoff, fmtPct, shareToPct } from "@/lib/fmt";
@@ -31,7 +32,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
     return m;
   }, [notes]);
 
-  const view = get("v") === "flat" ? "flat" : "depth";
+  const view = get("v") === "flat" ? "flat" : get("v") === "pitch" ? "pitch" : "depth";
   const pos = listParam(get("pos"));
   const ageMin = numParam(get("amin"), 15);
   const ageMax = numParam(get("amax"), 45);
@@ -324,10 +325,11 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
               label={d.common.view}
               options={[
                 { value: "depth", label: d.pool.depth },
+                { value: "pitch", label: d.pool.pitch },
                 { value: "flat", label: d.pool.flat },
               ]}
               value={view}
-              onChange={(v) => set({ v: v === "flat" ? "flat" : null })}
+              onChange={(v) => set({ v: v === "depth" ? null : v, slot: null })}
             />
           </FilterRow>
         }
@@ -393,7 +395,9 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
         </div>
       </FilterBar>
 
-      {view === "flat" ? (
+      {view === "pitch" ? (
+        <PitchDepth rows={shown} locale={locale} />
+      ) : view === "flat" ? (
         <SortableTable {...tableProps} rows={shown as unknown as Row[]} initialSort="pos_rank" initialDir="asc" caption={d.pool.title} />
       ) : (
         <SortableTable
