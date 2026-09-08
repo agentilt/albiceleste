@@ -109,6 +109,22 @@ table.data td.r {
 table.data tbody tr:hover td {
   background: var(--color-celeste-tint);
 }
+/* Group sub-header inside a table (position groups): one column header for the whole table, mono labels between */
+table.data tr.group-row td,
+table.data tbody tr.group-row:hover td {
+  padding: 1rem 0.5rem 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-rule-strong);
+  background: transparent;
+  white-space: nowrap;
+}
+table.data tr.group-row:first-child td {
+  padding-top: 0.5rem;
+}
 table.data th button {
   all: unset;
   cursor: pointer;
@@ -142,6 +158,19 @@ table.data th button:focus-visible {
 }
 .scroll-x.no-bar::-webkit-scrollbar {
   display: none;
+}
+
+/* A clipped cell: truncates at `--cw` from `sm` up and at 7.5rem on a phone, so club names never widen a table. */
+.clip {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(var(--cw, 12rem), 7.5rem);
+}
+@media (min-width: 640px) {
+  .clip {
+    max-width: var(--cw, 12rem);
+  }
 }
 
 .link {
@@ -238,9 +267,8 @@ table.data th button:focus-visible {
   text-align: left;
   white-space: normal;
   box-shadow: 0 4px 14px rgb(15 23 33 / 0.1);
-  opacity: 0;
+  display: none;
   pointer-events: none;
-  transition: opacity 120ms;
 }
 .tip.tip-right::after {
   left: auto;
@@ -249,7 +277,7 @@ table.data th button:focus-visible {
 .tip:hover::after,
 .tip:focus-visible::after,
 .tip:active::after {
-  opacity: 1;
+  display: block;
 }
 
 .chip:focus-visible,

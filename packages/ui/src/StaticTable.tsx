@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { priorityClass } from "./priority";
 
 export interface Col<T> {
@@ -44,7 +44,7 @@ export function StaticTable<T>({ rows, cols, rowKey, empty = "No data.", caption
               {cols.map((c, j) => (
                 <td key={c.key ?? j} className={`${c.align === "r" ? "r" : ""} ${priorityClass(c.priority)}`}>
                   {c.maxWidth ? (
-                    <span className="block truncate" style={{ maxWidth: c.maxWidth }}>
+                    <span className="clip" style={{ "--cw": c.maxWidth } as CSSProperties}>
                       {c.render(r)}
                     </span>
                   ) : (

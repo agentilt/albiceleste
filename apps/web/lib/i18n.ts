@@ -115,6 +115,8 @@ const es = {
     neutral: "Neutro",
     followedOnly: "Solo seguidos",
     withNotes: "Con notas",
+    showMore: (n: number) => `+ ${n} más`,
+    showFewer: "menos",
   },
   home: {
     countdown: {
@@ -167,6 +169,7 @@ const es = {
   },
   pool: {
     title: "Plantel",
+    hint: "Todos los jugadores elegibles seguidos, por puesto en el orden del ranking del sitio: minutos, titularidades, nivel de la competencia y producción. La página de cada jugador lo explica por componente.",
     lede: "Todos los jugadores elegibles en un plantel seguido, ordenados por puesto con el ranking del sitio. El ranking sale de minutos, titularidades, nivel de la competencia y producción; la página de cada jugador lo explica por componente.",
     depth: "Por puesto",
     flat: "Lista",
@@ -345,10 +348,16 @@ const es = {
     label: "Competencia",
     presets: { top5: "Top 5 de Europa", sudamerica: "Sudamérica", resto: "Resto" },
     clear: "Todas",
+    more: "Ligas ▾",
+    fewer: "Ligas ▴",
     remembered: "Filtro recordado de tu última visita",
   },
   round: {
     title: "La fecha",
+    hint: "Semana calendario, de lunes a domingo, hora de Buenos Aires: el partido de mitad de semana cae en la misma fecha que el del fin de semana. Solo ligas domésticas: Champions, Libertadores y copas no están cargadas, así que un jugador puede mostrar un partido menos. El puesto es el del lunes de esa semana; la enfermería solo aparece en la semana en curso.",
+    scope: "Alcance",
+    matches: "Partidos",
+    addNote: "Anotar este partido",
     lede: "La semana del plantel en una sola imagen: quién jugó, cuánto y con qué; quién no jugó aunque su club sí; quién está afuera. Una fecha es una semana calendario, de lunes a domingo, hora de Buenos Aires, así el partido de mitad de semana cae en la misma fecha que el del fin de semana.",
     week: (a: string, b: string) => `Semana del ${a} al ${b}`,
     current: "semana en curso",
@@ -501,6 +510,8 @@ const en: Dict = {
     neutral: "Neutral",
     followedOnly: "Followed only",
     withNotes: "With notes",
+    showMore: (n) => `+ ${n} more`,
+    showFewer: "fewer",
   },
   home: {
     countdown: {
@@ -553,6 +564,7 @@ const en: Dict = {
   },
   pool: {
     title: "Pool",
+    hint: "Every eligible player tracked, by position in the site's ranking order: minutes, starts, competition level and production. Each player's page explains it component by component.",
     lede: "Every eligible player in a tracked squad, by position in the site's ranking order. The ranking comes from minutes, starts, competition level and production; each player's page explains it component by component.",
     depth: "By position",
     flat: "Flat list",
@@ -730,10 +742,16 @@ const en: Dict = {
     label: "Competition",
     presets: { top5: "Europe's top 5", sudamerica: "South America", resto: "Rest" },
     clear: "All",
+    more: "Leagues ▾",
+    fewer: "Leagues ▴",
     remembered: "Filter remembered from your last visit",
   },
   round: {
     title: "The round",
+    hint: "A calendar week, Monday to Sunday in Buenos Aires time, so a midweek match sits in the same round as the weekend. Domestic leagues only: the Champions League, Libertadores and cups are not loaded, so a player can show one match fewer. The rank is the one on that week's Monday; the infirmary appears for the current week only.",
+    scope: "Scope",
+    matches: "Matches",
+    addNote: "Note this match",
     lede: "The pool's week as one picture: who played, how much and with what; who did not play although the club did; who is out. A round is a calendar week, Monday to Sunday in Buenos Aires time, so a midweek match sits in the same round as the weekend.",
     week: (a, b) => `Week of ${a} to ${b}`,
     current: "current week",

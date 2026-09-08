@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type CSSProperties, Fragment, type ReactNode, useMemo, useState } from "react";
 import { date, dec1, dec2, eur, int, pct } from "./format";
 import { DefaultLink, type LinkLike } from "./link";
 import { priorityClass } from "./priority";
@@ -54,6 +54,7 @@ export function SortableTable({
   rowKey,
   rowClassName,
   caption,
+  groupBy,
 }: {
   columns: ColumnSpec[];
   rows: Row[];
@@ -71,6 +72,8 @@ export function SortableTable({
   rowClassName?: (row: Row) => string | undefined;
   /** accessible table name (visually hidden) */
   caption?: string;
+  /** group rows under mono sub-headers (position groups); sorting applies within each group, one header for all */
+  groupBy?: { of: (row: Row) => string; order?: string[]; label: (key: string, count: number) => ReactNode };
 }) {
   const [sortState, setSortState] = useState<string | undefined>(initialSort);
   const [dirState, setDirState] = useState<"asc" | "desc">(initialDir);
@@ -94,6 +97,19 @@ export function SortableTable({
     });
     return copy;
   }, [rows, sort, dir, columns]);
+
+  const bodies = useMemo(() => {
+    if (!groupBy) return [{ key: "", rows: sorted }];
+    const map = new Map<string, Row[]>();
+    for (const r of sorted) {
+      const k = groupBy.of(r);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(r);
+    }
+    const order = groupBy.order ?? [];
+    const keys = [...order.filter((k) => map.has(k)), ...[...map.keys()].filter((k) => !order.includes(k))];
+    return keys.map((k) => ({ key: k, rows: map.get(k)! }));
+  }, [sorted, groupBy]);
 
   function toggle(key: string, kind: ColumnSpec["kind"]) {
     const next: [string | undefined, "asc" | "desc"] = sort === key ? [key, dir === "asc" ? "desc" : "asc"] : [key, numeric(kind) ? "desc" : "asc"];
@@ -144,7 +160,7 @@ export function SortableTable({
   function clipped(spec: ColumnSpec, content: ReactNode) {
     if (!spec.maxWidth) return content;
     return (
-      <span className="block truncate" style={{ maxWidth: spec.maxWidth }} title={typeof content === "string" ? content : undefined}>
+      <span className="clip" style={{ "--cw": spec.maxWidth } as CSSProperties} title={typeof content === "string" ? content : undefined}>
         {content}
       </span>
     );
@@ -184,14 +200,23 @@ export function SortableTable({
               </td>
             </tr>
           )}
-          {sorted.map((r, i) => (
-            <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
-              {columns.map((c) => (
-                <td key={c.key} className={`${numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""} ${priorityClass(c.priority)}`}>
-                  {clipped(c, cell(c, r))}
-                </td>
+          {bodies.map((b) => (
+            <Fragment key={b.key}>
+              {groupBy && (
+                <tr className="group-row">
+                  <td colSpan={columns.length}>{groupBy.label(b.key, b.rows.length)}</td>
+                </tr>
+              )}
+              {b.rows.map((r, i) => (
+                <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
+                  {columns.map((c) => (
+                    <td key={c.key} className={`${numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""} ${priorityClass(c.priority)}`}>
+                      {clipped(c, cell(c, r))}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
+            </Fragment>
           ))}
         </tbody>
       </table>

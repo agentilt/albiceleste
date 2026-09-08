@@ -23,23 +23,24 @@ export async function RoundPage({ locale, week }: { locale: Locale; week: string
   const scoped = rows.filter(inRoundScope);
   return (
     <>
-      <PageTitle title={d.round.title} lede={d.round.lede} />
-      <div className="mb-6 flex flex-wrap items-baseline gap-4 text-sm">
+      <PageTitle title={d.round.title} hint={d.round.hint} hintHref={routes.about(locale, "#round")} aside={`${weeks.length} · ${fmtDate(locale, weeks[0]!.week_start, false)} → ${fmtDate(locale, current)}`} />
+      <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         <span className="font-mono text-base">
           {d.round.week(fmtDate(locale, w.week_start, false), fmtDate(locale, w.week_end))}
           {isCurrent && <span className="text-muted"> · {d.round.current}</span>}
         </span>
-        {prev && (
-          <AppLink className="link" href={routes.round(locale, prev.week_start)}>
-            {d.round.prev}
-          </AppLink>
-        )}
-        {next && (
-          <AppLink className="link" href={next.week_start === current ? routes.round(locale) : routes.round(locale, next.week_start)}>
-            {d.round.next}
-          </AppLink>
-        )}
-        <span className="ml-auto text-xs text-muted">{weeks.length} · {fmtDate(locale, weeks[0]!.week_start, false)} → {fmtDate(locale, current)}</span>
+        <span className="ml-auto flex gap-2">
+          {prev && (
+            <AppLink className="chip" href={routes.round(locale, prev.week_start)}>
+              {d.round.prev}
+            </AppLink>
+          )}
+          {next && (
+            <AppLink className="chip" href={next.week_start === current ? routes.round(locale) : routes.round(locale, next.week_start)}>
+              {d.round.next}
+            </AppLink>
+          )}
+        </span>
       </div>
 
       {standouts.length > 0 && (
