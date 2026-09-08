@@ -27,12 +27,12 @@ export interface SheetColumn {
 
 function Columns({ columns, dense, small, offset, LinkComponent }: { columns: SheetColumn[]; dense: boolean; small: boolean; offset: number; LinkComponent: LinkLike }) {
   let i = offset;
-  const row = small ? "h-8 text-sm" : dense ? "h-9 text-[15px]" : "py-1 text-sm";
+  const row = dense ? "h-9 text-[15px]" : "py-1 text-sm";
   return (
     <div className={`grid grid-cols-2 sm:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
       {columns.map((col) => (
         <div key={col.title} className="min-w-0">
-          <div className={`mb-1 flex items-baseline justify-between gap-2 border-b-2 pb-1 font-mono uppercase tracking-wide text-muted ${small ? "border-rule-strong text-[11px]" : "border-celeste text-xs"}`}>
+          <div className={`mb-1 flex items-baseline justify-between gap-2 border-b-2 pb-1 font-mono text-xs uppercase tracking-wide text-muted ${small ? "border-rule-strong" : "border-celeste"}`}>
             <span>
               {col.title} <span className="num">{col.slots}</span>
             </span>
@@ -59,7 +59,7 @@ function Columns({ columns, dense, small, offset, LinkComponent }: { columns: Sh
                   ) : (
                     <span className="text-rule-strong">—</span>
                   )}
-                  <span className={`num whitespace-nowrap font-mono ${small ? "text-[11px]" : "text-xs"} text-ink-2`}>{n?.note ?? n?.stats ?? ""}</span>
+                  <span className="num whitespace-nowrap font-mono text-xs text-ink-2">{n?.note ?? n?.stats ?? ""}</span>
                   <span className="text-[10px] text-gold" title={n?.marked ? "last squad" : undefined} aria-hidden={!n?.marked}>
                     {n?.marked ? "●" : ""}
                   </span>
@@ -118,8 +118,8 @@ export function SquadSheet({
       <Columns columns={columns} dense={dense} small={false} offset={0} LinkComponent={LinkComponent} />
       {secondary && (
         <>
-          <div className="flex items-center justify-between gap-3 border-t-2 border-ink px-4 py-1.5">
-            <h3 className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-wide text-ink-2">
+          <div className="mx-3 mt-1 flex items-center justify-between gap-3 border-t border-rule-strong px-1 pt-3">
+            <h3 className="flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-muted">
               {secondary.title}
               {secondary.hint && <Hint text={secondary.hint} href={hintHref} />}
             </h3>

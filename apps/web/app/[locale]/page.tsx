@@ -52,7 +52,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const isDef = (g: string) => g === "GK" || g === "DEF";
   const stats = (p: PoolRow | undefined, g: string) => {
     const r = p ? seasonOf.get(p.player_key) : undefined;
-    return !r ? "" : `${r.minutes}′ · ${isDef(g) ? cleanSheets(r) : r.goals + r.assists}`;
+    return !r ? "" : `${r.apps} · ${isDef(g) ? cleanSheets(r) : r.goals + r.assists}`;
   };
   const nameOf = (p: PoolRow | undefined, g: string, fallback: string, key: string | null) => ({
     key: key ?? fallback,
