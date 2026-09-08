@@ -67,3 +67,6 @@ const NAV = [{ href: "/feed", label: "Watch feed" }, { href: "/abroad", label: "
 
 Compose lists with `EventList` + `Severity`, filters with `FilterBar` > `FilterRow` > `Chip` and `Field`, headline numbers with
 `StatRow` > `Stat`, and charts with `Bars`, `LineChart`, `MinutesTimeline` (server-safe SVG, no client code).
+Rank rows with `RankList` (+ `RankArrow`, `StateWord`, `Tag`), dense one-line records with `Line`, call-ups with `CallStrip`,
+the personal layer with `FollowButton`, `NoteMark`, `NoteComposer`, `NoteList`, single-choice switches with `Segmented`, and
+the comparison and trajectory charts with `Radar`, `Sparkline`, `RankHistory`, `AgeScatter`.

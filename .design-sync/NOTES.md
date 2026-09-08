@@ -45,11 +45,8 @@ Repo-specific facts a re-sync needs. Config lives in `.design-sync/config.json`;
   two columns (`TwoColumns`); the site itself renders four.
 - The 24 first-sync components were carried forward by the anchor (0 changed); only `Header`, `SortableTable`,
   `MinutesTimeline` and `Note` re-uploaded because their `.d.ts`/`.prompt.md` changed (new props), not their renders.
-- `conventions.md` validated against this build (colours, utilities, tokens, helpers, components all resolve). It does not yet
-  name the fifteen new components in its composition guidance; proposed addition, not applied by the sync: "Rank rows with
-  `RankList` (+ `RankArrow`, `StateWord`, `Tag`), dense records with `Line`, call-ups with `CallStrip`, the personal layer with
-  `FollowButton`, `NoteMark`, `NoteComposer`, `NoteList`, single-choice switches with `Segmented`, and the new charts `Radar`,
-  `Sparkline`, `RankHistory`, `AgeScatter`."
+- `conventions.md` validated against this build (colours, utilities, tokens, helpers, components all resolve). Its composition guidance names the
+  fifteen new components since 2026-09-08 (applied at the user's request after the sync, then re-synced).
 
 ## Known render warns
 
