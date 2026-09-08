@@ -64,7 +64,21 @@ function LastMatch({ p, locale }: { p: PoolJsonRow; locale: Locale }) {
 }
 
 /** The follow block: one dense line per followed player, sorted by next kickoff. Shared by Home and Mi tablero. */
-export function FollowList({ locale, ctx, suggestions, removable = false, compact = false }: { locale: Locale; ctx: EventContext; suggestions: { key: string; name: string }[]; removable?: boolean; compact?: boolean }) {
+export function FollowList({
+  locale,
+  ctx,
+  suggestions,
+  removable = false,
+  compact = false,
+  onRemoved,
+}: {
+  locale: Locale;
+  ctx: EventContext;
+  suggestions: { key: string; name: string }[];
+  removable?: boolean;
+  compact?: boolean;
+  /** called after a removal, so the host can offer an undo */ onRemoved?: (key: string, name: string) => void;
+}) {
   const d = t(locale);
   const rows = usePoolJson();
   const { follows, remove } = useFollows();
@@ -108,11 +122,29 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
                 {p.n}
               </AppLink>
               <span className="text-muted"> {p.t}</span>
-              <span className="text-muted"> · {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}</span> <RankArrow change={p.d} className="text-xs" />
+              <span className="text-muted">
+                {" "}
+                · {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}
+              </span>{" "}
+              <RankArrow change={p.d} className="text-xs" />
             </span>
             <span className="min-w-0 truncate text-right text-ink-2" style={{ flex: "0 1 auto", maxWidth: "55%" }}>
               {p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o} · ${fmtKickoff(locale, p.nm.k)}` : ""}
             </span>
+            {removable && (
+              <button
+                type="button"
+                className="hit shrink-0 px-1 font-mono text-sm text-muted hover:text-danger"
+                aria-label={`${d.board.remove} ${p.n}`}
+                title={d.board.remove}
+                onClick={() => {
+                  remove(p.k);
+                  onRemoved?.(p.k, p.n);
+                }}
+              >
+                ×
+              </button>
+            )}
           </li>
         ))}
       </ul>

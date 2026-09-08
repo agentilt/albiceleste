@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Note, PageTitle, Section, StaticTable } from "@albiceleste/ui";
+import { PageTitle, Section, StaticTable } from "@albiceleste/ui";
 import { getAgreement, getCoverage, getMethodParameters, getPipelineRuns, getRawSummary, getSquadLists, getStatsBySource, getUnmatched, getWindows, manifest } from "@albiceleste/data";
 import { DASH, fmtDate, fmtDateTime, fmtDec, fmtInt } from "@/lib/fmt";
 import { t, windowLabel, type Locale } from "@/lib/i18n";
@@ -22,6 +22,7 @@ const COPY = {
       "No es un sitio de noticias, no tiene videos ni contratos, y no reemplaza el criterio de un cuerpo técnico. Todo número que muestra sale de un registro de fuente que se puede rastrear; todo lo que no está en los datos se dice que no está, en lugar de inventarse.",
       "Proyecto personal, sin relación con la AFA ni con ningún club. Solo datos gratuitos.",
     ],
+    horizonShort: (asOf: string) => `datos al ${asOf}`,
     horizon: (asOf: string, exported: string) =>
       `El horizonte de datos es el último partido completo cargado: ${asOf}. La instantánea que ve el sitio se exportó el ${exported}. Las actualizaciones son manuales (una corrida de ingesta, el modelo de transformación, la exportación y la reconstrucción del sitio); no hay una programación automática, por decisión.`,
     sources: [
@@ -58,12 +59,62 @@ const COPY = {
       "Los que pelean el lugar: los tres mejores por puesto en la mira y fuera de la última lista, por el índice de temporada = (goles ×3 + asistencias ×2 + vallas invictas ×2 para arqueros y defensores + una por titularidad + minutos ÷ 90) × peso de la competencia (1,00 / 0,85 / 0,70 según nivel), desde el 1 de julio.",
       "Los de la semana: el mismo índice sin el peso de competencia, sobre los últimos siete días. Señales de alarma: jugadores en la mira cuyo club jugó y no sumaron minutos (primero los de la última lista, después por ranking), y titulares habituales (cuota de minutos de 50 % o más) con menos de 30 minutos en la semana.",
     ],
+    round:
+      "Una fecha es una semana calendario, de lunes a domingo, hora de Buenos Aires: el partido de mitad de semana cae en la misma fecha que el del fin de semana. Solo entran las catorce ligas domésticas seguidas; la Champions League, la Libertadores y las copas no están cargadas, así que un jugador puede mostrar un partido menos. El puesto en el ranking es el del lunes de esa semana; la enfermería solo se muestra para la semana en curso. Lo destacado de la fecha son los movimientos de esa semana ordenados por importancia.",
     windows:
       "Las fechas FIFA, los anuncios de lista y las listas mismas se mantienen a mano a partir de anuncios de la AFA y de la prensa argentina, y se resuelven a jugadores por nombre exacto sin acentos, luego apellido más inicial con un único candidato, y si no, un identificador fijado a mano. Fechas marcadas como previstas hasta que sean oficiales.",
     privacy:
       "La lista de seguidos y las notas viven en el almacenamiento local de este navegador. No se envían a ningún servidor, no hay cuentas y no hay analítica sobre ellas. Un enlace compartido lleva los identificadores de los jugadores en la URL y nada más. Borrar los datos del sitio en el navegador las borra: exportá un archivo cada tanto.",
-    tables: { thresholds: "Umbrales", weights: "Pesos por puesto", eventWeights: "Pesos base por tipo de movimiento", windows: "Fechas FIFA cargadas", resolution: "Resolución de las listas", coverage: "Cobertura por liga", bySource: "Filas de estadísticas por fuente", agreement: "Acuerdo de minutos entre Highlightly y ESPN", unmatched: "Sin cruzar, por tipo", raw: "Registros crudos por fuente", runs: "Últimas corridas" },
-    cols: { name: "Nombre", value: "Valor", description: "Descripción", posGroup: "Puesto", component: "Componente", weight: "Peso", type: "Tipo", window: "Fecha FIFA", dates: "Fechas", announcement: "Anuncio", status: "Estado", listed: "Listados", resolved: "Resueltos", league: "Liga", matches: "Partidos", hl: "con Highlightly", fd: "con football-data", box: "con ficha", source: "Fuente", rows: "Filas", players: "Jugadores", pairs: "Pares", within3: "dentro de 3 min", meanDiff: "diferencia media", maxDiff: "máxima", issue: "Tipo", count: "Cantidad", entity: "Entidad", records: "Registros", versions: "Versiones", last: "Último", started: "Inicio", command: "Comando", written: "Escritos", requests: "Pedidos" },
+    tables: {
+      thresholds: "Umbrales",
+      weights: "Pesos por puesto",
+      eventWeights: "Pesos base por tipo de movimiento",
+      windows: "Fechas FIFA cargadas",
+      resolution: "Resolución de las listas",
+      coverage: "Cobertura por liga",
+      bySource: "Filas de estadísticas por fuente",
+      agreement: "Acuerdo de minutos entre Highlightly y ESPN",
+      unmatched: "Sin cruzar, por tipo",
+      raw: "Registros crudos por fuente",
+      runs: "Últimas corridas",
+    },
+    cols: {
+      name: "Nombre",
+      value: "Valor",
+      description: "Descripción",
+      posGroup: "Puesto",
+      component: "Componente",
+      weight: "Peso",
+      type: "Tipo",
+      window: "Fecha FIFA",
+      dates: "Fechas",
+      announcement: "Anuncio",
+      status: "Estado",
+      listed: "Listados",
+      resolved: "Resueltos",
+      league: "Liga",
+      matches: "Partidos",
+      hl: "con Highlightly",
+      fd: "con football-data",
+      box: "con ficha",
+      source: "Fuente",
+      rows: "Filas",
+      players: "Jugadores",
+      pairs: "Pares",
+      within3: "dentro de 3 min",
+      meanDiff: "diferencia media",
+      maxDiff: "máxima",
+      issue: "Tipo",
+      count: "Cantidad",
+      entity: "Entidad",
+      records: "Registros",
+      versions: "Versiones",
+      last: "Último",
+      started: "Inicio",
+      command: "Comando",
+      written: "Escritos",
+      requests: "Pedidos",
+    },
   },
   en: {
     what: [
@@ -71,6 +122,7 @@ const COPY = {
       "It is not a news site, it has no clips or contracts, and it does not replace a coaching staff's judgement. Every number it shows traces back to a source record; whatever is not in the data is said to be missing rather than invented.",
       "A personal project, unaffiliated with AFA or any club. Free data only.",
     ],
+    horizonShort: (asOf: string) => `data to ${asOf}`,
     horizon: (asOf: string, exported: string) =>
       `The data horizon is the last completed match loaded: ${asOf}. The snapshot the site reads was exported on ${exported}. Refreshes are manual (an ingestion run, the transformation model, the export and the site rebuild); there is no schedule, by choice.`,
     sources: [
@@ -95,7 +147,7 @@ const COPY = {
     states:
       "One state per player, in precedence order: retired; out (injured, suspended or absent); just moved (club change in the last 30 days); back (return from an absence in the last 14 days); no position or no minutes; short of minutes (no score for lack of matches, or minutes share under 40%); on fire (score 55 or more and a rise of 8 or more points in 28 days); rising (rise of 8 or more); declining (fall of 8 or more); established (score 50 or more, stable); steady.",
     infirmary:
-      "Suspended: sent off in his last match and the club has not played since. Absent: a regular (minutes share of 40% or more at the last scoring date before the absence) with no minutes in three or more of his current club's matches, and not a new signing. Injured: never fires, because ESPN publishes no injury listings for soccer; hence the site says \"absent since\", not \"injured\". The date is the last match played.",
+      'Suspended: sent off in his last match and the club has not played since. Absent: a regular (minutes share of 40% or more at the last scoring date before the absence) with no minutes in three or more of his current club\'s matches, and not a new signing. Injured: never fires, because ESPN publishes no injury listings for soccer; hence the site says "absent since", not "injured". The date is the last match played.',
     trajectory:
       "Trajectory = current activity index (minutes share × competition weight over the team's last ten matches) divided by the 75th percentile of that index among pool players at the same age across the available history (floored at 0.10). The age percentile is the share of same-age observations at or below the index. The cohort: aged 23 or under at the horizon, eligible, in a tracked squad (the Argentine league in full).",
     importance:
@@ -107,12 +159,62 @@ const COPY = {
       "Fighting for a place: the three best per position on the watch and outside the last list, by the season index = (goals ×3 + assists ×2 + clean sheets ×2 for keepers and defenders + one per start + minutes ÷ 90) × competition weight (1.00 / 0.85 / 0.70 by tier), since 1 July.",
       "Best of the week: the same index without the competition weight, over the last seven days. Worrying signs: watch players whose club played but who got no minutes (last list first, then by rank), and regulars (minutes share of 50% or more) with under 30 minutes in the week.",
     ],
+    round:
+      "A round is a calendar week, Monday to Sunday in Buenos Aires time, so a midweek match sits in the same round as the weekend. Only the fourteen domestic leagues followed count; the Champions League, the Libertadores and the cups are not loaded, so a player can show one match fewer. The rank is the one on that week's Monday; the infirmary is shown for the current week only. The round's standouts are that week's movers ordered by importance.",
     windows:
       "FIFA windows, announcement dates and the lists themselves are kept by hand from AFA announcements and the Argentine press, and resolved to players by exact unaccented name, then surname plus initial with a single candidate, else a hand-pinned identifier. Dates are marked expected until official.",
     privacy:
       "The follow list and the notes live in this browser's local storage. They are not sent to any server, there are no accounts and no analytics over them. A shared link carries the players' identifiers in the URL and nothing else. Clearing site data in the browser wipes them: export a file now and then.",
-    tables: { thresholds: "Thresholds", weights: "Weights per position", eventWeights: "Base weights per kind of mover", windows: "Loaded FIFA windows", resolution: "Squad-list resolution", coverage: "Coverage by league", bySource: "Statistics rows by source", agreement: "Minutes agreement, Highlightly against ESPN", unmatched: "Unmatched, by kind", raw: "Raw records by source", runs: "Latest runs" },
-    cols: { name: "Name", value: "Value", description: "Description", posGroup: "Position", component: "Component", weight: "Weight", type: "Kind", window: "Window", dates: "Dates", announcement: "Announcement", status: "Status", listed: "Listed", resolved: "Resolved", league: "League", matches: "Matches", hl: "with Highlightly", fd: "with football-data", box: "with box score", source: "Source", rows: "Rows", players: "Players", pairs: "Pairs", within3: "within 3 min", meanDiff: "mean difference", maxDiff: "max", issue: "Kind", count: "Count", entity: "Entity", records: "Records", versions: "Versions", last: "Last", started: "Started", command: "Command", written: "Written", requests: "Requests" },
+    tables: {
+      thresholds: "Thresholds",
+      weights: "Weights per position",
+      eventWeights: "Base weights per kind of mover",
+      windows: "Loaded FIFA windows",
+      resolution: "Squad-list resolution",
+      coverage: "Coverage by league",
+      bySource: "Statistics rows by source",
+      agreement: "Minutes agreement, Highlightly against ESPN",
+      unmatched: "Unmatched, by kind",
+      raw: "Raw records by source",
+      runs: "Latest runs",
+    },
+    cols: {
+      name: "Name",
+      value: "Value",
+      description: "Description",
+      posGroup: "Position",
+      component: "Component",
+      weight: "Weight",
+      type: "Kind",
+      window: "Window",
+      dates: "Dates",
+      announcement: "Announcement",
+      status: "Status",
+      listed: "Listed",
+      resolved: "Resolved",
+      league: "League",
+      matches: "Matches",
+      hl: "with Highlightly",
+      fd: "with football-data",
+      box: "with box score",
+      source: "Source",
+      rows: "Rows",
+      players: "Players",
+      pairs: "Pairs",
+      within3: "within 3 min",
+      meanDiff: "mean difference",
+      maxDiff: "max",
+      issue: "Kind",
+      count: "Count",
+      entity: "Entity",
+      records: "Records",
+      versions: "Versions",
+      last: "Last",
+      started: "Started",
+      command: "Command",
+      written: "Written",
+      requests: "Requests",
+    },
   },
 };
 
@@ -139,164 +241,289 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const resolution = windows.map((w) => ({ w, rows: squads.filter((s) => s.window_id === w.window_id) }));
   const S = d.about.sections;
   const P = ({ children }: { children: string }) => <p className="mb-3 max-w-3xl text-sm leading-relaxed text-ink-2">{children}</p>;
+  const H3 = ({ children }: { children: string }) => <h3 className="mb-1 font-mono text-[11px] font-medium uppercase tracking-wide text-muted">{children}</h3>;
+  const describe = (name: string, fallback: string | null) => d.about.params[name] ?? fallback ?? "";
+  const toc: [string, string][] = [
+    ["what", S.what],
+    ["horizon", S.horizon],
+    ["sources", S.sources],
+    ["eligibility", S.eligibility],
+    ["matching", S.matching],
+    ["minutes", S.minutes],
+    ["ranking", S.score],
+    ["states", S.states],
+    ["infirmary", S.infirmary],
+    ["watch", S.watch],
+    ["home", S.home],
+    ["round", S.round],
+    ["events", S.importance],
+    ["trajectory", S.trajectory],
+    ["windows", S.windows],
+    ["quality", S.quality],
+    ["privacy", S.privacy],
+  ];
 
   return (
     <>
-      <PageTitle title={d.about.title} lede={d.about.lede} />
+      <PageTitle title={d.about.title} hint={d.about.lede} aside={c.horizonShort(fmtDate(locale, m.data_as_of))} />
+      <div className="grid gap-x-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <nav className="hidden self-start lg:sticky lg:top-6 lg:block" aria-label={d.about.title}>
+          <ol className="flex flex-col gap-1 border-l border-rule-strong pl-3 font-mono text-[11px] uppercase tracking-wide">
+            {toc.map(([id, label]) => (
+              <li key={id}>
+                <a className="block py-0.5 text-muted hover:text-ink" href={`#${id}`}>
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <div className="min-w-0">
+          <Section id="what" title={S.what}>
+            {c.what.map((p, i) => (
+              <P key={i}>{p}</P>
+            ))}
+            <p className="mb-3 text-sm">
+              <a className="link" href={REPO_URL}>
+                {d.site.source} →
+              </a>
+            </p>
+          </Section>
 
-      <Section title={S.what}>
-        {c.what.map((p, i) => (
-          <P key={i}>{p}</P>
-        ))}
-        <P>{`${d.site.source}: ${REPO_URL}`}</P>
-      </Section>
+          <Section id="horizon" title={S.horizon}>
+            <P>{c.horizon(fmtDate(locale, m.data_as_of), fmtDateTime(locale, m.exported_at))}</P>
+          </Section>
 
-      <Section title={S.horizon}>
-        <P>{c.horizon(fmtDate(locale, m.data_as_of), fmtDateTime(locale, m.exported_at))}</P>
-      </Section>
+          <Section id="sources" title={S.sources}>
+            <ul className="max-w-3xl text-sm leading-relaxed text-ink-2">
+              {c.sources.map(([name, what]) => (
+                <li key={name} className="border-b border-rule py-1">
+                  <span className="font-medium text-ink">{name}</span> · {what}
+                </li>
+              ))}
+            </ul>
+          </Section>
 
-      <Section title={S.sources}>
-        <ul className="max-w-3xl text-sm leading-relaxed text-ink-2">
-          {c.sources.map(([name, what]) => (
-            <li key={name} className="border-b border-rule py-1">
-              <span className="font-medium text-ink">{name}</span> · {what}
-            </li>
-          ))}
-        </ul>
-      </Section>
+          <Section id="eligibility" title={S.eligibility}>
+            <P>{c.eligibility}</P>
+          </Section>
+          <Section id="matching" title={S.matching}>
+            <P>{c.matching}</P>
+          </Section>
+          <Section id="minutes" title={S.minutes}>
+            <P>{c.minutes}</P>
+          </Section>
 
-      <Section title={S.eligibility}>
-        <P>{c.eligibility}</P>
-      </Section>
-      <Section title={S.matching}>
-        <P>{c.matching}</P>
-      </Section>
-      <Section title={S.minutes}>
-        <P>{c.minutes}</P>
-      </Section>
+          <Section id="ranking" title={S.score}>
+            {c.score.map((p, i) => (
+              <P key={i}>{p}</P>
+            ))}
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div>
+                <H3>{c.tables.weights}</H3>
+                <StaticTable
+                  rows={weights}
+                  rowKey={(r) => r.name}
+                  caption={c.tables.weights}
+                  cols={[
+                    { label: c.cols.posGroup, render: (r) => (d.pos as Record<string, string>)[r.pos_group ?? ""] ?? r.pos_group },
+                    { label: c.cols.component, render: (r) => r.component ?? "" },
+                    { label: c.cols.weight, align: "r", render: (r) => fmtDec(locale, r.value) },
+                  ]}
+                />
+              </div>
+              <div>
+                <H3>{c.tables.thresholds}</H3>
+                <StaticTable
+                  rows={thresholds}
+                  rowKey={(r) => r.name}
+                  caption={c.tables.thresholds}
+                  cols={[
+                    { label: c.cols.name, render: (r) => <span className="font-mono text-xs">{r.name}</span> },
+                    { label: c.cols.value, align: "r", render: (r) => fmtDec(locale, r.value, Number.isInteger(r.value) ? 0 : 2) },
+                    { label: c.cols.description, priority: 2, render: (r) => <span className="wrap block max-w-[22rem] whitespace-normal text-xs text-ink-2">{describe(r.name, r.description)}</span> },
+                  ]}
+                />
+              </div>
+            </div>
+          </Section>
 
-      <Section title={S.score}>
-        <div id="score" />
-        {c.score.map((p, i) => (
-          <P key={i}>{p}</P>
-        ))}
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.weights}</h3>
-            <StaticTable rows={weights} rowKey={(r) => r.name} cols={[{ label: c.cols.posGroup, render: (r) => (d.pos as Record<string, string>)[r.pos_group ?? ""] ?? r.pos_group }, { label: c.cols.component, render: (r) => r.component ?? "" }, { label: c.cols.weight, align: "r", render: (r) => fmtDec(locale, r.value) }]} />
-          </div>
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.thresholds}</h3>
-            <StaticTable rows={thresholds} rowKey={(r) => r.name} cols={[{ label: c.cols.name, render: (r) => <span className="font-mono text-xs">{r.name}</span> }, { label: c.cols.value, align: "r", render: (r) => fmtDec(locale, r.value, Number.isInteger(r.value) ? 0 : 2) }, { label: c.cols.description, render: (r) => <span className="wrap text-xs text-ink-2">{r.description}</span> }]} />
-          </div>
+          <Section id="states" title={S.states}>
+            <P>{c.states}</P>
+          </Section>
+          <Section id="infirmary" title={S.infirmary}>
+            <P>{c.infirmary}</P>
+          </Section>
+
+          <Section id="watch" title={S.watch}>
+            <P>{c.watch}</P>
+          </Section>
+
+          <Section id="home" title={S.home}>
+            {c.home.map((p, i) => (
+              <P key={i}>{p}</P>
+            ))}
+          </Section>
+
+          <Section id="round" title={S.round}>
+            <P>{c.round}</P>
+          </Section>
+
+          <Section id="events" title={S.importance}>
+            <P>{c.importance}</P>
+            <H3>{c.tables.eventWeights}</H3>
+            <div className="max-w-3xl">
+              <StaticTable
+                rows={eventWeights}
+                rowKey={(r) => r.name}
+                caption={c.tables.eventWeights}
+                cols={[
+                  { label: c.cols.type, render: (r) => (d.movers.kinds as Record<string, string>)[r.name] ?? r.name },
+                  { label: c.cols.weight, align: "r", render: (r) => fmtInt(locale, r.value) },
+                  { label: c.cols.description, priority: 2, render: (r) => <span className="wrap block max-w-[28rem] whitespace-normal text-xs text-ink-2">{describe(r.name, r.description)}</span> },
+                ]}
+              />
+            </div>
+          </Section>
+
+          <Section id="trajectory" title={S.trajectory}>
+            <P>{c.trajectory}</P>
+          </Section>
+
+          <Section id="windows" title={S.windows}>
+            <P>{c.windows}</P>
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div>
+                <H3>{c.tables.windows}</H3>
+                <StaticTable
+                  rows={windows}
+                  rowKey={(r) => r.window_id}
+                  caption={c.tables.windows}
+                  cols={[
+                    { label: c.cols.window, render: (r) => windowLabel(locale, r) },
+                    { label: c.cols.dates, render: (r) => `${fmtDate(locale, r.starts, false)} – ${fmtDate(locale, r.ends)}` },
+                    {
+                      label: c.cols.announcement,
+                      priority: 2,
+                      render: (r) => `${fmtDate(locale, r.announcement_date)} (${r.announcement_status === "official" ? d.common.official : d.common.expected})`,
+                    },
+                    { label: c.cols.listed, align: "r", render: (r) => fmtInt(locale, r.listed) },
+                  ]}
+                />
+              </div>
+              <div>
+                <H3>{c.tables.resolution}</H3>
+                <StaticTable
+                  rows={resolution.filter((x) => x.rows.length > 0)}
+                  rowKey={(r) => r.w.window_id}
+                  caption={c.tables.resolution}
+                  cols={[
+                    { label: c.cols.window, render: (r) => windowLabel(locale, r.w) },
+                    { label: c.cols.listed, align: "r", render: (r) => fmtInt(locale, r.rows.length) },
+                    { label: c.cols.resolved, align: "r", render: (r) => fmtInt(locale, r.rows.filter((s) => s.player_key).length) },
+                    {
+                      label: c.cols.status,
+                      priority: 2,
+                      maxWidth: "16rem",
+                      render: (r) =>
+                        r.rows
+                          .filter((s) => !s.player_key)
+                          .map((s) => s.player_name)
+                          .join(", ") || DASH,
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </Section>
+
+          <Section id="quality" title={S.quality}>
+            <div className="grid gap-8 lg:grid-cols-2">
+              <div>
+                <H3>{c.tables.coverage}</H3>
+                <StaticTable
+                  rows={coverage}
+                  rowKey={(r) => r.league}
+                  caption={c.tables.coverage}
+                  cols={[
+                    { label: c.cols.league, render: (r) => r.league },
+                    { label: c.cols.matches, align: "r", render: (r) => fmtInt(locale, r.matches) },
+                    { label: c.cols.hl, align: "r", priority: 2, render: (r) => fmtInt(locale, r.with_highlightly_match) },
+                    { label: c.cols.fd, align: "r", priority: 2, render: (r) => fmtInt(locale, r.with_fd_match) },
+                    { label: c.cols.box, align: "r", render: (r) => fmtInt(locale, r.with_box_score_rows) },
+                  ]}
+                />
+              </div>
+              <div>
+                <H3>{c.tables.bySource}</H3>
+                <StaticTable
+                  rows={bySource}
+                  rowKey={(r) => `${r.league}-${r.stats_source}`}
+                  caption={c.tables.bySource}
+                  cols={[
+                    { label: c.cols.league, render: (r) => r.league },
+                    { label: c.cols.source, render: (r) => r.stats_source },
+                    { label: c.cols.rows, align: "r", render: (r) => fmtInt(locale, r.rows) },
+                    { label: c.cols.players, align: "r", render: (r) => fmtInt(locale, r.players) },
+                  ]}
+                />
+                {agreement && (
+                  <p className="num mt-2 font-mono text-xs text-muted">
+                    {c.tables.agreement}: {fmtInt(locale, agreement.pairs)} {c.cols.pairs.toLowerCase()} · {fmtDec(locale, agreement.pct_within_3_min, 1)}% {c.cols.within3} · {c.cols.meanDiff}{" "}
+                    {fmtDec(locale, agreement.mean_abs_diff, 1)} · {c.cols.maxDiff} {fmtInt(locale, agreement.max_abs_diff)}
+                  </p>
+                )}
+              </div>
+              <div>
+                <H3>{c.tables.unmatched}</H3>
+                <StaticTable
+                  rows={unmatchedByIssue}
+                  rowKey={(r) => r[0]}
+                  caption={c.tables.unmatched}
+                  cols={[
+                    { label: c.cols.issue, render: (r) => r[0] },
+                    { label: c.cols.count, align: "r", render: (r) => fmtInt(locale, r[1]) },
+                  ]}
+                />
+              </div>
+              <div>
+                <H3>{c.tables.raw}</H3>
+                <StaticTable
+                  rows={raw}
+                  rowKey={(r) => `${r.source}-${r.entity}`}
+                  caption={c.tables.raw}
+                  cols={[
+                    { label: c.cols.source, render: (r) => r.source },
+                    { label: c.cols.entity, render: (r) => r.entity },
+                    { label: c.cols.records, align: "r", render: (r) => fmtInt(locale, r.records) },
+                    { label: c.cols.versions, align: "r", priority: 2, render: (r) => fmtInt(locale, r.versions) },
+                    { label: c.cols.last, priority: 2, render: (r) => fmtDate(locale, r.last_ingested) },
+                  ]}
+                />
+              </div>
+            </div>
+            <div className="mt-8 max-w-3xl">
+              <H3>{c.tables.runs}</H3>
+              <StaticTable
+                rows={runs}
+                rowKey={(r) => `${r.started_at}-${r.command}`}
+                caption={c.tables.runs}
+                cols={[
+                  { label: c.cols.started, render: (r) => fmtDateTime(locale, r.started_at) },
+                  { label: c.cols.command, render: (r) => <span className="font-mono text-xs">{r.command}</span> },
+                  { label: c.cols.status, render: (r) => r.status },
+                  { label: c.cols.written, align: "r", priority: 2, render: (r) => fmtInt(locale, r.records_written) },
+                  { label: c.cols.requests, align: "r", priority: 2, render: (r) => fmtInt(locale, r.requests_made) },
+                ]}
+              />
+            </div>
+          </Section>
+
+          <Section id="privacy" title={S.privacy}>
+            <P>{c.privacy}</P>
+          </Section>
         </div>
-      </Section>
-
-      <Section title={S.states}>
-        <P>{c.states}</P>
-      </Section>
-      <Section title={S.infirmary}>
-        <P>{c.infirmary}</P>
-      </Section>
-      <Section title={S.trajectory}>
-        <P>{c.trajectory}</P>
-      </Section>
-
-      <Section title={S.importance}>
-        <P>{c.importance}</P>
-        <h3 className="mb-1 text-sm text-muted">{c.tables.eventWeights}</h3>
-        <div className="max-w-3xl">
-          <StaticTable rows={eventWeights} rowKey={(r) => r.name} cols={[{ label: c.cols.type, render: (r) => (d.movers.kinds as Record<string, string>)[r.name] ?? r.name }, { label: c.cols.weight, align: "r", render: (r) => fmtInt(locale, r.value) }, { label: c.cols.description, render: (r) => <span className="text-xs text-ink-2">{r.description}</span> }]} />
-        </div>
-      </Section>
-
-      <Section title={S.watch}>
-        <div id="watch" />
-        <P>{c.watch}</P>
-      </Section>
-
-      <Section title={S.home}>
-        <div id="home" />
-        {c.home.map((p, i) => (
-          <P key={i}>{p}</P>
-        ))}
-      </Section>
-
-      <Section title={S.windows}>
-        <P>{c.windows}</P>
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.windows}</h3>
-            <StaticTable
-              rows={windows}
-              rowKey={(r) => r.window_id}
-              cols={[
-                { label: c.cols.window, render: (r) => windowLabel(locale, r) },
-                { label: c.cols.dates, render: (r) => `${fmtDate(locale, r.starts, false)} – ${fmtDate(locale, r.ends)}` },
-                { label: c.cols.announcement, render: (r) => `${fmtDate(locale, r.announcement_date)} (${r.announcement_status === "official" ? d.common.official : d.common.expected})` },
-                { label: c.cols.listed, align: "r", render: (r) => fmtInt(locale, r.listed) },
-              ]}
-            />
-          </div>
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.resolution}</h3>
-            <StaticTable
-              rows={resolution.filter((x) => x.rows.length > 0)}
-              rowKey={(r) => r.w.window_id}
-              cols={[
-                { label: c.cols.window, render: (r) => windowLabel(locale, r.w) },
-                { label: c.cols.listed, align: "r", render: (r) => fmtInt(locale, r.rows.length) },
-                { label: c.cols.resolved, align: "r", render: (r) => fmtInt(locale, r.rows.filter((s) => s.player_key).length) },
-                { label: c.cols.status, render: (r) => r.rows.filter((s) => !s.player_key).map((s) => s.player_name).join(", ") || DASH },
-              ]}
-            />
-          </div>
-        </div>
-      </Section>
-
-      <Section title={S.quality}>
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.coverage}</h3>
-            <StaticTable
-              rows={coverage}
-              rowKey={(r) => r.league}
-              cols={[
-                { label: c.cols.league, render: (r) => r.league },
-                { label: c.cols.matches, align: "r", render: (r) => fmtInt(locale, r.matches) },
-                { label: c.cols.hl, align: "r", render: (r) => fmtInt(locale, r.with_highlightly_match) },
-                { label: c.cols.fd, align: "r", render: (r) => fmtInt(locale, r.with_fd_match) },
-                { label: c.cols.box, align: "r", render: (r) => fmtInt(locale, r.with_box_score_rows) },
-              ]}
-            />
-          </div>
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.bySource}</h3>
-            <StaticTable rows={bySource} rowKey={(r) => `${r.league}-${r.stats_source}`} cols={[{ label: c.cols.league, render: (r) => r.league }, { label: c.cols.source, render: (r) => r.stats_source }, { label: c.cols.rows, align: "r", render: (r) => fmtInt(locale, r.rows) }, { label: c.cols.players, align: "r", render: (r) => fmtInt(locale, r.players) }]} />
-            {agreement && (
-              <Note>
-                {c.tables.agreement}: {fmtInt(locale, agreement.pairs)} {c.cols.pairs.toLowerCase()}, {fmtDec(locale, agreement.pct_within_3_min, 1)}% {c.cols.within3}, {c.cols.meanDiff} {fmtDec(locale, agreement.mean_abs_diff, 1)}, {c.cols.maxDiff} {fmtInt(locale, agreement.max_abs_diff)}.
-              </Note>
-            )}
-          </div>
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.unmatched}</h3>
-            <StaticTable rows={unmatchedByIssue} rowKey={(r) => r[0]} cols={[{ label: c.cols.issue, render: (r) => r[0] }, { label: c.cols.count, align: "r", render: (r) => fmtInt(locale, r[1]) }]} />
-          </div>
-          <div>
-            <h3 className="mb-1 text-sm text-muted">{c.tables.raw}</h3>
-            <StaticTable rows={raw} rowKey={(r) => `${r.source}-${r.entity}`} cols={[{ label: c.cols.source, render: (r) => r.source }, { label: c.cols.entity, render: (r) => r.entity }, { label: c.cols.records, align: "r", render: (r) => fmtInt(locale, r.records) }, { label: c.cols.versions, align: "r", render: (r) => fmtInt(locale, r.versions) }, { label: c.cols.last, render: (r) => fmtDate(locale, r.last_ingested) }]} />
-          </div>
-        </div>
-        <h3 className="mb-1 mt-8 text-sm text-muted">{c.tables.runs}</h3>
-        <div className="max-w-3xl">
-          <StaticTable rows={runs} rowKey={(r) => `${r.started_at}-${r.command}`} cols={[{ label: c.cols.started, render: (r) => fmtDateTime(locale, r.started_at) }, { label: c.cols.command, render: (r) => <span className="font-mono text-xs">{r.command}</span> }, { label: c.cols.status, render: (r) => r.status }, { label: c.cols.written, align: "r", render: (r) => fmtInt(locale, r.records_written) }, { label: c.cols.requests, align: "r", render: (r) => fmtInt(locale, r.requests_made) }]} />
-        </div>
-      </Section>
-
-      <Section title={S.privacy}>
-        <P>{c.privacy}</P>
-      </Section>
+      </div>
     </>
   );
 }

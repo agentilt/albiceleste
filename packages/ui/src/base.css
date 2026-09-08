@@ -8,6 +8,8 @@
   --scroll-bg: var(--color-surface);
 }
 
+/* Everything below sits in the components layer, so Tailwind utilities (a later layer) can override any of it. */
+@layer components {
 html {
   font-size: 106.25%;
   background: var(--color-paper);
@@ -142,6 +144,11 @@ table.data th button:focus-visible {
   top: 0;
   background: var(--scroll-bg);
   z-index: 1;
+}
+
+/* Grid children never widen the page: a table inside a card scrolls instead of stretching its column. */
+.grid > * {
+  min-width: 0;
 }
 
 /* A horizontal scroller that shows a shadow on whichever edge still has content: tables, the phone nav. */
@@ -337,4 +344,5 @@ textarea {
       transform: none;
     }
   }
+}
 }

@@ -21,7 +21,7 @@ export default async function ComparePage({ params }: { params: Promise<{ locale
   const windows = await getWindows();
   return (
     <>
-      <PageTitle title={d.compare.title} lede={d.compare.choose} />
+      <PageTitle title={d.compare.title} hint={d.compare.lede} aside={d.compare.choose} />
       <Suspense>
         <CompareTool locale={locale} windows={windows} horizon={manifest().data_as_of} />
       </Suspense>

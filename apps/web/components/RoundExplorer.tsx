@@ -1,10 +1,12 @@
 "use client";
 
-import { Chip, type ColumnSpec, FilterBar, FilterRow, NoteComposer, Panel, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
-import type { Competition, RoundMatch, RoundRow } from "@albiceleste/data";
+import { Chip, type ColumnSpec, FilterBar, FilterRow, NoteComposer, Panel, PanelRows, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
+import type { Competition, MoverRow, RoundMatch, RoundRow } from "@albiceleste/data";
 import { useEffect, useMemo, useState } from "react";
 import { CompetitionChips } from "@/components/CompetitionChips";
 import { FollowStar } from "@/components/FollowStar";
+import { MoverWho, moverFact } from "@/components/MoverLine";
+import type { EventContext } from "@/lib/events";
 import { noteLabels } from "@/components/PlayerNotes";
 import { useCompetitionFilter } from "@/lib/compfilter";
 import { DASH, fmtDate, fmtDec, fmtInt } from "@/lib/fmt";
@@ -177,7 +179,23 @@ function Lines({
   );
 }
 
-export function RoundExplorer({ rows: scoped, week, current, competitions, locale }: { rows: RoundRow[]; week: string; current: boolean; competitions: Competition[]; locale: Locale }) {
+export function RoundExplorer({
+  rows: scoped,
+  week,
+  current,
+  competitions,
+  locale,
+  standouts = [],
+  ctx,
+}: {
+  rows: RoundRow[];
+  week: string;
+  current: boolean;
+  competitions: Competition[];
+  locale: Locale;
+  standouts?: MoverRow[];
+  ctx?: EventContext;
+}) {
   const d = t(locale);
   const { get, set } = useUrlState();
   const comp = useCompetitionFilter();
@@ -337,8 +355,13 @@ export function RoundExplorer({ rows: scoped, week, current, competitions, local
         </section>
       )}
 
-      {panels.length > 0 && (
-        <div className={`grid gap-4 ${panels.length >= 3 ? "lg:grid-cols-3" : panels.length === 2 ? "lg:grid-cols-2" : ""}`}>
+      {(panels.length > 0 || standouts.length > 0) && (
+        <div className={`grid gap-4 ${panels.length + (standouts.length > 0 ? 1 : 0) >= 2 ? "lg:grid-cols-2" : ""}`}>
+          {standouts.length > 0 && ctx && (
+            <Panel title={d.round.standouts} aside={<span className="num font-mono text-xs">{standouts.length}</span>}>
+              <PanelRows rows={standouts.map((m) => ({ key: m.event_key, left: <MoverWho m={m} locale={locale} />, right: moverFact(m, locale, ctx) }))} />
+            </Panel>
+          )}
           {panels.map((p) => (
             <Panel key={p.key} title={d.round.categories[p.key]} aside={<span className="num font-mono text-xs">{p.rows.length}</span>}>
               <Lines rows={p.rows} locale={locale} current={current} showMatches={p.matches} reasonOnly={p.key === "out"} />

@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   // DuckDB is a native module used only at build time (every page is static). Keep it out of the bundle.
   serverExternalPackages: ["@duckdb/node-api"],
   typedRoutes: true,
+  // The site-chromed 404 for URLs outside every route (app/global-not-found.tsx).
+  experimental: { globalNotFound: true },
   async redirects() {
     return [
       { source: "/", destination: "/es", permanent: false },
