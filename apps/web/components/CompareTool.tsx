@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { FollowStar, NoteCount } from "@/components/FollowStar";
 import { type IndexEntry, loadIndex, searchIndex } from "@/components/PlayerSearch";
 import { loadPoolJson } from "@/components/FollowList";
+import { useCompetitionFilter } from "@/lib/compfilter";
 import { DASH, fmtDate, fmtDec, fmtEur, fmtInt, fmtPct, shareToPct } from "@/lib/fmt";
 import { t, type Locale, windowLabel } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
@@ -35,6 +36,7 @@ export function CompareTool({ locale, windows, horizon }: { locale: Locale; wind
   const [groupPick, setGroupPick] = useState<Group | null>(null);
   const [refused, setRefused] = useState<string | null>(null);
   const { follows } = useFollows();
+  const comp = useCompetitionFilter();
 
   useEffect(() => {
     loadIndex().then(setIndex);
@@ -55,7 +57,7 @@ export function CompareTool({ locale, windows, horizon }: { locale: Locale; wind
   }, [keys.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const group: Group | null = (players[0]?.pos_group as Group | undefined) ?? groupPick;
-  const hits = useMemo<SearchHit[]>(() => (index ? searchIndex(index.filter((e) => e.pos_group && (!group || e.pos_group === group) && !keys.includes(e.key)), q).map((e) => ({ key: e.key, name: e.name, detail: e.team })) : []), [index, q, group, keys]);
+  const hits = useMemo<SearchHit[]>(() => (index ? searchIndex(index.filter((e) => e.pos_group && (!group || e.pos_group === group) && !keys.includes(e.key) && comp.matches(e.league)), q).map((e) => ({ key: e.key, name: e.name, detail: e.team })) : []), [index, q, group, keys, comp.selected]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function seed() {
     const rows = await loadPoolJson();

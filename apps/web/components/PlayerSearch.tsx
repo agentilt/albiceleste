@@ -12,6 +12,7 @@ export interface IndexEntry {
   name: string;
   team: string | null;
   competition: string | null;
+  league?: string | null;
   pos_group?: string | null;
 }
 

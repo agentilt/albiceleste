@@ -3,7 +3,9 @@
 import { Chip, type ColumnSpec, Field, FilterBar, FilterRow, Note, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
 import type { Competition, PoolRow } from "@albiceleste/data";
 import { useMemo } from "react";
+import { CompetitionChips } from "@/components/CompetitionChips";
 import { FollowStar } from "@/components/FollowStar";
+import { useCompetitionFilter } from "@/lib/compfilter";
 import { downloadText, toCsv } from "@/lib/download";
 import { fmtDec, fmtEur, fmtInt, fmtKickoff, fmtPct, shareToPct } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
@@ -20,6 +22,7 @@ const TIERS: Tier[] = ["form", "production", "support", "next"];
 export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabel }: { rows: PoolRow[]; competitions: Competition[]; locale: Locale; horizon: string; lastListLabel: string | null }) {
   const d = t(locale);
   const { get, set } = useUrlState();
+  const comp = useCompetitionFilter();
   const { follows } = useFollows();
   const { notes } = useNotes();
   const noteCounts = useMemo(() => {
@@ -30,7 +33,6 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
 
   const view = get("v") === "flat" ? "flat" : "depth";
   const pos = listParam(get("pos"));
-  const comp = listParam(get("comp"));
   const ageMin = numParam(get("amin"), 15);
   const ageMax = numParam(get("amax"), 45);
   const minMinutes = numParam(get("min"), 0);
@@ -49,7 +51,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
       rows.filter(
         (r) =>
           (pos.length === 0 || pos.includes(r.pos_group)) &&
-          (comp.length === 0 || (r.league !== null && comp.includes(r.league))) &&
+          comp.matches(r.league) &&
           (r.age === null || (r.age >= ageMin && r.age <= ageMax)) &&
           (r.season_minutes ?? 0) >= minMinutes &&
           (review || r.eligibility_status === "eligible") &&
@@ -60,7 +62,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
           (lens === "all" || r.is_abroad || r.in_focus) &&
           r.state !== "retired",
       ),
-    [rows, pos, comp, ageMin, ageMax, minMinutes, review, squad, inf, fol, u23, lens, follows],
+    [rows, pos, comp.selected, ageMin, ageMax, minMinutes, review, squad, inf, fol, u23, lens, follows], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const columns = useMemo<ColumnSpec[]>(() => {
@@ -173,13 +175,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
             </Chip>
           ))}
         </FilterRow>
-        <FilterRow label={d.common.competition}>
-          {competitions.map((c) => (
-            <Chip key={c.league} pressed={comp.includes(c.league)} onClick={() => toggleList("comp", comp, c.league)}>
-              {c.competition_name}
-            </Chip>
-          ))}
-        </FilterRow>
+        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
         <FilterRow label={d.common.filters}>
           <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
             {d.pool.lastSquad}

@@ -2,6 +2,7 @@ import type { Locale } from "./i18n";
 
 export const routes = {
   home: (l: Locale) => `/${l}`,
+  round: (l: Locale, week?: string) => (week ? `/${l}/round/${week}` : `/${l}/round`),
   pool: (l: Locale, q = "") => `/${l}/pool${q}`,
   player: (l: Locale, key: string) => `/${l}/players/${encodeURIComponent(key)}`,
   movers: (l: Locale, q = "") => `/${l}/movers${q}`,

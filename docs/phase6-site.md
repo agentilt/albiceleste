@@ -19,6 +19,7 @@ shared links survive the language switch):
 | `/{locale}/next-cycle` | Next cycle: age-against-index panels, cohort list by trajectory, retention watch, breakthroughs, youth record, pipeline context | list filters in the URL |
 | `/{locale}/board` | Mi tablero: follow list with remove and share link, notes by player, export/import | the whole personal layer |
 | `/{locale}/about-data` | About the data: every rule with its numbers, parameter tables, windows, data quality | — |
+| `/{locale}/round`, `/{locale}/round/{monday}` | La fecha (added 2026-09-08): one calendar week, row per player with match sub-lines, week categories, standouts; the page embeds the default scope and fetches the whole pool from `/data/round/{monday}` on demand | scope and filters in the URL |
 
 Static data routes: `/data/index.json` (search index with position group), `/data/pool.json` (compact record per pool player
 for the follow list, 420 KB raw), `/data/players/{key}` (Compare record: percentile axes, season, sparkline, call-ups).
@@ -35,6 +36,19 @@ for the follow list, 420 KB raw), `/data/players/{key}` (Compare record: percent
   `youth_events`, `nt_status`, `method_parameters` (thresholds, position weights and event weights in one table).
 - Compare percentiles are computed in TypeScript over the pool: for each axis, the share of the position group at or below the
   value (goals conceded inverted). Axes per position are in `COMPARE_AXES`.
+
+## Added 2026-09-08
+
+- **La fecha.** `getWeeks()`, `currentWeekStart()`, `getRound(monday)` (memoised per week; rank and team as of the week's Monday
+  from `player_rank_history`, the club's matches from `fct_match`, the player's rows from `fct_player_match_stats`, category
+  decided for the week) and `getMoversBetween()`. 109 week pages per locale; the whole-pool JSON is about 760 KB per week and is
+  fetched only when the reader widens the scope or filters by followed players. Home carries "the round so far" under the
+  masthead.
+- **Shared competition filter.** `apps/web/lib/compfilter.ts` + `CompetitionChips`: fourteen chips, three presets (Top 5,
+  Sudamérica, Resto), a clear chip; the selection lives in `?comp=` and the last user choice is remembered in `localStorage`
+  as the default when a list page opens without one (with a visible hint). A selection arriving through a shared link is not
+  stored, so opening someone else's view never changes your default. Wired into Pool, Movers, Next cycle, La fecha and the
+  Compare search (the search index now carries the league).
 
 ## Site conventions
 

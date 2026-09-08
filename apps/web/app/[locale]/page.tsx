@@ -1,5 +1,5 @@
 import { Bars, Hero, Note, RankList, Section, StateWord, Tag } from "@albiceleste/ui";
-import { getMovers, getPool, getPresence, getTrajectory, getWeekend, getWindows, manifest } from "@albiceleste/data";
+import { currentWeekStart, getMovers, getMoversBetween, getPool, getPresence, getRound, getTrajectory, getWeekend, getWeeks, getWindows, inRoundScope, manifest } from "@albiceleste/data";
 import { FollowList } from "@/components/FollowList";
 import { FollowStar } from "@/components/FollowStar";
 import { MoverLine } from "@/components/MoverLine";
@@ -22,7 +22,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const locale = await readLocale(params);
   const d = t(locale);
   const m = manifest();
-  const [pool, windows, weekend, movers, trajectory, presence, ctx] = await Promise.all([
+  const [pool, windows, weekend, movers, trajectory, presence, ctx, week] = await Promise.all([
     getPool(),
     getWindows(),
     getWeekend(),
@@ -30,7 +30,18 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     getTrajectory(),
     getPresence(),
     eventContext(),
+    currentWeekStart(),
   ]);
+  const [round, weeks] = await Promise.all([getRound(week), getWeeks()]);
+  const thisWeek = weeks.find((w) => w.week_start === week);
+  const scoped = round.filter(inRoundScope);
+  const roundCounts = {
+    played: scoped.filter((r) => r.category === "played").length,
+    dnp: scoped.filter((r) => r.category === "did_not_play" && !r.infirmary_reason).length,
+    out: scoped.filter((r) => r.infirmary_reason).length,
+    of: scoped.length,
+  };
+  const roundStandouts = thisWeek ? await getMoversBetween(thisWeek.week_start, thisWeek.week_end, 4) : [];
 
   const cd = countdown(windows, today());
   const ranked = pool.filter((p) => p.pos_rank !== null);
@@ -70,6 +81,29 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </>
         }
       />
+
+      <Section
+        title={d.round.homeTitle}
+        aside={
+          <>
+            {thisWeek ? `${d.round.week(fmtDate(locale, thisWeek.week_start, false), fmtDate(locale, thisWeek.week_end, false))} · ` : ""}
+            <AppLink className="link" href={routes.round(locale)}>
+              {d.round.homeAll} →
+            </AppLink>
+          </>
+        }
+      >
+        <p className="text-sm text-ink">
+          {d.round.homeLine(roundCounts.played, roundCounts.dnp, roundCounts.out, roundCounts.of)} <span className="text-muted">({d.round.homeScope})</span>
+        </p>
+        {roundStandouts.length > 0 && (
+          <ol className="mt-2">
+            {roundStandouts.map((x) => (
+              <MoverLine key={x.event_key} m={x} locale={locale} ctx={ctx} />
+            ))}
+          </ol>
+        )}
+      </Section>
 
       <Section
         title={d.home.follow.title}

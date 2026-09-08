@@ -3,7 +3,9 @@
 import { Chip, FilterBar, FilterRow, Note, Segmented } from "@albiceleste/ui";
 import type { Competition, MoverRow } from "@albiceleste/data";
 import { useMemo } from "react";
+import { CompetitionChips } from "@/components/CompetitionChips";
 import { MoverLine } from "@/components/MoverLine";
+import { useCompetitionFilter } from "@/lib/compfilter";
 import type { EventContext } from "@/lib/events";
 import { fmtDate } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
@@ -23,8 +25,8 @@ export function MoversExplorer({ rows, competitions, locale, ctx, horizon, lastA
   const d = t(locale);
   const { get, set } = useUrlState();
   const { follows } = useFollows();
+  const comp = useCompetitionFilter();
   const pos = listParam(get("pos"));
-  const comp = listParam(get("comp"));
   const kinds = listParam(get("kind"));
   const dirs = listParam(get("dir"));
   const squad = boolParam(get("squad"));
@@ -39,14 +41,14 @@ export function MoversExplorer({ rows, competitions, locale, ctx, horizon, lastA
       (r) =>
         r.event_date >= since &&
         (pos.length === 0 || (r.pos_group !== null && pos.includes(r.pos_group))) &&
-        (comp.length === 0 || (r.league !== null && comp.includes(r.league))) &&
+        comp.matches(r.league) &&
         (kinds.length === 0 || kinds.includes(r.event_type)) &&
         (dirs.length === 0 || dirs.includes(r.direction)) &&
         (!squad || r.in_last_squad) &&
         (!fol || follows.includes(r.player_key)),
     );
     return order === "date" ? [...f].sort((a, b) => b.event_date.localeCompare(a.event_date) || b.importance - a.importance) : f;
-  }, [rows, since, pos, comp, kinds, dirs, squad, fol, follows, order]);
+  }, [rows, since, pos, comp.selected, kinds, dirs, squad, fol, follows, order]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const batch = shown.filter((r) => r.event_type === "selection_called" || r.event_type === "selection_left_out");
   const rest = shown.filter((r) => !(r.event_type === "selection_called" || r.event_type === "selection_left_out"));
@@ -102,13 +104,7 @@ export function MoversExplorer({ rows, competitions, locale, ctx, horizon, lastA
             {d.common.followedOnly}
           </Chip>
         </FilterRow>
-        <FilterRow label={d.common.competition}>
-          {competitions.map((c) => (
-            <Chip key={c.league} pressed={comp.includes(c.league)} onClick={() => toggle("comp", comp, c.league)}>
-              {c.competition_name}
-            </Chip>
-          ))}
-        </FilterRow>
+        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
       </FilterBar>
 
       <p className="mb-3 text-sm text-muted">

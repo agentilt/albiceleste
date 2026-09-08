@@ -38,7 +38,7 @@ export function getPresence() {
 
 export function getPlayerIndex() {
   return rows<PlayerIndexEntry>(`
-    select player_key as key, full_name as name, current_team_name as team, current_competition as competition
+    select player_key as key, full_name as name, current_team_name as team, current_competition as competition, current_league as league
     from marts.dim_player where ${PAGE_PLAYERS}
     order by in_tracked_squad desc, full_name
   `);

@@ -10,6 +10,7 @@ import { routes, switchLocale } from "@/lib/routes";
 export function navItems(locale: Locale): NavItem[] {
   const d = t(locale);
   return [
+    { href: routes.round(locale), label: d.nav.round },
     { href: routes.pool(locale), label: d.nav.pool },
     { href: routes.movers(locale), label: d.nav.movers },
     { href: routes.compare(locale), label: d.nav.compare },

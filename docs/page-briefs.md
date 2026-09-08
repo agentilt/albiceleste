@@ -31,8 +31,8 @@ the international windows are the heartbeat; "what changed" is the briefing befo
   player search on Compare): the fourteen competitions as chips plus three presets (Top 5 de Europa; Sudamérica: Argentina and
   Brazil; Resto: the other seven). The selection travels in the URL (`comp=`) so a view can be shared, and the last selection is
   remembered in the browser as the default on the next list page when the URL carries none, with a visible "clear" chip so the
-  narrowing is never silent. Home stays whole (it is the briefing), but every link out of Home carries the current selection.
-  Settled 2026-09-08.
+  narrowing is never silent. Home stays whole (it is the briefing); its links need not carry the selection because the remembered default applies on
+  the next list page. Settled 2026-09-08; built the same day.
 - **Follow list.** Stored in the browser; follow buttons on player pages and on every list row; a share link encodes the list in the
   URL (replace or merge on open); a "followed" filter on Pool, Movers and Next cycle; the compare page can be seeded from it.
   One compact JSON of every pool player is generated at build so the follow block renders client-side from a single file.
@@ -282,7 +282,7 @@ Off the page: anything about the pool itself.
 
 ## La fecha (The round)
 
-**Settled 2026-09-08.**
+**Settled 2026-09-08; built the same day.**
 
 Purpose: the round as one picture, so the question "what did the pool do this week?" has an answer that lines players of the same
 position up next to each other, including the ones who did not play. The question it answers: "who played this round, how much,

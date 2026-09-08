@@ -1,9 +1,11 @@
 "use client";
 
 import { AgeScatter, Chip, type ColumnSpec, FilterBar, FilterRow, type Row, SortableTable, Tag } from "@albiceleste/ui";
-import type { AgeBand, TrajectoryRow } from "@albiceleste/data";
+import type { AgeBand, Competition, TrajectoryRow } from "@albiceleste/data";
 import { useMemo } from "react";
+import { CompetitionChips } from "@/components/CompetitionChips";
 import { FollowStar } from "@/components/FollowStar";
+import { useCompetitionFilter } from "@/lib/compfilter";
 import { fmtDate, fmtDec, fmtInt, fmtPct, shareToPct } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
@@ -37,9 +39,10 @@ export function CohortScatter({ rows, band, locale }: { rows: TrajectoryRow[]; b
 }
 
 /** The cohort list: trajectory columns, U21 and followed toggles, position chips. */
-export function CohortExplorer({ rows, locale }: { rows: TrajectoryRow[]; locale: Locale }) {
+export function CohortExplorer({ rows, competitions, locale }: { rows: TrajectoryRow[]; competitions: Competition[]; locale: Locale }) {
   const d = t(locale);
   const { get, set } = useUrlState();
+  const comp = useCompetitionFilter();
   const { follows } = useFollows();
   const { notes } = useNotes();
   const pos = listParam(get("pos"));
@@ -59,9 +62,10 @@ export function CohortExplorer({ rows, locale }: { rows: TrajectoryRow[]; locale
           (pos.length === 0 || (r.pos_group !== null && pos.includes(r.pos_group))) &&
           (!u21 || (r.age !== null && r.age <= 21)) &&
           (!fol || follows.includes(r.player_key)) &&
+          comp.matches(r.league) &&
           (abroad === null || (abroad === "abroad" ? r.is_abroad : !r.is_abroad)),
       ),
-    [rows, pos, u21, fol, follows, abroad],
+    [rows, pos, u21, fol, follows, abroad, comp.selected], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const columns: ColumnSpec[] = [
@@ -120,6 +124,7 @@ export function CohortExplorer({ rows, locale }: { rows: TrajectoryRow[]; locale
           </Chip>
           <span className="text-sm text-muted">{d.pool.count(shown.length, rows.length)}</span>
         </FilterRow>
+        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
       </FilterBar>
       <SortableTable columns={columns} rows={shown as unknown as Row[]} initialSort="trajectory" initialDir="desc" emptyText={d.common.empty} LinkComponent={AppLink} />
     </>

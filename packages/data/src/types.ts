@@ -24,6 +24,7 @@ export interface PlayerIndexEntry {
   name: string;
   team: string | null;
   competition: string | null;
+  league: string | null;
 }
 
 export interface Player {
@@ -513,4 +514,55 @@ export interface PlayerExtra {
   windows: SelectionWindow[];
   trajectory: TrajectoryRow | null;
   nt_status: { status: string; since: string | null } | null;
+}
+
+// ---- La fecha (the round in review) ----------------------------------------------------------------------------------
+
+export interface RoundMatch {
+  match_key: string;
+  match_date: string;
+  home_team: string;
+  away_team: string;
+  home_score: number | null;
+  away_score: number | null;
+  is_home: boolean;
+  competition: string;
+  /** null when the player has no row for the club's match (unused or absent) */
+  played: boolean | null;
+  is_starter: boolean | null;
+  minutes: number | null;
+  goals: number | null;
+  assists: number | null;
+  rating: number | null;
+}
+
+export type RoundCategory = "played" | "did_not_play" | "club_idle";
+
+export interface RoundRow {
+  player_key: string;
+  full_name: string;
+  pos_group: string;
+  /** rank within the position as of the week's Monday (null before the ranking starts) */
+  pos_rank: number | null;
+  in_last_squad: boolean;
+  state: State;
+  infirmary_reason: InfirmaryReason | null;
+  team: string | null;
+  competition: string | null;
+  league: string | null;
+  category: RoundCategory;
+  matches: RoundMatch[];
+  team_matches: number;
+  apps: number;
+  starts: number;
+  minutes: number;
+  goals: number;
+  assists: number;
+  rating: number | null;
+}
+
+export interface RoundWeek {
+  week_start: string;
+  week_end: string;
+  matches: number;
 }

@@ -13,6 +13,9 @@ import type {
   PlayerExtra,
   PoolRow,
   RankPoint,
+  RoundMatch,
+  RoundRow,
+  RoundWeek,
   SelectionWindow,
   SquadListRow,
   TrajectoryRow,
@@ -364,4 +367,118 @@ export async function getPoolJson() {
 
 export function horizon(): string {
   return manifest().data_as_of;
+}
+
+// ---- La fecha ----------------------------------------------------------------------------------------------------------
+
+/** Every calendar week (Monday start) with at least one completed match in the data, oldest first. */
+export function getWeeks() {
+  return rows<RoundWeek>(`
+    select date_trunc('week', match_date)::date as week_start, (date_trunc('week', match_date) + interval 6 day)::date as week_end, count(*) as matches
+    from marts.fct_match where is_completed group by 1, 2 order by 1
+  `);
+}
+
+/** Monday of the week that holds the data horizon. */
+export async function currentWeekStart(): Promise<string> {
+  const r = await one<{ ws: string }>(`select date_trunc('week', as_of())::date as ws`);
+  return r!.ws;
+}
+
+/**
+ * The round: one row per pool player whose club played in the week (or who is in the last squad, ranked, or followed later
+ * on the client), with the club's matches as sub-lines and the week's totals. Rank and team are taken as of the week's Monday.
+ */
+const roundCache = new Map<string, Promise<RoundRow[]>>();
+
+export function getRound(weekStart: string): Promise<RoundRow[]> {
+  if (!roundCache.has(weekStart)) roundCache.set(weekStart, loadRound(weekStart));
+  return roundCache.get(weekStart)!;
+}
+
+/** The default scope of the round page: the last squad and the top fifteen of each position. */
+export function inRoundScope(r: RoundRow): boolean {
+  return r.in_last_squad || (r.pos_rank !== null && r.pos_rank <= 15);
+}
+
+async function loadRound(weekStart: string): Promise<RoundRow[]> {
+  const r = await rows<Omit<RoundRow, "matches"> & { matches: string }>(
+    `
+    with wk as (select ?::date as ws, (?::date + interval 6 day)::date as we),
+    pool as (
+      select s.player_key, s.full_name, s.pos_group, coalesce(s.in_last_squad, false) as in_last_squad, s.state, s.infirmary_reason,
+             d.current_espn_team_id, d.current_team_name, d.current_league, d.current_competition
+      from marts.player_state s join marts.dim_player d using (player_key)
+      where s.state <> 'retired'
+    ),
+    rank_asof as (
+      select player_key, team_id, pos_rank
+      from marts.player_rank_history, wk
+      where as_of <= wk.ws
+      qualify row_number() over (partition by player_key order by as_of desc) = 1
+    ),
+    -- the team the player belonged to that week: his own rows in the week, else the rank history's team, else the current club
+    week_rows as (
+      select f.player_key, f.match_key, f.espn_team_id, f.played, f.is_starter, f.minutes_played, f.goals, f.assists, f.match_rating, f.is_home
+      from marts.fct_player_match_stats f join marts.fct_match m using (match_key), wk
+      where m.match_date between wk.ws and wk.we and m.is_completed
+    ),
+    team_of as (
+      select p.player_key,
+             coalesce((select min(w.espn_team_id) from week_rows w where w.player_key = p.player_key), a.team_id, p.current_espn_team_id) as team_id
+      from pool p left join rank_asof a using (player_key)
+    ),
+    club_matches as (
+      select t.player_key, m.match_key, m.match_date, m.home_team_name as home_team, m.away_team_name as away_team, m.home_score, m.away_score,
+             (m.home_espn_team_id = t.team_id) as is_home, m.competition_name as competition
+      from team_of t join marts.fct_match m on t.team_id in (m.home_espn_team_id, m.away_espn_team_id), wk
+      where m.match_date between wk.ws and wk.we and m.is_completed
+    ),
+    lines as (
+      select c.*, w.played, w.is_starter, w.minutes_played as minutes, w.goals, w.assists, w.match_rating as rating
+      from club_matches c left join week_rows w on w.player_key = c.player_key and w.match_key = c.match_key
+    ),
+    agg as (
+      select player_key,
+             count(*) as team_matches,
+             count(*) filter (where played) as apps,
+             count(*) filter (where is_starter) as starts,
+             coalesce(sum(minutes), 0) as minutes,
+             coalesce(sum(goals), 0) as goals,
+             coalesce(sum(assists), 0) as assists,
+             avg(rating) filter (where played) as rating,
+             to_json(list({'match_key': match_key, 'match_date': match_date, 'home_team': home_team, 'away_team': away_team,
+                           'home_score': home_score, 'away_score': away_score, 'is_home': is_home, 'competition': competition,
+                           'played': played, 'is_starter': is_starter, 'minutes': minutes, 'goals': goals, 'assists': assists, 'rating': rating}
+                          order by match_date, match_key)) as matches
+      from lines group by 1
+    )
+    select p.player_key, p.full_name, p.pos_group, a.pos_rank, p.in_last_squad, p.state, p.infirmary_reason,
+           coalesce((select min(coalesce(t.team_name, '')) from marts.dim_team t where t.espn_team_id = tf.team_id and t.is_current_member), p.current_team_name) as team,
+           p.current_competition as competition, p.current_league as league,
+           case when coalesce(g.apps, 0) > 0 then 'played' when coalesce(g.team_matches, 0) > 0 then 'did_not_play' else 'club_idle' end as category,
+           coalesce(g.matches, '[]') as matches,
+           coalesce(g.team_matches, 0) as team_matches, coalesce(g.apps, 0) as apps, coalesce(g.starts, 0) as starts,
+           coalesce(g.minutes, 0) as minutes, coalesce(g.goals, 0) as goals, coalesce(g.assists, 0) as assists, g.rating
+    from pool p
+    left join rank_asof a using (player_key)
+    left join team_of tf using (player_key)
+    left join agg g using (player_key)
+    order by p.pos_group, a.pos_rank nulls last, p.full_name
+    `,
+    [weekStart, weekStart],
+  );
+  return r.map((x) => ({ ...x, matches: JSON.parse(x.matches) as RoundMatch[] }));
+}
+
+/** Movers dated inside a window, importance order. */
+export function getMoversBetween(from: string, to: string, limit = 60) {
+  return rows<MoverRow>(
+    `select m.event_key, m.player_key, m.full_name, m.event_type, m.event_date, m.league, m.current_competition as competition, m.current_team_name as team,
+            m.level_rank, coalesce(m.is_abroad, false) as is_abroad, m.age, m.pos_group, m.pos_rank, m.state, coalesce(m.in_last_squad, false) as in_last_squad,
+            m.evidence, m.direction, m.importance
+     from marts.movers m where m.event_date between ?::date and ?::date
+     order by m.importance desc, m.event_date desc, m.full_name limit ${Number(limit)}`,
+    [from, to],
+  );
 }

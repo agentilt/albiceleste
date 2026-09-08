@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Bars, LineChart, Note, PageTitle, Section, StaticTable } from "@albiceleste/ui";
-import { getAgeBands, getExportsByCountry, getExportsByYear, getMovers, getTrajectory, getYouthEvents, manifest } from "@albiceleste/data";
+import { getAgeBands, getCompetitions, getExportsByCountry, getExportsByYear, getMovers, getTrajectory, getYouthEvents, manifest } from "@albiceleste/data";
 import { CohortExplorer, CohortScatter } from "@/components/Cohort";
 import { MoverLine } from "@/components/MoverLine";
 import { eventContext } from "@/lib/ctx";
@@ -26,7 +26,7 @@ export default async function NextCyclePage({ params }: { params: Promise<{ loca
   const locale = await readLocale(params);
   const d = t(locale);
   const horizon = manifest().data_as_of;
-  const [rows, band, youth, movers, byCountry, byYear, ctx] = await Promise.all([getTrajectory(), getAgeBands(), getYouthEvents(), getMovers(), getExportsByCountry(2015, 12), getExportsByYear(2015), eventContext()]);
+  const [rows, band, youth, movers, byCountry, byYear, ctx, competitions] = await Promise.all([getTrajectory(), getAgeBands(), getYouthEvents(), getMovers(), getExportsByCountry(2015, 12), getExportsByYear(2015), eventContext(), getCompetitions()]);
   const keys = new Set(rows.map((r) => r.player_key));
   const breakthroughs = movers.filter((m) => keys.has(m.player_key) && BREAKTHROUGH_KINDS.has(m.event_type)).slice(0, 30);
   const retention = rows.filter((r) => r.dual_national_untied);
@@ -55,7 +55,7 @@ export default async function NextCyclePage({ params }: { params: Promise<{ loca
 
       <Section title={d.next.list} aside={d.next.trajectory}>
         <Suspense>
-          <CohortExplorer rows={rows} locale={locale} />
+          <CohortExplorer rows={rows} competitions={competitions} locale={locale} />
         </Suspense>
         <Note>{d.next.trajectoryNote}</Note>
       </Section>
