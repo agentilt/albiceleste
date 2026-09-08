@@ -31,10 +31,11 @@ export function SiteHeader({ locale, meta, right }: { locale: Locale; meta: Reac
       homeHref={routes.home(locale)}
       LinkComponent={AppLink}
       right={
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           {right}
-          <AppLink href={switchLocale(path, other)} className="font-mono text-xs uppercase tracking-wide text-muted hover:text-ink">
-            {d.site.language}
+          <AppLink href={switchLocale(path, other)} className="hit inline-flex items-center py-2 font-mono text-xs uppercase tracking-wide text-muted hover:text-ink" aria-label={d.site.language}>
+            <span className="sm:hidden">{d.site.language.slice(0, 2)}</span>
+            <span className="hidden sm:inline">{d.site.language}</span>
           </AppLink>
         </div>
       }

@@ -60,7 +60,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     href: key ? routes.player(locale, key) : undefined,
     club: p?.team_short ?? p?.team ?? null,
     rank: p?.pos_rank ?? null,
-    marked: false,
     stats: p && p.state !== "retired" && p.state !== "out" ? stats(p, g) : undefined,
     note: p && (p.state === "retired" || p.state === "out") ? d.state[p.state] : undefined,
   });
@@ -105,7 +104,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
         {r.full_name}
       </AppLink>
-      <span className="text-muted"> {r.team}</span>
+      <span className="text-muted"> {byKey.get(r.player_key)?.team_short ?? r.team}</span>
       {r.in_last_squad && (
         <>
           {" "}
@@ -151,12 +150,13 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             rows={best.map((r) => {
               const cs = isDef(r.pos_group) ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
               const last = [...r.matches].reverse().find((x) => x.played);
+              // what matters first, so a tight row cuts the minutes, never the goals or the score
               const facts = [
                 r.goals > 0 ? `${r.goals} G` : null,
                 r.assists > 0 ? `${r.assists} A` : null,
                 cs > 0 ? d.home.week.cleanSheet(cs) : null,
-                `${r.minutes}′${r.apps > 1 ? ` · ${r.apps} ${d.common.matches}` : ""}`,
                 last ? `${last.is_home ? d.common.vs : "@"} ${last.is_home ? last.away_team : last.home_team} ${last.is_home ? last.home_score : last.away_score}–${last.is_home ? last.away_score : last.home_score}` : null,
+                `${r.minutes}′${r.apps > 1 ? ` · ${r.apps} ${d.common.matches}` : ""}`,
               ].filter(Boolean);
               return { key: r.player_key, left: who(r), right: facts.join(" · ") };
             })}

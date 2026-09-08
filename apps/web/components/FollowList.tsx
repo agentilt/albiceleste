@@ -81,8 +81,8 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
   if (follows.length === 0) {
     return (
       <div className="text-sm text-ink-2">
-        {!compact && <p>{d.home.follow.empty}</p>}
-        <p className={compact ? "" : "mt-2"}>
+        <p>{d.home.follow.empty}</p>
+        <p className="mt-2">
           <span className="text-muted">{d.home.follow.suggest} </span>
           {suggestions.map((s, i) => (
             <span key={s.key}>
@@ -110,7 +110,9 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
               <span className="text-muted"> {p.t}</span>
               <span className="text-muted"> · {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}</span> <RankArrow change={p.d} className="text-xs" />
             </span>
-            <span className="shrink-0 text-ink-2">{p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o} · ${fmtKickoff(locale, p.nm.k)}` : ""}</span>
+            <span className="min-w-0 truncate text-right text-ink-2" style={{ flex: "0 1 auto", maxWidth: "55%" }}>
+              {p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o} · ${fmtKickoff(locale, p.nm.k)}` : ""}
+            </span>
           </li>
         ))}
       </ul>

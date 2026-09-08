@@ -25,46 +25,62 @@ export interface SheetColumn {
   hint?: string;
 }
 
+/**
+ * The position columns. One column on a phone, two on a tablet, four from `lg`. Every column is ruled to the same depth
+ * (blank lines under a short position) so the sheet reads as one filled box; the fillers vanish on a phone where the
+ * columns stack.
+ */
 function Columns({ columns, dense, small, offset, LinkComponent }: { columns: SheetColumn[]; dense: boolean; small: boolean; offset: number; LinkComponent: LinkLike }) {
   let i = offset;
   const row = dense ? "h-9 text-[15px]" : "py-1 text-sm";
+  const depth = Math.max(0, ...columns.map((c) => c.slots));
+  const marks = columns.some((c) => c.names.some((n) => n.marked));
+  const cols = marks ? "grid-cols-[1.25rem_minmax(0,1fr)_auto_auto]" : "grid-cols-[1.25rem_minmax(0,1fr)_auto]";
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
+    <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
       {columns.map((col) => (
         <div key={col.title} className="min-w-0">
           {!small && (
             <div className="mb-1 flex items-baseline justify-between gap-2 border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted">
-              <span>
+              <span className="whitespace-nowrap">
                 {col.title} <span className="num">{col.slots}</span>
               </span>
-              {col.hint && <span className="normal-case tracking-normal">{col.hint}</span>}
+              {col.hint && <span className="whitespace-nowrap normal-case tracking-normal">{col.hint}</span>}
             </div>
           )}
           <ol>
-            {Array.from({ length: col.slots }, (_, k) => {
-              const n = col.names[k];
+            {Array.from({ length: depth }, (_, k) => {
+              const filler = k >= col.slots;
+              const n = filler ? undefined : col.names[k];
               const delay = `${Math.min(i++, 40) * 20}ms`;
               return (
-                <li key={n ? n.key : `empty-${k}`} className={`sheet-row grid grid-cols-[1.25rem_1fr_auto_auto] items-center gap-x-2 border-b border-rule ${row}`} style={{ animationDelay: delay }}>
+                <li
+                  key={n ? n.key : `empty-${k}`}
+                  className={`sheet-row ${filler ? "hidden sm:grid" : "grid"} ${cols} items-center gap-x-2 border-b border-rule ${row}`}
+                  style={{ animationDelay: delay }}
+                  aria-hidden={filler || undefined}
+                >
                   <span className="num font-mono text-[11px] text-muted">{n?.rank ?? ""}</span>
                   {n ? (
                     <span className={`condensed min-w-0 leading-tight ${dense ? "flex items-baseline gap-1.5" : ""}`}>
                       {n.href ? (
-                        <LinkComponent href={n.href} className="shrink-0 font-medium text-ink hover:text-celeste-deep">
+                        <LinkComponent href={n.href} className="min-w-0 truncate font-medium text-ink hover:text-celeste-deep">
                           {n.name}
                         </LinkComponent>
                       ) : (
-                        <span className="shrink-0 font-medium">{n.name}</span>
+                        <span className="min-w-0 truncate font-medium">{n.name}</span>
                       )}
-                      {n.club && (dense ? <span className="min-w-0 truncate text-xs text-muted">{n.club}</span> : <span className="block truncate text-[11px] text-muted">{n.club}</span>)}
+                      {n.club && (dense ? <span className="min-w-0 shrink-[3] truncate text-xs text-muted">{n.club}</span> : <span className="block truncate text-[11px] text-muted">{n.club}</span>)}
                     </span>
                   ) : (
-                    <span className="text-rule-strong">—</span>
+                    <span className="text-rule-strong">{filler ? "" : "—"}</span>
                   )}
                   <span className="num whitespace-nowrap font-mono text-xs text-ink-2">{n?.note ?? n?.stats ?? ""}</span>
-                  <span className="text-[10px] text-gold" title={n?.marked ? "last squad" : undefined} aria-hidden={!n?.marked}>
-                    {n?.marked ? "●" : ""}
-                  </span>
+                  {marks && (
+                    <span className="text-[10px] text-gold" title={n?.marked ? "last squad" : undefined} aria-hidden={!n?.marked}>
+                      {n?.marked ? "●" : ""}
+                    </span>
+                  )}
                 </li>
               );
             })}
@@ -114,7 +130,7 @@ export function SquadSheet({
             {title}
             {hint && <Hint text={hint} href={hintHref} />}
           </h2>
-          {aside && <div className="min-w-0 truncate text-sm text-muted">{aside}</div>}
+          {aside && <div className="hidden min-w-0 truncate text-sm text-muted sm:block">{aside}</div>}
         </div>
       )}
       <Columns columns={columns} dense={dense} small={false} offset={0} LinkComponent={LinkComponent} />

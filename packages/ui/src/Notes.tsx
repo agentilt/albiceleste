@@ -58,7 +58,7 @@ export function NoteComposer({ labels, onSave, initial, onCancel, autoFocus = fa
               {labels.cancel}
             </button>
           )}
-          <button type="submit" className="chip" aria-pressed="true" disabled={!text.trim()}>
+          <button type="submit" className="chip chip-primary" disabled={!text.trim()}>
             {labels.save}
           </button>
         </span>

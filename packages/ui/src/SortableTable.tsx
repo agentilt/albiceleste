@@ -3,6 +3,7 @@
 import { type ReactNode, useMemo, useState } from "react";
 import { date, dec1, dec2, eur, int, pct } from "./format";
 import { DefaultLink, type LinkLike } from "./link";
+import { priorityClass } from "./priority";
 
 /** Serializable column spec, so a server page can hand a client table its layout. */
 export interface ColumnSpec {
@@ -21,6 +22,10 @@ export interface ColumnSpec {
   title?: string;
   /** header text when the label is an abbreviation that needs no sort affordance change */
   sortable?: boolean;
+  /** 1 (default): always shown; 2: hidden on a phone (under `sm`); 3: hidden under `lg`. The phone keeps what matters. */
+  priority?: 1 | 2 | 3;
+  /** truncate the cell at this CSS width (club and competition names) instead of widening the table */
+  maxWidth?: string;
 }
 
 export type Row = Record<string, string | number | boolean | string[] | null>;
@@ -31,7 +36,8 @@ function numeric(kind: ColumnSpec["kind"]): boolean {
 
 /**
  * Client-side sortable table. Click a header to sort; numeric kinds sort descending first. `kind: "link"` renders the
- * cell as a link built by `hrefFor(row[keyField])`, using `LinkComponent` (a plain anchor by default).
+ * cell as a link built by `hrefFor(row[keyField])`, using `LinkComponent` (a plain anchor by default). The wrapper
+ * scrolls sideways with a shadow on the hidden edge; give secondary columns a `priority` so a phone drops them instead.
  */
 export function SortableTable({
   columns,
@@ -47,6 +53,7 @@ export function SortableTable({
   LinkComponent = DefaultLink,
   rowKey,
   rowClassName,
+  caption,
 }: {
   columns: ColumnSpec[];
   rows: Row[];
@@ -62,6 +69,8 @@ export function SortableTable({
   LinkComponent?: LinkLike;
   rowKey?: (row: Row, i: number) => string;
   rowClassName?: (row: Row) => string | undefined;
+  /** accessible table name (visually hidden) */
+  caption?: string;
 }) {
   const [sortState, setSortState] = useState<string | undefined>(initialSort);
   const [dirState, setDirState] = useState<"asc" | "desc">(initialDir);
@@ -132,17 +141,33 @@ export function SortableTable({
     }
   }
 
+  function clipped(spec: ColumnSpec, content: ReactNode) {
+    if (!spec.maxWidth) return content;
+    return (
+      <span className="block truncate" style={{ maxWidth: spec.maxWidth }} title={typeof content === "string" ? content : undefined}>
+        {content}
+      </span>
+    );
+  }
+
   return (
-    <div className={`overflow-x-auto ${sticky ? "sticky-head" : ""}`}>
+    <div className={`scroll-x ${sticky ? "sticky-head" : ""}`}>
       <table className="data">
+        {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
           <tr>
             {columns.map((c) => (
-              <th key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : ""} style={c.width ? { width: c.width } : undefined} title={c.title}>
+              <th
+                key={c.key}
+                className={`${numeric(c.kind) || c.align === "r" ? "r" : ""} ${priorityClass(c.priority)}`}
+                style={c.width ? { width: c.width } : undefined}
+                title={c.title}
+                aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}
+              >
                 {c.sortable === false ? (
                   c.label
                 ) : (
-                  <button type="button" onClick={() => toggle(c.key, c.kind)} aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}>
+                  <button type="button" onClick={() => toggle(c.key, c.kind)}>
                     {c.label}
                     {sort === c.key ? (dir === "asc" ? " ↑" : " ↓") : ""}
                   </button>
@@ -162,8 +187,8 @@ export function SortableTable({
           {sorted.map((r, i) => (
             <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
               {columns.map((c) => (
-                <td key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""}>
-                  {cell(c, r)}
+                <td key={c.key} className={`${numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""} ${priorityClass(c.priority)}`}>
+                  {clipped(c, cell(c, r))}
                 </td>
               ))}
             </tr>

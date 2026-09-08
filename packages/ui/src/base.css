@@ -1,6 +1,11 @@
 /* Base rules shared by the site and the design-system previews. Components reference tokens only. */
 :root {
   color-scheme: light;
+  /* the colour a scrolling table fades into at its edges: the page ground, or the panel surface inside a panel */
+  --scroll-bg: var(--color-paper);
+}
+.bg-surface {
+  --scroll-bg: var(--color-surface);
 }
 
 html {
@@ -38,6 +43,11 @@ h2 {
 h3 {
   font-weight: 700;
   letter-spacing: 0;
+}
+
+/* Anchored headings land with the heading visible, not under the fold. */
+[id] {
+  scroll-margin-top: 1.5rem;
 }
 
 .num {
@@ -103,14 +113,35 @@ table.data th button {
   all: unset;
   cursor: pointer;
 }
-table.data th button:hover {
+table.data th button:hover,
+table.data th[aria-sort] button {
   color: var(--color-ink);
+}
+table.data th button:focus-visible {
+  outline: 2px solid var(--color-celeste-deep);
+  outline-offset: 2px;
 }
 .sticky-head thead th {
   position: sticky;
   top: 0;
-  background: var(--color-paper);
+  background: var(--scroll-bg);
   z-index: 1;
+}
+
+/* A horizontal scroller that shows a shadow on whichever edge still has content: tables, the phone nav. */
+.scroll-x {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--scroll-bg) 45%, transparent) left / 36px 100% no-repeat local,
+    linear-gradient(to left, var(--scroll-bg) 45%, transparent) right / 36px 100% no-repeat local,
+    linear-gradient(to right, rgb(15 23 33 / 0.16), transparent) left / 12px 100% no-repeat scroll,
+    linear-gradient(to left, rgb(15 23 33 / 0.16), transparent) right / 12px 100% no-repeat scroll;
+}
+.scroll-x.no-bar {
+  scrollbar-width: none;
+}
+.scroll-x.no-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .link {
@@ -121,29 +152,111 @@ table.data th button:hover {
   text-underline-offset: 0.15em;
 }
 
+/* Chips: filters, switches and small actions. 32px tall with a mouse, 41px under a finger. */
 .chip {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.35rem;
+  min-height: 1.9rem;
   border: 1px solid var(--color-rule-strong);
   border-radius: var(--radius-xs);
-  padding: 0.2rem 0.55rem;
+  padding: 0.2rem 0.6rem;
   background: var(--color-surface);
   cursor: pointer;
   color: var(--color-ink-2);
   font: inherit;
   font-size: 0.8rem;
   font-stretch: 87.5%;
+  line-height: 1.2;
+  transition:
+    border-color 120ms,
+    color 120ms,
+    background-color 120ms;
 }
-.chip[aria-pressed="true"] {
+.chip:hover {
+  border-color: var(--color-ink-2);
+  color: var(--color-ink);
+}
+.chip[aria-pressed="true"],
+.chip[aria-checked="true"] {
   background: var(--color-ink);
   border-color: var(--color-ink);
   color: var(--color-paper);
 }
+.chip:disabled {
+  cursor: default;
+  color: var(--color-muted);
+  background: var(--color-paper);
+  border-color: var(--color-rule);
+}
+.chip-primary:not(:disabled) {
+  background: var(--color-celeste-deep);
+  border-color: var(--color-celeste-deep);
+  color: #fff;
+}
+.chip-primary:not(:disabled):hover {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+@media (pointer: coarse) {
+  .chip {
+    min-height: 2.4rem;
+    padding: 0.35rem 0.8rem;
+  }
+}
+
+/* A larger hit area for small controls (the "?", the follow star, a × button) without changing their size. */
+.hit {
+  position: relative;
+}
+.hit::before {
+  content: "";
+  position: absolute;
+  inset: -0.6rem;
+}
+
+/* Hover-and-focus tooltip from `data-tip`: the way explanations stay off the page but one gesture away. */
+.tip {
+  position: relative;
+}
+.tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  width: max-content;
+  max-width: min(20rem, 80vw);
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-rule-strong);
+  background: var(--color-surface);
+  color: var(--color-ink-2);
+  font: 400 0.8rem / 1.4 var(--font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  box-shadow: 0 4px 14px rgb(15 23 33 / 0.1);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.tip.tip-right::after {
+  left: auto;
+  right: 0;
+}
+.tip:hover::after,
+.tip:focus-visible::after,
+.tip:active::after {
+  opacity: 1;
+}
+
 .chip:focus-visible,
 .link:focus-visible,
 button:focus-visible,
-a:focus-visible {
+a:focus-visible,
+[tabindex]:focus-visible {
   outline: 2px solid var(--color-celeste-deep);
   outline-offset: 2px;
 }
@@ -158,6 +271,14 @@ textarea {
   background: var(--color-surface);
   padding: 0.3rem 0.5rem;
   color: var(--color-ink);
+  min-height: 1.9rem;
+}
+@media (pointer: coarse) {
+  select,
+  input[type="search"],
+  input[type="number"] {
+    min-height: 2.4rem;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

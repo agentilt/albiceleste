@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { max } from "d3-array";
 import { type ScaleTime, scaleLinear, scaleTime } from "d3-scale";
 import { line as d3line } from "d3-shape";
@@ -21,17 +22,40 @@ function xTicks(x: ScaleTime<number, number>, width: number): Date[] {
   return stride > 1 ? ticks.filter((_, i) => i % stride === 0) : ticks;
 }
 
-/** Horizontal magnitude bars: one hue, category labels on the left, the value printed at the bar end. Server-rendered SVG. */
-export function Bars({ data, width = 560, rowHeight = 26, format = int }: { data: { label: string; value: number }[]; width?: number; rowHeight?: number; format?: (v: number) => string }) {
-  if (data.length === 0) return <p className="text-sm text-muted">No data.</p>;
-  const labelW = 150;
+/**
+ * Two renders of one chart: the wide one from `sm` up, the narrow one below, so tick text stays legible on a phone
+ * instead of shrinking with the viewBox.
+ */
+function Twin({ wide, narrow }: { wide: ReactNode; narrow: ReactNode }) {
+  return (
+    <>
+      <div className="hidden sm:block">{wide}</div>
+      <div className="sm:hidden">{narrow}</div>
+    </>
+  );
+}
+
+export interface BarsProps {
+  data: { label: string; value: number }[];
+  width?: number;
+  rowHeight?: number;
+  format?: (v: number) => string;
+  /** accessible name, in the reader's language */
+  label?: string;
+  /** width of the phone render; omit for a single render */
+  narrow?: number;
+  empty?: string;
+}
+
+function BarsSvg({ data, width = 560, rowHeight = 26, format = int, label = "bar chart" }: Omit<BarsProps, "narrow" | "empty">) {
+  const labelW = Math.min(150, Math.round(width * 0.36));
   const valueW = 56;
   const height = data.length * rowHeight;
   const x = scaleLinear()
     .domain([0, max(data, (d) => d.value) ?? 1])
     .range([0, width - labelW - valueW]);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="bar chart" style={{ maxWidth: width }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label} style={{ maxWidth: width }}>
       {data.map((d, i) => {
         const y = i * rowHeight;
         return (
@@ -50,9 +74,26 @@ export function Bars({ data, width = 560, rowHeight = 26, format = int }: { data
   );
 }
 
-/** Per-match minutes as thin bars (starters in deep celeste, substitutes lighter) with a rolling average of five in ink. */
-export function MinutesTimeline({ points, width = 900, height = 220, markers = [] }: { points: { date: string; minutes: number; starter: boolean }[]; width?: number; height?: number; markers?: { date: string; label: string }[] }) {
-  if (points.length === 0) return <p className="text-sm text-muted">No matches.</p>;
+/** Horizontal magnitude bars: one hue, category labels on the left, the value printed at the bar end. Server-rendered SVG. */
+export function Bars(props: BarsProps) {
+  const { narrow, empty = "No data.", ...rest } = props;
+  if (rest.data.length === 0) return <p className="text-sm text-muted">{empty}</p>;
+  return narrow ? <Twin wide={<BarsSvg {...rest} />} narrow={<BarsSvg {...rest} width={narrow} />} /> : <BarsSvg {...rest} />;
+}
+
+export interface MinutesTimelineProps {
+  points: { date: string; minutes: number; starter: boolean }[];
+  width?: number;
+  height?: number;
+  markers?: { date: string; label: string }[];
+  /** BCP 47 tag for the tick dates */
+  locale?: string;
+  label?: string;
+  narrow?: number;
+  empty?: string;
+}
+
+function MinutesTimelineSvg({ points, width = 900, height = 220, markers = [], locale = "en-GB", label = "minutes per match" }: Omit<MinutesTimelineProps, "narrow" | "empty">) {
   const m = { top: 10, right: 12, bottom: 24, left: 34 };
   const iw = width - m.left - m.right;
   const ih = height - m.top - m.bottom;
@@ -69,7 +110,7 @@ export function MinutesTimeline({ points, width = 900, height = 220, markers = [
     .x((_, i) => x(dates[i]!))
     .y((v) => y(v))(rolling);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="minutes per match">
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label}>
       <g transform={`translate(${m.left},${m.top})`}>
         {[0, 45, 90].map((t) => (
           <g key={t}>
@@ -81,7 +122,7 @@ export function MinutesTimeline({ points, width = 900, height = 220, markers = [
         ))}
         {points.map((p, i) => (
           <rect key={p.date + i} x={x(dates[i]!) - 2} y={y(p.minutes)} width={4} height={ih - y(p.minutes)} fill={p.starter ? BLUE : "var(--color-celeste)"}>
-            <title>{`${p.date}: ${p.minutes} min${p.starter ? ", started" : ""}`}</title>
+            <title>{`${p.date}: ${p.minutes}′`}</title>
           </rect>
         ))}
         {path && <path d={path} fill="none" stroke={INK} strokeWidth={1.5} />}
@@ -97,7 +138,7 @@ export function MinutesTimeline({ points, width = 900, height = 220, markers = [
           ))}
         {xTicks(x, iw).map((t) => (
           <text key={t.toISOString()} x={x(t)} y={ih + 16} textAnchor="middle" fontSize={11} fill={MUTED}>
-            {t.toLocaleDateString("en-GB", spanYears(x) < 0.3 ? { day: "numeric", month: "short" } : { month: "short", year: "2-digit" })}
+            {t.toLocaleDateString(locale, spanYears(x) < 0.3 ? { day: "numeric", month: "short" } : { month: "short", year: "2-digit" })}
           </text>
         ))}
       </g>
@@ -105,9 +146,27 @@ export function MinutesTimeline({ points, width = 900, height = 220, markers = [
   );
 }
 
-/** Single-series line over dates or years, with points and a formatted y axis. */
-export function LineChart({ points, width = 560, height = 200, format = int, yLabel }: { points: { x: string | number; y: number }[]; width?: number; height?: number; format?: (v: number) => string; yLabel?: string }) {
-  if (points.length === 0) return <p className="text-sm text-muted">No data.</p>;
+/** Per-match minutes as thin bars (starters in deep celeste, substitutes lighter) with a rolling average of five in ink. */
+export function MinutesTimeline(props: MinutesTimelineProps) {
+  const { narrow, empty = "No matches.", ...rest } = props;
+  if (rest.points.length === 0) return <p className="text-sm text-muted">{empty}</p>;
+  return narrow ? <Twin wide={<MinutesTimelineSvg {...rest} />} narrow={<MinutesTimelineSvg {...rest} width={narrow} />} /> : <MinutesTimelineSvg {...rest} />;
+}
+
+export interface LineChartProps {
+  points: { x: string | number; y: number }[];
+  width?: number;
+  height?: number;
+  format?: (v: number) => string;
+  /** the series name: the accessible name and the fallback label */
+  yLabel?: string;
+  locale?: string;
+  label?: string;
+  narrow?: number;
+  empty?: string;
+}
+
+function LineChartSvg({ points, width = 560, height = 200, format = int, yLabel, locale = "en-GB", label }: Omit<LineChartProps, "narrow" | "empty">) {
   const m = { top: 12, right: 16, bottom: 24, left: 52 };
   const iw = width - m.left - m.right;
   const ih = height - m.top - m.bottom;
@@ -123,7 +182,7 @@ export function LineChart({ points, width = 560, height = 200, format = int, yLa
     .x((_, i) => x(xs[i]!))
     .y((p) => y(p.y))(points);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={yLabel ?? "line chart"} style={{ maxWidth: width }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label ?? yLabel ?? "line chart"} style={{ maxWidth: width }}>
       <g transform={`translate(${m.left},${m.top})`}>
         {y.ticks(4).map((t) => (
           <g key={t}>
@@ -141,7 +200,7 @@ export function LineChart({ points, width = 560, height = 200, format = int, yLa
         ))}
         {xTicks(x, iw).map((t) => (
           <text key={t.toISOString()} x={x(t)} y={ih + 16} textAnchor="middle" fontSize={11} fill={MUTED}>
-            {t.toLocaleDateString("en-GB", spanYears(x) >= 3 ? { year: "numeric" } : { month: "short", year: "2-digit" })}
+            {t.toLocaleDateString(locale, spanYears(x) >= 3 ? { year: "numeric" } : { month: "short", year: "2-digit" })}
           </text>
         ))}
       </g>
@@ -149,13 +208,21 @@ export function LineChart({ points, width = 560, height = 200, format = int, yLa
   );
 }
 
+/** Single-series line over dates or years, with points and a formatted y axis. */
+export function LineChart(props: LineChartProps) {
+  const { narrow, empty = "No data.", ...rest } = props;
+  if (rest.points.length === 0) return <p className="text-sm text-muted">{empty}</p>;
+  return narrow ? <Twin wide={<LineChartSvg {...rest} />} narrow={<LineChartSvg {...rest} width={narrow} />} /> : <LineChartSvg {...rest} />;
+}
+
 const SERIES = ["var(--color-ink)", "var(--color-celeste-deep)", "var(--color-gold)", "var(--color-danger)"];
 
 /**
  * Radar for Compare: every axis is a percentile (0–100) so the scale is identical; series are outlines with a light fill in
  * distinct strokes; the value is printed at each vertex in the series colour. Axis order is the caller's (fixed per position).
+ * A missing value (no ranking yet) leaves the vertex out rather than drawing it at zero.
  */
-export function Radar({ axes, series, size = 360 }: { axes: { key: string; label: string }[]; series: { name: string; values: (number | null)[] }[]; size?: number }) {
+export function Radar({ axes, series, size = 360, label = "radar" }: { axes: { key: string; label: string }[]; series: { name: string; values: (number | null)[] }[]; size?: number; label?: string }) {
   const n = axes.length;
   if (n < 3) return <p className="text-sm text-muted">—</p>;
   const cx = size / 2;
@@ -170,7 +237,7 @@ export function Radar({ axes, series, size = 360 }: { axes: { key: string; label
       .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`)
       .join(" ") + "Z";
   return (
-    <svg viewBox={`0 0 ${size} ${size}`} width="100%" role="img" aria-label="radar" style={{ maxWidth: size }}>
+    <svg viewBox={`0 0 ${size} ${size}`} width="100%" role="img" aria-label={label} style={{ maxWidth: size }}>
       {[25, 50, 75, 100].map((v) => (
         <path key={v} d={ring(v)} fill="none" stroke={v === 100 ? "var(--color-rule-strong)" : RULE} />
       ))}
@@ -188,20 +255,21 @@ export function Radar({ axes, series, size = 360 }: { axes: { key: string; label
         );
       })}
       {series.map((s, si) => {
-        const pts = s.values.map((v, i) => pt(i, v ?? 0));
-        const d = pts.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ") + "Z";
+        const present = s.values.map((v, i) => (v === null ? -1 : i)).filter((i) => i >= 0);
+        if (present.length === 0) return null;
+        const pts = present.map((i) => [i, pt(i, s.values[i]!)] as const);
+        const closed = present.length >= 3;
+        const d = present.length >= 2 ? pts.map(([, [x, y]], k) => `${k === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`).join(" ") + (closed ? "Z" : "") : null;
         const color = SERIES[si % SERIES.length];
         return (
           <g key={s.name}>
-            <path d={d} fill={color} fillOpacity={0.08} stroke={color} strokeWidth={1.75} />
-            {pts.map(([x, y], i) => (
+            {d && <path d={d} fill={closed ? color : "none"} fillOpacity={0.08} stroke={color} strokeWidth={1.75} />}
+            {pts.map(([i, [x, y]]) => (
               <g key={i}>
                 <circle cx={x} cy={y} r={2.5} fill={color} />
-                {s.values[i] !== null && (
-                  <text x={x + (Math.cos(angle(i)) >= 0 ? 6 : -6) + (si % 2 ? 0 : 0)} y={y - 6 + si * 11} textAnchor={Math.cos(angle(i)) >= 0 ? "start" : "end"} fontSize={10} fill={color} className="num">
-                    {s.values[i]}
-                  </text>
-                )}
+                <text x={x + (Math.cos(angle(i)) >= 0 ? 6 : -6)} y={y - 6 + si * 11} textAnchor={Math.cos(angle(i)) >= 0 ? "start" : "end"} fontSize={10} fill={color} className="num">
+                  {s.values[i]}
+                </text>
               </g>
             ))}
           </g>
@@ -212,13 +280,13 @@ export function Radar({ axes, series, size = 360 }: { axes: { key: string; label
 }
 
 /** Minutes per match as a small aligned strip: shared date domain so several sparklines line up in Compare. */
-export function Sparkline({ points, domain, width = 220, height = 36 }: { points: { date: string; minutes: number; starter: boolean }[]; domain: [string, string]; width?: number; height?: number }) {
+export function Sparkline({ points, domain, width = 220, height = 36, label = "minutes per match" }: { points: { date: string; minutes: number; starter: boolean }[]; domain: [string, string]; width?: number; height?: number; label?: string }) {
   const x = scaleTime()
     .domain([new Date(domain[0]), new Date(domain[1])])
     .range([2, width - 2]);
   const y = scaleLinear().domain([0, 100]).range([height - 1, 2]);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="minutes per match" style={{ maxWidth: width }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label} style={{ maxWidth: width }}>
       <line x1={0} x2={width} y1={height - 1} y2={height - 1} stroke={RULE} />
       {points.map((p, i) => (
         <rect key={p.date + i} x={x(new Date(p.date)) - 1.5} y={y(Math.min(100, p.minutes))} width={3} height={height - 1 - y(Math.min(100, p.minutes))} fill={p.starter ? BLUE : "var(--color-celeste)"}>
@@ -229,10 +297,21 @@ export function Sparkline({ points, domain, width = 220, height = 36 }: { points
   );
 }
 
-/** Rank within the position over time (1 at the top), with squad-announcement dates as vertical rules and call-ups as marks. */
-export function RankHistory({ points, windows = [], calls = [], width = 900, height = 220, maxRank }: { points: { date: string; rank: number | null }[]; windows?: { date: string; label: string }[]; calls?: string[]; width?: number; height?: number; maxRank?: number }) {
+export interface RankHistoryProps {
+  points: { date: string; rank: number | null }[];
+  windows?: { date: string; label: string }[];
+  calls?: string[];
+  width?: number;
+  height?: number;
+  maxRank?: number;
+  locale?: string;
+  label?: string;
+  narrow?: number;
+  empty?: string;
+}
+
+function RankHistorySvg({ points, windows = [], calls = [], width = 900, height = 220, maxRank, locale = "en-GB", label = "rank history" }: Omit<RankHistoryProps, "narrow" | "empty">) {
   const known = points.filter((p): p is { date: string; rank: number } => p.rank !== null);
-  if (known.length === 0) return <p className="text-sm text-muted">—</p>;
   const m = { top: 12, right: 12, bottom: 24, left: 34 };
   const iw = width - m.left - m.right;
   const ih = height - m.top - m.bottom;
@@ -255,7 +334,7 @@ export function RankHistory({ points, windows = [], calls = [], width = 900, hei
     .y((p) => y(p.rank));
   const ticks = [1, 5, 10, 20, 50].filter((t) => t <= top);
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label="rank history">
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label}>
       <g transform={`translate(${m.left},${m.top})`}>
         {ticks.map((t) => (
           <g key={t}>
@@ -282,7 +361,7 @@ export function RankHistory({ points, windows = [], calls = [], width = 900, hei
         })}
         {xTicks(x, iw).map((t) => (
           <text key={t.toISOString()} x={x(t)} y={ih + 16} textAnchor="middle" fontSize={11} fill={MUTED}>
-            {t.toLocaleDateString("en-GB", { month: "short", year: "2-digit" })}
+            {t.toLocaleDateString(locale, { month: "short", year: "2-digit" })}
           </text>
         ))}
       </g>
@@ -290,25 +369,25 @@ export function RankHistory({ points, windows = [], calls = [], width = 900, hei
   );
 }
 
-/**
- * Age against an activity index for the Next cycle: one point per youngster, the pool's reference band (p25–p75, median as a
- * line, p90 dotted) behind. Followed points are filled. Hover names a point.
- */
-export function AgeScatter({
-  points,
-  band,
-  xDomain = [16, 23],
-  width = 420,
-  height = 240,
-  yLabel = "index",
-}: {
+/** Rank within the position over time (1 at the top), with squad-announcement dates as vertical rules and call-ups as marks. */
+export function RankHistory(props: RankHistoryProps) {
+  const { narrow, empty = "—", ...rest } = props;
+  if (!rest.points.some((p) => p.rank !== null)) return <p className="text-sm text-muted">{empty}</p>;
+  return narrow ? <Twin wide={<RankHistorySvg {...rest} />} narrow={<RankHistorySvg {...rest} width={narrow} />} /> : <RankHistorySvg {...rest} />;
+}
+
+export interface AgeScatterProps {
   points: { key: string; label: string; age: number; value: number; followed?: boolean; href?: string }[];
   band: { age: number; p25: number; p50: number; p75: number; p90: number }[];
   xDomain?: [number, number];
   width?: number;
   height?: number;
   yLabel?: string;
-}) {
+  label?: string;
+  narrow?: number;
+}
+
+function AgeScatterSvg({ points, band, xDomain = [16, 23], width = 420, height = 240, yLabel = "index", label }: Omit<AgeScatterProps, "narrow">) {
   const m = { top: 12, right: 12, bottom: 26, left: 36 };
   const iw = width - m.left - m.right;
   const ih = height - m.top - m.bottom;
@@ -324,7 +403,7 @@ export function AgeScatter({
   // spread points sharing an age a little so they do not stack
   const byAge = new Map<number, number>();
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={`age against ${yLabel}`} style={{ maxWidth: width }}>
+    <svg viewBox={`0 0 ${width} ${height}`} width="100%" role="img" aria-label={label ?? `age against ${yLabel}`} style={{ maxWidth: width }}>
       <g transform={`translate(${m.left},${m.top})`}>
         {[0, 0.25, 0.5, 0.75, 1].map((t) => (
           <g key={t}>
@@ -346,7 +425,14 @@ export function AgeScatter({
           const dot = <circle cx={cx} cy={cy} r={p.followed ? 4 : 3} fill={p.followed ? INK : "var(--color-surface)"} stroke={p.followed ? INK : BLUE} strokeWidth={1.25} />;
           return (
             <g key={p.key}>
-              {p.href ? <a href={p.href}>{dot}</a> : dot}
+              {/* points stay clickable but out of the tab order: hundreds of stops would trap a keyboard user */}
+              {p.href ? (
+                <a href={p.href} tabIndex={-1} aria-hidden="true">
+                  {dot}
+                </a>
+              ) : (
+                dot
+              )}
               <title>{`${p.label}: ${p.age}, ${p.value.toFixed(2)}`}</title>
             </g>
           );
@@ -359,4 +445,13 @@ export function AgeScatter({
       </g>
     </svg>
   );
+}
+
+/**
+ * Age against an activity index for the Next cycle: one point per youngster, the pool's reference band (p25–p75, median as a
+ * line, p90 dotted) behind. Followed points are filled. Hover names a point.
+ */
+export function AgeScatter(props: AgeScatterProps) {
+  const { narrow, ...rest } = props;
+  return narrow ? <Twin wide={<AgeScatterSvg {...rest} />} narrow={<AgeScatterSvg {...rest} width={narrow} />} /> : <AgeScatterSvg {...rest} />;
 }
