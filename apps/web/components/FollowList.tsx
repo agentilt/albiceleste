@@ -80,7 +80,7 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
 
   if (follows.length === 0) {
     return (
-      <div className={compact ? "text-xs text-ink-2" : "text-sm text-ink-2"}>
+      <div className="text-sm text-ink-2">
         {!compact && <p>{d.home.follow.empty}</p>}
         <p className={compact ? "" : "mt-2"}>
           <span className="text-muted">{d.home.follow.suggest} </span>
@@ -100,16 +100,17 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
   if (!rows) return <p className="text-sm text-muted">…</p>;
   if (compact) {
     return (
-      <ul className="text-xs">
+      <ul className="grid flex-1 auto-rows-fr text-sm">
         {list.map((p) => (
-          <li key={p.k} className="flex items-baseline justify-between gap-2 border-b border-rule py-1 last:border-b-0">
+          <li key={p.k} className="flex min-h-10 items-center justify-between gap-4 border-b border-rule last:border-b-0">
             <span className="min-w-0 truncate">
               <AppLink className="link font-medium" href={routes.player(locale, p.k)}>
                 {p.n}
               </AppLink>
-              <span className="text-muted"> {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}</span> <RankArrow change={p.d} className="text-[10px]" />
+              <span className="text-muted"> {p.t}</span>
+              <span className="text-muted"> · {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}</span> <RankArrow change={p.d} className="text-xs" />
             </span>
-            <span className="shrink-0 text-muted">{p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o}, ${fmtKickoff(locale, p.nm.k)}` : ""}</span>
+            <span className="shrink-0 text-ink-2">{p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o} · ${fmtKickoff(locale, p.nm.k)}` : ""}</span>
           </li>
         ))}
       </ul>

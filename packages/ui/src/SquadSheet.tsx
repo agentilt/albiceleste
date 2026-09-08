@@ -29,16 +29,16 @@ export function SquadSheet({ columns, caption, dense = false, LinkComponent = De
       <div className={`grid grid-cols-2 sm:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
         {columns.map((col) => (
           <div key={col.title}>
-            <div className="mb-1 flex items-baseline justify-between border-b-2 border-celeste pb-1 font-mono text-[11px] uppercase tracking-wide text-muted">
+            <div className="mb-1 flex items-baseline justify-between border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted">
               <span>{col.title}</span>
               <span className="num">{col.slots}</span>
             </div>
-            <ol className="text-sm">
+            <ol className={dense ? "text-[15px]" : "text-sm"}>
               {Array.from({ length: col.slots }, (_, k) => {
                 const n = col.names[k];
                 const delay = `${Math.min(i++, 30) * 25}ms`;
                 return (
-                  <li key={n ? n.key : `empty-${k}`} className={`sheet-row grid grid-cols-[1.25rem_1fr_auto] items-start gap-x-1 border-b border-rule ${dense ? "py-0.5" : "py-1"}`} style={{ animationDelay: delay }} title={dense && n?.club ? n.club : undefined}>
+                  <li key={n ? n.key : `empty-${k}`} className={`sheet-row grid grid-cols-[1.25rem_1fr_auto] items-center gap-x-1 border-b border-rule ${dense ? "h-8" : "py-1"}`} style={{ animationDelay: delay }} title={dense && n?.club ? n.club : undefined}>
                     <span className="num pt-0.5 font-mono text-[11px] text-muted">{n?.rank ?? ""}</span>
                     {n ? (
                       <span className={`condensed min-w-0 leading-tight ${dense ? "truncate" : ""}`}>

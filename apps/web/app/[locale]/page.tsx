@@ -1,4 +1,4 @@
-import { Panel, SquadSheet, Tag } from "@albiceleste/ui";
+import { Panel, PanelRows, SquadSheet, Tag } from "@albiceleste/ui";
 import { getPool, getRound, getWindows, inWatch, manifest, weekIndex, type RoundRow } from "@albiceleste/data";
 import { FollowList } from "@/components/FollowList";
 import { FollowStar } from "@/components/FollowStar";
@@ -64,7 +64,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         <div>
           <p className="mb-3 font-mono text-xs uppercase tracking-wide text-celeste-deep">{d.home.sheet.eyebrow}</p>
           <h1 className="text-4xl sm:text-5xl">{headline}</h1>
-          <p className="mt-4 font-mono text-xs text-muted">
+          <p className="mt-4 font-mono text-sm leading-relaxed text-muted">
             <CountdownLine cd={cd} locale={locale} />
           </p>
           <p className="mt-6">
@@ -78,8 +78,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
         <Panel title={d.home.week.best} aside={d.home.week.last7}>
-          <ol className="text-xs">
-            {best.map((r) => {
+          <PanelRows
+            rows={best.map((r) => {
               const cs = r.pos_group === "GK" || r.pos_group === "DEF" ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
               const last = [...r.matches].reverse().find((x) => x.played);
               const facts = [
@@ -87,41 +87,57 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
                 r.assists > 0 ? `${r.assists} A` : null,
                 cs > 0 ? d.home.week.cleanSheet(cs) : null,
                 `${r.minutes}′${r.apps > 1 ? ` · ${r.apps} ${d.common.matches}` : ""}`,
-                last ? `${last.home_team} ${last.home_score ?? ""}–${last.away_score ?? ""} ${last.away_team}` : null,
+                last ? `${last.is_home ? d.common.vs : "@"} ${last.is_home ? last.away_team : last.home_team} ${last.is_home ? last.home_score : last.away_score}–${last.is_home ? last.away_score : last.home_score}` : null,
               ].filter(Boolean);
-              return (
-                <li key={r.player_key} className="flex flex-wrap items-baseline gap-x-2 border-b border-rule py-1 leading-snug last:border-b-0">
-                  <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
-                    {r.full_name}
-                  </AppLink>
-                  <span className="text-muted">{r.team}</span>
-                  {r.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
-                  <span className="text-ink-2">{facts.join(" · ")}</span>
-                </li>
-              );
+              return {
+                key: r.player_key,
+                left: (
+                  <>
+                    <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
+                      {r.full_name}
+                    </AppLink>
+                    <span className="text-muted"> {r.team}</span>
+                    {r.in_last_squad && (
+                      <>
+                        {" "}
+                        <Tag tone="accent">{d.marks.lastSquadShort}</Tag>
+                      </>
+                    )}
+                  </>
+                ),
+                right: facts.join(" · "),
+              };
             })}
-          </ol>
+          />
         </Panel>
         <Panel title={d.home.week.worry} aside={d.home.week.last7}>
           {worry.length === 0 ? (
-            <p className="text-xs text-muted">{d.home.week.none}</p>
+            <p className="text-sm text-muted">{d.home.week.none}</p>
           ) : (
-            <ol className="text-xs">
-              {worry.map(({ r, line }) => (
-                <li key={r.player_key} className="flex flex-wrap items-baseline gap-x-2 border-b border-rule py-1 leading-snug last:border-b-0">
-                  <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
-                    {r.full_name}
-                  </AppLink>
-                  <span className="text-muted">{r.team}</span>
-                  {r.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
-                  <span className="text-ink-2">{line}</span>
-                </li>
-              ))}
-            </ol>
+            <PanelRows
+              rows={worry.map(({ r, line }) => ({
+                key: r.player_key,
+                left: (
+                  <>
+                    <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
+                      {r.full_name}
+                    </AppLink>
+                    <span className="text-muted"> {r.team}</span>
+                    {r.in_last_squad && (
+                      <>
+                        {" "}
+                        <Tag tone="accent">{d.marks.lastSquadShort}</Tag>
+                      </>
+                    )}
+                  </>
+                ),
+                right: line,
+              }))}
+            />
           )}
         </Panel>
       </div>
-      <p className="mb-4 text-xs text-muted">
+      <p className="mb-4 text-sm text-muted">
         {d.home.week.roundLine(watchPlayed, watchClubPlayed)} · {d.home.week.watch} ·{" "}
         <AppLink className="link" href={routes.round(locale)}>
           {d.round.homeAll} →
