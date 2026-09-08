@@ -96,8 +96,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       .sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999))
       .map((r) => ({ r, line: d.home.week.short(r.minutes, r.team_matches) })),
   ].slice(0, 7);
-  const watchPlayed = watch.filter((r) => r.apps > 0).length;
-  const watchClubPlayed = watch.filter((r) => r.team_matches > 0).length;
 
   const ranked = pool.filter((p) => p.pos_rank !== null);
   const suggestions = GROUPS.flatMap((g) => ranked.filter((p) => p.pos_group === g).slice(0, 1)).slice(0, 3).map((p) => ({ key: p.player_key, name: p.full_name }));
@@ -139,20 +137,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           title={lastWindow ? d.home.sheet.lastList(windowLabel(locale, lastWindow)) : d.home.sheet.challengers}
           aside={lastWindow ? `${lastRows.length} · ${fmtDate(locale, lastWindow.announcement_date)}` : undefined}
           columns={lastWindow ? squadCols : challengerCols}
-          secondary={lastWindow ? { title: d.home.sheet.challengers, aside: d.home.week.watch, columns: challengerCols } : undefined}
-          caption={
-            <>
-              {lastWindow ? `${d.home.sheet.lastListCaption(since)} ` : ""}
-              {d.home.sheet.challengersCaption(since)}
-            </>
-          }
+          hint={lastWindow ? d.home.sheet.lastListCaption(since) : d.home.sheet.challengersCaption(since)}
+          hintHref={routes.about(locale, "#home")}
+          secondary={lastWindow ? { title: d.home.sheet.challengers, hint: d.home.sheet.challengersCaption(since), columns: challengerCols } : undefined}
           dense
           LinkComponent={AppLink}
         />
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
-        <Panel title={d.home.week.best} aside={d.home.week.last7}>
+        <Panel title={d.home.week.best} hint={d.home.week.bestHint} hintHref={routes.about(locale, "#home")} aside={d.home.week.last7}>
           <PanelRows
             rows={best.map((r) => {
               const cs = isDef(r.pos_group) ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
@@ -168,16 +162,19 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             })}
           />
         </Panel>
-        <Panel title={d.home.week.worry} aside={d.home.week.last7}>
+        <Panel
+          title={d.home.week.worry}
+          hint={d.home.week.worryHint}
+          hintHref={routes.about(locale, "#home")}
+          aside={
+            <AppLink className="link" href={routes.round(locale)}>
+              {d.round.homeAll} →
+            </AppLink>
+          }
+        >
           {worry.length === 0 ? <p className="text-sm text-muted">{d.home.week.none}</p> : <PanelRows rows={worry.map(({ r, line }) => ({ key: r.player_key, left: who(r), right: line }))} />}
         </Panel>
       </div>
-      <p className="mb-4 text-sm text-muted">
-        {d.home.week.roundLine(watchPlayed, watchClubPlayed)} ·{" "}
-        <AppLink className="link" href={routes.round(locale)}>
-          {d.round.homeAll} →
-        </AppLink>
-      </p>
 
       <Panel
         title={d.home.follow.title}

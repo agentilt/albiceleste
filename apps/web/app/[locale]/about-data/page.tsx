@@ -51,6 +51,13 @@ const COPY = {
       "Trayectoria = índice de actividad actual (cuota de minutos × peso de la competencia, sobre los últimos diez partidos del equipo) dividido por el percentil 75 de ese índice entre los jugadores del plantel a la misma edad en toda la historia disponible (con un piso de 0,10). El percentil de edad es la proporción de observaciones de la misma edad con índice igual o menor. La camada: 23 años o menos al horizonte, elegibles, en un plantel seguido (la liga argentina entera).",
     importance:
       "Cada movimiento tiene un peso base por tipo (tabla), más modificadores: +20 en un cambio de club cuando cambia el nivel de la competencia; hasta +30 en un movimiento del ranking según la cantidad de puestos (2 por puesto); +15 por hat-trick, por racha goleadora de cinco o por diez titularidades seguidas; +15 si el jugador está en la última lista; +10 si está entre los diez primeros de su puesto. El total se multiplica por nivel de competencia (1: ×1,00; 2: ×0,85; 3: ×0,70). Los movimientos del ranking solo se registran cuando tocan los primeros quince puestos y no se muestran para recién llegados, regresos o jugadores en enfermería. Las rachas de tres titularidades no se cuentan hasta el sexto partido de la temporada; las subidas y bajadas de minutos exigen al menos cuatro partidos del equipo en la ventana anterior.",
+    watch:
+      "El sitio rankea solo a los jugadores en la mira de la Selección: los que tienen al menos un partido con la mayor, los que estuvieron en alguna lista publicada, y los que juegan en un club de una competencia marcada en_watch en la tabla de competencias (las ligas europeas seguidas y el Brasileirão). La MLS, la Liga MX y la liga saudí cuentan solo por convocatoria. De la liga argentina entran por mérito los tres mejores por puesto en cada fecha de cálculo (domestic_watch_slots). Todos los jugadores seguidos tienen puntaje y estado; solo los de la mira tienen puesto en el ranking. Plantel y La fecha muestran a la mira por defecto y a toda la base con un interruptor.",
+    home: [
+      "La última lista muestra a los convocados con su temporada en el club desde el 1 de julio anterior al horizonte: minutos y goles más asistencias, o vallas invictas para arqueros y defensores. El 1 de julio arranca la temporada europea y la segunda mitad de las sudamericanas, así los minutos se comparan.",
+      "Los que pelean el lugar: los tres mejores por puesto en la mira y fuera de la última lista, por el índice de temporada = (goles ×3 + asistencias ×2 + vallas invictas ×2 para arqueros y defensores + una por titularidad + minutos ÷ 90) × peso de la competencia (1,00 / 0,85 / 0,70 según nivel), desde el 1 de julio.",
+      "Los de la semana: el mismo índice sin el peso de competencia, sobre los últimos siete días. Señales de alarma: jugadores en la mira cuyo club jugó y no sumaron minutos (primero los de la última lista, después por ranking), y titulares habituales (cuota de minutos de 50 % o más) con menos de 30 minutos en la semana.",
+    ],
     windows:
       "Las fechas FIFA, los anuncios de lista y las listas mismas se mantienen a mano a partir de anuncios de la AFA y de la prensa argentina, y se resuelven a jugadores por nombre exacto sin acentos, luego apellido más inicial con un único candidato, y si no, un identificador fijado a mano. Fechas marcadas como previstas hasta que sean oficiales.",
     privacy:
@@ -93,6 +100,13 @@ const COPY = {
       "Trajectory = current activity index (minutes share × competition weight over the team's last ten matches) divided by the 75th percentile of that index among pool players at the same age across the available history (floored at 0.10). The age percentile is the share of same-age observations at or below the index. The cohort: aged 23 or under at the horizon, eligible, in a tracked squad (the Argentine league in full).",
     importance:
       "Every mover has a base weight by kind (table) plus modifiers: +20 on a club change when the competition tier changes; up to +30 on a rank move by the number of places (2 per place); +15 for a hat-trick, a five-match scoring streak or ten straight starts; +15 when the player is in the last squad; +10 when he is in the top ten of his position. The total is multiplied by competition tier (1: ×1.00; 2: ×0.85; 3: ×0.70). Rank moves are only recorded when they touch the top fifteen and are not shown for new arrivals, returns or players in the infirmary. Streaks of three starts do not count until the sixth match of the season; minute surges and drops need at least four team matches in the previous window.",
+    watch:
+      "The site ranks only the players on the national team's watch: anyone with a senior cap, anyone who was in a published list, and anyone at a club in a competition flagged in_watch in the competitions table (the European leagues followed and the Brasileirão). MLS, Liga MX and the Saudi league count through a call-up only. From the Argentine league, the best three per position at every scoring date enter on merit (domestic_watch_slots). Everyone tracked has a score and a state; only the watch has a rank. Pool and La fecha show the watch by default and everyone tracked behind a switch.",
+    home: [
+      "The last list shows its players with their club season since the 1 July before the horizon: minutes and goals plus assists, or clean sheets for keepers and defenders. 1 July starts the European season and the second half of the South American ones, so minutes compare.",
+      "Fighting for a place: the three best per position on the watch and outside the last list, by the season index = (goals ×3 + assists ×2 + clean sheets ×2 for keepers and defenders + one per start + minutes ÷ 90) × competition weight (1.00 / 0.85 / 0.70 by tier), since 1 July.",
+      "Best of the week: the same index without the competition weight, over the last seven days. Worrying signs: watch players whose club played but who got no minutes (last list first, then by rank), and regulars (minutes share of 50% or more) with under 30 minutes in the week.",
+    ],
     windows:
       "FIFA windows, announcement dates and the lists themselves are kept by hand from AFA announcements and the Argentine press, and resolved to players by exact unaccented name, then surname plus initial with a single candidate, else a hand-pinned identifier. Dates are marked expected until official.",
     privacy:
@@ -194,6 +208,18 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         <div className="max-w-3xl">
           <StaticTable rows={eventWeights} rowKey={(r) => r.name} cols={[{ label: c.cols.type, render: (r) => (d.movers.kinds as Record<string, string>)[r.name] ?? r.name }, { label: c.cols.weight, align: "r", render: (r) => fmtInt(locale, r.value) }, { label: c.cols.description, render: (r) => <span className="text-xs text-ink-2">{r.description}</span> }]} />
         </div>
+      </Section>
+
+      <Section title={S.watch}>
+        <div id="watch" />
+        <P>{c.watch}</P>
+      </Section>
+
+      <Section title={S.home}>
+        <div id="home" />
+        {c.home.map((p, i) => (
+          <P key={i}>{p}</P>
+        ))}
       </Section>
 
       <Section title={S.windows}>

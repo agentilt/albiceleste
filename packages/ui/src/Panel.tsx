@@ -1,16 +1,18 @@
 import type { ReactNode } from "react";
+import { Hint } from "./Hint";
 
 /**
  * Dashboard panel: a white box on the paper ground with a mono title bar (stripe mark, title, right-hand aside) and a padded
  * body. Panels tile a screen; sections stack a page. Keep bodies dense: numbers, short lines, no paragraphs.
  */
-export function Panel({ title, aside, children, className = "" }: { title: string; aside?: ReactNode; children: ReactNode; className?: string }) {
+export function Panel({ title, aside, hint, hintHref, children, className = "" }: { title: string; aside?: ReactNode; /** explanation shown on hover of a "?" after the title */ hint?: string; hintHref?: string; children: ReactNode; className?: string }) {
   return (
     <section className={`flex min-w-0 flex-col border border-rule-strong bg-surface ${className}`}>
       <header className="flex items-center justify-between gap-3 border-b border-rule px-4 py-2">
         <h2 className="flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-ink">
           <span className="stripe" aria-hidden="true" style={{ width: "0.75rem", height: "0.75rem" }} />
           {title}
+          {hint && <Hint text={hint} href={hintHref} />}
         </h2>
         {aside && <div className="min-w-0 truncate text-sm text-muted">{aside}</div>}
       </header>

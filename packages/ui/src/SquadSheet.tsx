@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Hint } from "./Hint";
 import { DefaultLink, type LinkLike } from "./link";
 
 export interface SheetName {
@@ -81,6 +82,8 @@ export function SquadSheet({
   caption,
   title,
   aside,
+  hint,
+  hintHref,
   secondary,
   dense = false,
   LinkComponent = DefaultLink,
@@ -90,8 +93,11 @@ export function SquadSheet({
   /** header strip above the columns */
   title?: string;
   aside?: ReactNode;
+  /** explanation on hover of a "?" after the title */
+  hint?: string;
+  hintHref?: string;
   /** a second, smaller block under a rule: title, its own columns, an optional right-hand note */
-  secondary?: { title: string; aside?: ReactNode; columns: SheetColumn[] };
+  secondary?: { title: string; aside?: ReactNode; hint?: string; columns: SheetColumn[] };
   /** one line per name, club on hover: fits a screen */
   dense?: boolean;
   LinkComponent?: LinkLike;
@@ -104,6 +110,7 @@ export function SquadSheet({
           <h2 className="flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-ink">
             <span className="stripe" aria-hidden="true" style={{ width: "0.75rem", height: "0.75rem" }} />
             {title}
+            {hint && <Hint text={hint} href={hintHref} />}
           </h2>
           {aside && <div className="min-w-0 truncate text-sm text-muted">{aside}</div>}
         </div>
@@ -112,7 +119,10 @@ export function SquadSheet({
       {secondary && (
         <>
           <div className="flex items-center justify-between gap-3 border-t-2 border-ink px-4 py-1.5">
-            <h3 className="font-mono text-[11px] font-medium uppercase tracking-wide text-ink-2">{secondary.title}</h3>
+            <h3 className="flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-wide text-ink-2">
+              {secondary.title}
+              {secondary.hint && <Hint text={secondary.hint} href={hintHref} />}
+            </h3>
             {secondary.aside && <div className="min-w-0 truncate text-xs text-muted">{secondary.aside}</div>}
           </div>
           <Columns columns={secondary.columns} dense={dense} small offset={primaryCount} LinkComponent={LinkComponent} />
