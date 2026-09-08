@@ -403,6 +403,20 @@ export function inWatch(r: { in_watch: boolean }): boolean {
   return r.in_watch;
 }
 
+/** Competition weight for the season index: 1.0 / 0.85 / 0.7 by tier (the Movers scale). */
+export function tierWeight(level_rank: number | null): number {
+  return level_rank === 1 ? 1 : level_rank === 2 ? 0.85 : 0.7;
+}
+
+/**
+ * The season index behind "los que pelean el lugar": goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start,
+ * minutes over 90, all over the current season in the current league, multiplied by the competition weight.
+ */
+export function seasonIndex(p: PoolRow): number {
+  const cs = p.pos_group === "GK" || p.pos_group === "DEF" ? (p.season_clean_sheets ?? 0) : 0;
+  return ((p.season_goals ?? 0) * 3 + (p.season_assists ?? 0) * 2 + cs * 2 + (p.season_starts ?? 0) + (p.season_minutes ?? 0) / 90) * tierWeight(p.level_rank);
+}
+
 /** The week index behind "best of the week": goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start, minutes over 90. */
 export function weekIndex(r: RoundRow): number {
   const cs = r.pos_group === "GK" || r.pos_group === "DEF" ? r.matches.filter((m) => m.played && (m.is_home ? m.away_score : m.home_score) === 0).length : 0;

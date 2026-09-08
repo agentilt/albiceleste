@@ -4,6 +4,7 @@
 }
 
 html {
+  font-size: 106.25%;
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
