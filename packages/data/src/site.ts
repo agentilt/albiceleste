@@ -408,13 +408,32 @@ export function tierWeight(level_rank: number | null): number {
   return level_rank === 1 ? 1 : level_rank === 2 ? 0.85 : 0.7;
 }
 
+/** The comparable season window: from the 1 July before the horizon, when the European season starts and the South American
+ *  and MLS seasons begin their second half. Calendar-year leagues would otherwise show three times the minutes. */
+export function seasonStart(horizon: string): string {
+  const y = Number(horizon.slice(0, 4));
+  return `${horizon.slice(5, 7) >= "07" ? y : y - 1}-07-01`;
+}
+
+/** Every pool player's matches and totals since the season window start (a long round). */
+export function getSeasonToDate(): Promise<RoundRow[]> {
+  const h = manifest().data_as_of;
+  const start = seasonStart(h);
+  const days = Math.round((Date.parse(h) - Date.parse(start)) / 86400000) + 1;
+  return getRound(start, days);
+}
+
+/** Clean sheets in a set of matches, for GK and DEF only. */
+export function cleanSheets(r: RoundRow): number {
+  return r.pos_group === "GK" || r.pos_group === "DEF" ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
+}
+
 /**
  * The season index behind "los que pelean el lugar": goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start,
- * minutes over 90, all over the current season in the current league, multiplied by the competition weight.
+ * minutes over 90, all since the season window start, multiplied by the competition weight.
  */
-export function seasonIndex(p: PoolRow): number {
-  const cs = p.pos_group === "GK" || p.pos_group === "DEF" ? (p.season_clean_sheets ?? 0) : 0;
-  return ((p.season_goals ?? 0) * 3 + (p.season_assists ?? 0) * 2 + cs * 2 + (p.season_starts ?? 0) + (p.season_minutes ?? 0) / 90) * tierWeight(p.level_rank);
+export function seasonIndex(r: RoundRow, level_rank: number | null): number {
+  return (r.goals * 3 + r.assists * 2 + cleanSheets(r) * 2 + r.starts + r.minutes / 90) * tierWeight(level_rank);
 }
 
 /** The week index behind "best of the week": goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start, minutes over 90. */

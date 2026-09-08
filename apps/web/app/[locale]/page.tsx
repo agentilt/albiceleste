@@ -1,5 +1,5 @@
 import { Panel, PanelRows, SquadSheet, Tag } from "@albiceleste/ui";
-import { getPool, getRound, getSquadLists, getWindows, inWatch, manifest, seasonIndex, weekIndex, type PoolRow, type RoundRow } from "@albiceleste/data";
+import { cleanSheets, getPool, getRound, getSeasonToDate, getSquadLists, getWindows, inWatch, manifest, seasonIndex, seasonStart, weekIndex, type PoolRow, type RoundRow } from "@albiceleste/data";
 import { FollowList } from "@/components/FollowList";
 import { countdown, today } from "@/lib/countdown";
 import { eventContext } from "@/lib/ctx";
@@ -8,7 +8,6 @@ import { t, windowLabel } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
 import { localeParams, readLocale } from "@/lib/params";
 import { routes } from "@/lib/routes";
-import { stateLabel } from "@/lib/state";
 
 export function generateStaticParams() {
   return localeParams();
@@ -27,8 +26,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const d = t(locale);
   const m = manifest();
   const [pool, windows, squads, ctx] = await Promise.all([getPool(), getWindows(), getSquadLists(), eventContext()]);
-  const last7 = await getRound(addDays(m.data_as_of, -6), 7);
+  const [last7, season] = await Promise.all([getRound(addDays(m.data_as_of, -6), 7), getSeasonToDate()]);
   const byKey = new Map(pool.map((p) => [p.player_key, p]));
+  const seasonOf = new Map(season.map((r) => [r.player_key, r]));
+  const since = fmtDate(locale, seasonStart(m.data_as_of), false);
 
   // the headline: where the calendar stands
   const cd = countdown(windows, today());
@@ -49,8 +50,10 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const lastWindow = [...windows].reverse().find((w) => w.announcement_date && w.announcement_date <= m.data_as_of && w.listed > 0) ?? null;
   const lastRows = lastWindow ? squads.filter((s) => s.window_id === lastWindow.window_id) : [];
   const isDef = (g: string) => g === "GK" || g === "DEF";
-  const stats = (p: PoolRow | undefined, g: string) =>
-    !p ? "" : `${p.season_minutes ?? 0}′ · ${isDef(g) ? (p.season_clean_sheets ?? 0) : (p.season_goals ?? 0) + (p.season_assists ?? 0)}`;
+  const stats = (p: PoolRow | undefined, g: string) => {
+    const r = p ? seasonOf.get(p.player_key) : undefined;
+    return !r ? "" : `${r.minutes}′ · ${isDef(g) ? cleanSheets(r) : r.goals + r.assists}`;
+  };
   const nameOf = (p: PoolRow | undefined, g: string, fallback: string, key: string | null) => ({
     key: key ?? fallback,
     name: p?.full_name ?? fallback,
@@ -59,7 +62,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     rank: p?.pos_rank ?? null,
     marked: false,
     stats: p && p.state !== "retired" && p.state !== "out" ? stats(p, g) : undefined,
-    note: p && (p.state === "retired" || p.state === "out") ? stateLabel(d, p.state, p.infirmary_reason) : undefined,
+    note: p && (p.state === "retired" || p.state === "out") ? d.state[p.state] : undefined,
   });
   const squadCols = GROUPS.map((g) => {
     const rows = lastRows.filter((s) => s.pos_group === g).map((s) => ({ s, p: s.player_key ? byKey.get(s.player_key) : undefined }));
@@ -71,8 +74,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   // the challengers: best of the season per position, on the watch, outside the last list
   const challengerCols = GROUPS.map((g) => {
     const rows = pool
-      .filter((p) => p.pos_group === g && p.in_watch && !lastKeys.has(p.player_key) && p.state !== "out" && p.state !== "retired" && (p.season_minutes ?? 0) > 0)
-      .sort((a, b) => seasonIndex(b) - seasonIndex(a))
+      .filter((p) => p.pos_group === g && p.in_watch && !lastKeys.has(p.player_key) && p.state !== "out" && p.state !== "retired" && (seasonOf.get(p.player_key)?.minutes ?? 0) > 0)
+      .sort((a, b) => seasonIndex(seasonOf.get(b.player_key)!, b.level_rank) - seasonIndex(seasonOf.get(a.player_key)!, a.level_rank))
       .slice(0, 3);
     return { title: d.pos[g], slots: 3, hint: isDef(g) ? d.home.sheet.hintDef : d.home.sheet.hintAtt, names: rows.map((p) => nameOf(p, g, p.full_name, p.player_key)) };
   });
@@ -137,7 +140,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             title={d.home.sheet.lastList(windowLabel(locale, lastWindow))}
             aside={`${lastRows.length} · ${fmtDate(locale, lastWindow.announcement_date)}`}
             columns={squadCols}
-            caption={d.home.sheet.lastListCaption}
+            caption={d.home.sheet.lastListCaption(since)}
             dense
             LinkComponent={AppLink}
           />
@@ -145,7 +148,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       )}
 
       <div className="mb-4">
-        <SquadSheet title={d.home.sheet.challengers} aside={d.home.week.watch} columns={challengerCols} caption={d.home.sheet.challengersCaption} dense LinkComponent={AppLink} />
+        <SquadSheet title={d.home.sheet.challengers} aside={d.home.week.watch} columns={challengerCols} caption={d.home.sheet.challengersCaption(since)} dense LinkComponent={AppLink} />
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
