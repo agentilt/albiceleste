@@ -100,9 +100,9 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
   if (!rows) return <p className="text-sm text-muted">…</p>;
   if (compact) {
     return (
-      <ul className="grid flex-1 auto-rows-fr text-sm">
+      <ul className="grid min-w-0 flex-1 auto-rows-fr text-sm" style={{ gridTemplateColumns: "minmax(0, 1fr)" }}>
         {list.map((p) => (
-          <li key={p.k} className="flex min-h-9 items-center justify-between gap-4 border-b border-rule last:border-b-0">
+          <li key={p.k} className="flex min-h-9 min-w-0 items-center justify-between gap-4 border-b border-rule last:border-b-0">
             <span className="min-w-0 truncate">
               <AppLink className="link font-medium" href={routes.player(locale, p.k)}>
                 {p.n}
