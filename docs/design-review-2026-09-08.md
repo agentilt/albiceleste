@@ -35,6 +35,12 @@ Everything in the fix order below was done on the branch, page by page, verified
   scroll margin, Spanish parameter descriptions, repo link, mono table captions.
 - **404**: `app/global-not-found.tsx` (experimental `globalNotFound`) renders the site chrome in the reader's language.
 
+Later the same day, after the user's look: the Home sheet became rows per position (the official-list shape: names flow
+left to right, the challengers follow each row after a hairline, nothing blank), and Plantel gained a **pitch depth chart**
+("Cancha"): eleven slots on a 3:4 pitch from Transfermarkt's sub-position (166 of the 181 on the watch have one; the rest fall
+to the centre of their group with a hollow number), each box the best-ranked three or four, a side list for the chosen slot,
+sections instead of the pitch on a phone. `dim_player` now carries `sub_position` and `role`.
+
 Still open: Pool HTML weight (1.8 MB, lazy "Toda la base"); favicon; Claude Design re-sync; the domestic ramp decision.
 
 ## Cross-cutting themes (the shared fixes that clear findings on several pages at once)
