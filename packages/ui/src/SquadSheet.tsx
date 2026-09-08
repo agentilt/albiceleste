@@ -10,9 +10,9 @@ export interface SheetName {
   rank: number | null;
   /** last-squad mark */
   marked?: boolean;
-  /** short figures shown on the right of the name (minutes, goals) */
-  stats?: ReactNode;
-  /** a state word or note in place of stats */
+  /** the two figures, each under its own header (games played, goals plus assists or clean sheets) */
+  stats?: [ReactNode, ReactNode];
+  /** a short state word shown across both figure columns (out, retired) */
   note?: ReactNode;
 }
 
@@ -21,39 +21,56 @@ export interface SheetColumn {
   /** slots in the list for this position (3/9/8/6 for a 26) */
   slots: number;
   names: SheetName[];
-  /** what the stats column holds, e.g. "min · G+A" */
+  /** the two figure headers, e.g. ["GP", "G+A"] */
+  figures?: [string, string];
+  /** kept for older callers: one string with both headers */
   hint?: string;
 }
 
-function Cell({ n, small, LinkComponent }: { n: SheetName; small: boolean; LinkComponent: LinkLike }) {
+const COLS = "grid-cols-[1.1rem_minmax(0,1fr)_1.75rem_2rem]";
+
+function Row({ n, LinkComponent }: { n: SheetName; LinkComponent: LinkLike }) {
   return (
-    <li className={`sheet-row grid grid-cols-[1.25rem_minmax(0,1fr)_auto] items-center gap-x-2 border-b border-rule ${small ? "h-8 text-sm" : "h-9 text-[15px]"}`}>
+    <li className={`sheet-row grid h-9 ${COLS} items-center gap-x-1.5 border-b border-rule text-[15px]`}>
       <span className="num font-mono text-[11px] text-muted">{n.rank ?? ""}</span>
       <span className="condensed flex min-w-0 items-baseline gap-1.5 leading-tight">
         {n.href ? (
-          <LinkComponent href={n.href} className="min-w-0 truncate font-medium text-ink hover:text-celeste-deep">
+          <LinkComponent href={n.href} className="shrink-0 font-medium text-ink hover:text-celeste-deep">
             {n.name}
           </LinkComponent>
         ) : (
-          <span className="min-w-0 truncate font-medium">{n.name}</span>
+          <span className="shrink-0 font-medium">{n.name}</span>
         )}
-        {n.club && <span className="min-w-0 shrink-[3] truncate text-xs text-muted">{n.club}</span>}
+        {n.club && <span className="min-w-0 truncate text-xs text-muted">{n.club}</span>}
         {n.marked && (
           <span className="shrink-0 text-[10px] text-gold" aria-hidden="true">
             ●
           </span>
         )}
       </span>
-      <span className="num whitespace-nowrap font-mono text-xs text-ink-2">{n.note ?? n.stats ?? ""}</span>
+      {n.note ? (
+        <span className="col-span-2 truncate text-right font-mono text-[11px] uppercase tracking-wide text-ink-2">{n.note}</span>
+      ) : (
+        <>
+          <span className="num text-right font-mono text-xs text-ink-2">{n.stats?.[0] ?? ""}</span>
+          <span className="num text-right font-mono text-xs text-ink-2">{n.stats?.[1] ?? ""}</span>
+        </>
+      )}
     </li>
   );
 }
 
+function figuresOf(col: SheetColumn): [string, string] {
+  if (col.figures) return col.figures;
+  const parts = (col.hint ?? "").split("·").map((s) => s.trim());
+  return [parts[0] ?? "", parts[1] ?? ""];
+}
+
 /**
- * The squad sheet: one row per position, as the official list reads. The names flow left to right in cells of equal
- * width, so a position with three players takes three cells and one with eight takes two lines; nothing is blank. When a
- * `secondary` block is given (the challengers), its names for the same position follow on the row after a hairline, in a
- * smaller register.
+ * The squad sheet: one column per position, as the coach writes it. Each column is a small table (rank, name and club,
+ * two figures under their headers); a column ends where its players end. With `secondary` (the challengers), the three
+ * names fighting for that position follow under the column in a tinted block with its own label, so the two tiers read
+ * apart at a glance and every figure still sits under its header.
  */
 export function SquadSheet({
   columns,
@@ -67,13 +84,13 @@ export function SquadSheet({
 }: {
   columns: SheetColumn[];
   caption?: ReactNode;
-  /** header strip above the rows */
+  /** header strip above the columns */
   title?: string;
   aside?: ReactNode;
   /** explanation on hover of a "?" after the title */
   hint?: string;
   hintHref?: string;
-  /** a second, smaller block per position: title, its own columns (paired with `columns` by order), an optional note */
+  /** a second tier per position: title, its own columns (paired with `columns` by order), an optional note */
   secondary?: { title: string; aside?: ReactNode; hint?: string; columns: SheetColumn[] };
   /** kept for callers; the sheet is dense by design */
   dense?: boolean;
@@ -83,45 +100,51 @@ export function SquadSheet({
     <figure className="m-0 min-w-0 border-2 border-ink bg-surface">
       {title && (
         <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-2">
-          <h2 className="flex items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-ink">
+          <h2 className="flex min-w-0 items-center gap-2 font-mono text-xs font-medium uppercase tracking-wide text-ink">
             <span className="stripe" aria-hidden="true" style={{ width: "0.75rem", height: "0.75rem" }} />
-            {title}
+            <span className="min-w-0 truncate">{title}</span>
             {hint && <Hint text={hint} href={hintHref} />}
           </h2>
-          <div className="flex min-w-0 items-center gap-3 text-xs text-muted">
+          <div className="flex min-w-0 shrink-0 items-center gap-4 font-mono text-xs uppercase tracking-wide text-muted">
             {secondary && (
-              <span className="hidden items-center gap-1.5 font-mono uppercase tracking-wide sm:flex">
-                <span className="inline-block h-2 w-2 border-b border-rule-strong" aria-hidden="true" />
+              <span className="hidden items-center gap-1.5 sm:flex">
+                <span className="inline-block h-2.5 w-2.5 border border-rule-strong bg-celeste-tint" aria-hidden="true" />
                 {secondary.title}
                 {secondary.hint && <Hint text={secondary.hint} href={hintHref} />}
               </span>
             )}
-            {aside && <span className="hidden min-w-0 truncate sm:block">{aside}</span>}
+            {aside && <span className="hidden min-w-0 truncate normal-case tracking-normal sm:block">{aside}</span>}
           </div>
         </div>
       )}
-      <div className="px-3 pb-2">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-4 sm:grid-cols-2 lg:grid-cols-4">
         {columns.map((col, ci) => {
+          const [f0, f1] = figuresOf(col);
           const sec = secondary?.columns[ci];
           return (
-            <div key={col.title} className="border-b border-rule-strong py-2 last:border-b-0">
-              <div className="flex items-baseline justify-between gap-3 font-mono text-xs uppercase tracking-wide text-muted">
-                <span className="whitespace-nowrap">
+            <div key={col.title} className="min-w-0">
+              <div className={`grid ${COLS} items-baseline gap-x-1.5 border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted`}>
+                <span />
+                <span className="truncate">
                   {col.title} <span className="num">{col.slots}</span>
                 </span>
-                {col.hint && <span className="whitespace-nowrap normal-case tracking-normal">{col.hint}</span>}
+                <span className="text-right">{f0}</span>
+                <span className="text-right">{f1}</span>
               </div>
-              <ol className="grid gap-x-5 sm:grid-cols-2 lg:grid-cols-4">
+              <ol>
                 {col.names.slice(0, col.slots).map((n) => (
-                  <Cell key={n.key} n={n} small={false} LinkComponent={LinkComponent} />
+                  <Row key={n.key} n={n} LinkComponent={LinkComponent} />
                 ))}
               </ol>
               {sec && sec.names.length > 0 && (
-                <ol className="mt-1.5 grid gap-x-5 border-t border-rule-strong pt-1 sm:grid-cols-2 lg:grid-cols-4">
-                  {sec.names.slice(0, sec.slots).map((n) => (
-                    <Cell key={n.key} n={n} small LinkComponent={LinkComponent} />
-                  ))}
-                </ol>
+                <div className="-mx-2 mt-2 bg-celeste-tint px-2 pb-1">
+                  <div className="border-b border-rule-strong pb-0.5 pt-1.5 font-mono text-[10px] uppercase tracking-wide text-muted">{secondary!.title}</div>
+                  <ol>
+                    {sec.names.slice(0, sec.slots).map((n) => (
+                      <Row key={n.key} n={n} LinkComponent={LinkComponent} />
+                    ))}
+                  </ol>
+                </div>
               )}
             </div>
           );

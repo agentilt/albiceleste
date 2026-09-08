@@ -144,6 +144,11 @@ const es = {
       challengersCaption: (since: string) => `Los tres mejores por puesto desde el ${since}, en la mira y fuera de la última lista: goles ×3, asistencias ×2, vallas invictas ×2 (arqueros y defensores), una por titularidad y los minutos sobre 90, todo por el peso de la competencia (1,00 · 0,85 · 0,70 según nivel). El 1 de julio arranca la temporada europea y la segunda mitad en Sudamérica, así los minutos se comparan.`,
       hintAtt: "PJ · G+A",
       hintDef: "PJ · VI",
+      figApps: "PJ",
+      figGa: "G+A",
+      figCs: "VI",
+      out: "Enfermería",
+      retired: "Retirado",
     },
     dash: { played: "jugaron", dnp: "no jugaron, club sí", out: "en enfermería", nextMatches: "Próximos partidos", retention: (n: number) => `${n} sin atarse a una selección mayor` },
     week: {
@@ -618,6 +623,11 @@ const en: Dict = {
       challengersCaption: (since) => `The three best per position since ${since}, on the watch and outside the last list: goals ×3, assists ×2, clean sheets ×2 (keepers and defenders), one per start and minutes over 90, all by the competition weight (1.00 · 0.85 · 0.70 by tier). 1 July starts the European season and the second half in South America, so minutes compare.`,
       hintAtt: "GP · G+A",
       hintDef: "GP · CS",
+      figApps: "GP",
+      figGa: "G+A",
+      figCs: "CS",
+      out: "Infirmary",
+      retired: "Retired",
     },
     dash: { played: "played", dnp: "did not play, club did", out: "in the infirmary", nextMatches: "Next matches", retention: (n) => `${n} not yet tied to a senior team` },
     week: {

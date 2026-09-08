@@ -61,6 +61,10 @@ h3 {
 .condensed {
   font-stretch: 87.5%;
 }
+/* The squad sheet's names go one step narrower still, so a full name and its club share a 260px column. */
+.sheet-row .condensed {
+  font-stretch: 80%;
+}
 
 /* The albiceleste stripe: three bands, the mark that opens every section and the wordmark. */
 .stripe {
