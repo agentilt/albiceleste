@@ -35,8 +35,10 @@ Everything in the fix order below was done on the branch, page by page, verified
   scroll margin, Spanish parameter descriptions, repo link, mono table captions.
 - **404**: `app/global-not-found.tsx` (experimental `globalNotFound`) renders the site chrome in the reader's language.
 
-Later the same day, after the user's look: the Home sheet became rows per position (the official-list shape: names flow
-left to right, the challengers follow each row after a hairline, nothing blank), and Plantel gained a **pitch depth chart**
+Later the same day, after the user's look: the Home sheet settled as four position columns, each a small table (rank,
+name and club, two figure columns under their own headers), with the challengers under each column in a tinted block with
+its own label, one row height, no blank rows, a column ending where its players end; a rows-per-position attempt in
+between broke the header-to-figure alignment and clipped names. Plantel gained a **pitch depth chart**
 ("Cancha"): eleven slots on a 3:4 pitch from Transfermarkt's sub-position (166 of the 181 on the watch have one; the rest fall
 to the centre of their group with a hollow number), each box the best-ranked three or four, a side list for the chosen slot,
 sections instead of the pitch on a phone. `dim_player` now carries `sub_position` and `role`.
