@@ -16,3 +16,4 @@ absent_team_matches,3,team matches without minutes that put a player in the infi
 just_moved_days,30,days after a club change during which the state is Recién llegado
 back_days,14,days after a return from absence during which the state is Volvió
 arrow_default_days,28,days back for the rank arrow when no squad announcement date is earlier than the horizon
+domestic_watch_slots,3,players from the Argentine league admitted to the watch per position at each date (the best by score)

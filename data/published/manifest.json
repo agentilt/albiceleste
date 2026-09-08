@@ -1,6 +1,6 @@
 {
-  "exported_at": "2026-09-07T13:08:48+00:00",
-  "git_commit": "0d0f1c5",
+  "exported_at": "2026-09-08T11:55:39+00:00",
+  "git_commit": "228a310",
   "tables": {
     "marts.argentine_export_pipeline": {
       "rows": 665,
@@ -24,7 +24,7 @@
     },
     "marts.dim_competition": {
       "rows": 14,
-      "bytes": 3295
+      "bytes": 3497
     },
     "marts.dim_player": {
       "rows": 5482,
@@ -55,8 +55,8 @@
       "bytes": 3567
     },
     "marts.movers": {
-      "rows": 9888,
-      "bytes": 404640
+      "rows": 9874,
+      "bytes": 399081
     },
     "marts.nt_status": {
       "rows": 3,
@@ -67,8 +67,8 @@
       "bytes": 133845
     },
     "marts.player_events": {
-      "rows": 11817,
-      "bytes": 422470
+      "rows": 11801,
+      "bytes": 421664
     },
     "marts.player_focus_set": {
       "rows": 1141,
@@ -84,7 +84,7 @@
     },
     "marts.player_rank_history": {
       "rows": 88438,
-      "bytes": 869540
+      "bytes": 830662
     },
     "marts.player_recent_form": {
       "rows": 3729,
@@ -104,11 +104,11 @@
     },
     "marts.player_state": {
       "rows": 1141,
-      "bytes": 52204
+      "bytes": 47980
     },
     "marts.player_trajectory": {
       "rows": 504,
-      "bytes": 36698
+      "bytes": 36110
     },
     "marts.selection_windows": {
       "rows": 3,
@@ -119,8 +119,8 @@
       "bytes": 3899
     },
     "marts.watch_feed": {
-      "rows": 800,
-      "bytes": 51572
+      "rows": 794,
+      "bytes": 51190
     },
     "marts.youth_events": {
       "rows": 3,

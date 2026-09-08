@@ -89,7 +89,7 @@ export function getPool(): Promise<PoolRow[]> {
       select
           s.player_key, s.full_name, d.age, s.pos_group, d.primary_position, d.current_team_name as team, d.current_competition as competition,
           d.current_league as league, d.current_country as country, c.level_rank, s.is_abroad, coalesce(fo.in_focus, s.is_abroad) as in_focus,
-          s.eligibility_status, d.has_arg_senior_cap, coalesce(s.in_last_squad, false) as in_last_squad, s.last_list_status, s.state,
+          s.eligibility_status, d.has_arg_senior_cap, coalesce(s.in_last_squad, false) as in_last_squad, coalesce(s.in_watch, false) as in_watch, s.last_list_status, s.state,
           s.pos_rank, s.pos_size, s.rank_change, s.infirmary_reason, s.last_match_date, coalesce(s.team_matches_missed, 0) as team_matches_missed,
           s.minutes_share, s.starts_share, s.competition as competition_w, s.production, s.team_matches,
           se.season_year, se.appearances as season_apps, se.starts as season_starts, se.minutes as season_minutes, se.goals as season_goals, se.assists as season_assists,
@@ -256,7 +256,7 @@ function percentiles(): Promise<Percentiles> {
     pctCache = getPool().then((pool) => {
       const out: Percentiles = new Map();
       for (const group of Object.keys(COMPARE_AXES)) {
-        const players = pool.filter((p) => p.pos_group === group && p.pos_rank !== null);
+        const players = pool.filter((p) => p.pos_group === group && p.in_watch && p.pos_rank !== null);
         const m = new Map<string, number>();
         for (const axis of COMPARE_AXES[group]!) {
           const vals = players.map((p) => ({ k: p.player_key, v: axisValue(p, axis.key) })).filter((x): x is { k: string; v: number } => x.v !== null);
@@ -358,6 +358,7 @@ export async function getPoolJson() {
     s: p.state,
     i: p.infirmary_reason,
     q: p.in_last_squad ? 1 : 0,
+    w: p.in_watch ? 1 : 0,
     lm: p.last_match_date ? { d: p.last_match_date, o: p.last_opponent, h: p.last_is_home, m: p.last_minutes, st: p.last_started, f: p.last_for, ag: p.last_against } : null,
     nm: p.next_kickoff ? { o: p.next_opponent, h: p.next_is_home, k: p.next_kickoff, c: p.next_competition } : null,
     ev: p.last_event_type ? { t: p.last_event_type, d: p.last_event_date, e: p.last_event_evidence } : null,
@@ -391,22 +392,35 @@ export async function currentWeekStart(): Promise<string> {
  */
 const roundCache = new Map<string, Promise<RoundRow[]>>();
 
-export function getRound(weekStart: string): Promise<RoundRow[]> {
-  if (!roundCache.has(weekStart)) roundCache.set(weekStart, loadRound(weekStart));
-  return roundCache.get(weekStart)!;
+export function getRound(weekStart: string, days = 7): Promise<RoundRow[]> {
+  const key = `${weekStart}:${days}`;
+  if (!roundCache.has(key)) roundCache.set(key, loadRound(weekStart, days));
+  return roundCache.get(key)!;
 }
 
-/** The default scope of the round page: the last squad and the top fifteen of each position. */
+/** The watch (marts.player_state.in_watch): a previous senior cap, a place in any list, or a club in a watch competition. */
+export function inWatch(r: { in_watch: boolean }): boolean {
+  return r.in_watch;
+}
+
+/** The week index behind "best of the week": goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start, minutes over 90. */
+export function weekIndex(r: RoundRow): number {
+  const cs = r.pos_group === "GK" || r.pos_group === "DEF" ? r.matches.filter((m) => m.played && (m.is_home ? m.away_score : m.home_score) === 0).length : 0;
+  return r.goals * 3 + r.assists * 2 + cs * 2 + r.starts + r.minutes / 90;
+}
+
+/** The default scope of the round page: the watch. */
 export function inRoundScope(r: RoundRow): boolean {
-  return r.in_last_squad || (r.pos_rank !== null && r.pos_rank <= 15);
+  return r.in_watch;
 }
 
-async function loadRound(weekStart: string): Promise<RoundRow[]> {
+async function loadRound(weekStart: string, days: number): Promise<RoundRow[]> {
   const r = await rows<Omit<RoundRow, "matches"> & { matches: string }>(
     `
-    with wk as (select ?::date as ws, (?::date + interval 6 day)::date as we),
+    with wk as (select ?::date as ws, (?::date + interval (?) day)::date as we),
     pool as (
-      select s.player_key, s.full_name, s.pos_group, coalesce(s.in_last_squad, false) as in_last_squad, s.state, s.infirmary_reason,
+      select s.player_key, s.full_name, s.pos_group, coalesce(s.in_last_squad, false) as in_last_squad, coalesce(s.in_watch, false) as in_watch, coalesce(d.has_arg_senior_cap, false) as has_arg_senior_cap,
+             coalesce(s.is_abroad, false) as is_abroad, s.minutes_share, s.state, s.infirmary_reason,
              d.current_espn_team_id, d.current_team_name, d.current_league, d.current_competition
       from marts.player_state s join marts.dim_player d using (player_key)
       where s.state <> 'retired'
@@ -453,7 +467,7 @@ async function loadRound(weekStart: string): Promise<RoundRow[]> {
                           order by match_date, match_key)) as matches
       from lines group by 1
     )
-    select p.player_key, p.full_name, p.pos_group, a.pos_rank, p.in_last_squad, p.state, p.infirmary_reason,
+    select p.player_key, p.full_name, p.pos_group, a.pos_rank, p.in_last_squad, p.in_watch, p.has_arg_senior_cap, p.is_abroad, p.minutes_share, p.state, p.infirmary_reason,
            coalesce((select min(coalesce(t.team_name, '')) from marts.dim_team t where t.espn_team_id = tf.team_id and t.is_current_member), p.current_team_name) as team,
            p.current_competition as competition, p.current_league as league,
            case when coalesce(g.apps, 0) > 0 then 'played' when coalesce(g.team_matches, 0) > 0 then 'did_not_play' else 'club_idle' end as category,
@@ -466,7 +480,7 @@ async function loadRound(weekStart: string): Promise<RoundRow[]> {
     left join agg g using (player_key)
     order by p.pos_group, a.pos_rank nulls last, p.full_name
     `,
-    [weekStart, weekStart],
+    [weekStart, weekStart, days - 1],
   );
   return r.map((x) => ({ ...x, matches: JSON.parse(x.matches) as RoundMatch[] }));
 }

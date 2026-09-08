@@ -50,6 +50,7 @@ recent_events as (
     group by 1
 ),
 nt as (select player_key, status as nt_status, since as nt_since from {{ ref('int_nt_status') }} where player_key is not null),
+watch as (select player_key, in_watch_now from {{ ref('int_watch') }}),
 last_list as (
     select c.player_key, c.status as last_list_status, w.window_id as last_list_window
     from {{ ref('int_squad_calls') }} c
@@ -57,7 +58,7 @@ last_list as (
     where w.announcement_date = (select max(announcement_date) from {{ ref('fifa_windows') }}, h where announcement_date <= h.horizon)
 ),
 base as (
-    select d.player_key, d.full_name, nt.nt_status, nt.nt_since, (ll.player_key is not null) as in_last_squad, ll.last_list_status, ll.last_list_window, d.current_team_name, d.current_league, d.in_tracked_squad, d.eligibility_status, d.is_abroad,
+    select d.player_key, d.full_name, nt.nt_status, nt.nt_since, (ll.player_key is not null) as in_last_squad, coalesce(r.in_watch, w.in_watch_now, false) as in_watch, ll.last_list_status, ll.last_list_window, d.current_team_name, d.current_league, d.in_tracked_squad, d.eligibility_status, d.is_abroad,
            coalesce(r.pos_group, d.pos_group_from_profile) as pos_group, r.score, r.score_prev, r.pos_rank, r.pos_size, pr.prev_rank,
            r.minutes_share, r.starts_share, r.competition, r.production, r.team_matches,
            la.last_match_date, coalesce(mi.team_matches_missed, 0) as team_matches_missed,
@@ -78,6 +79,7 @@ base as (
     left join recent_events re using (player_key)
     left join nt using (player_key)
     left join last_list ll using (player_key)
+    left join watch w using (player_key)
     where d.eligibility_status in ('eligible', 'review') and d.in_tracked_squad
 )
 select b.*,

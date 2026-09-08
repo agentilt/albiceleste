@@ -11,6 +11,20 @@ the international windows are the heartbeat; "what changed" is the briefing befo
 
 ## Cross-cutting decisions
 
+- **The watch is the pool (settled 2026-09-08).** The site's object is the set of players the national team is realistically
+  choosing from: a previous senior cap, a place in any published list, or a club in a competition flagged `in_watch` in the
+  competitions seed (Europe's leagues and Brazil), plus a merit ramp from the Argentine league: the best three by score in each
+  position at every date (`domestic_watch_slots`). MLS, Mexico and Saudi Arabia count through a cap or a list only. Scores and
+  states exist for everyone tracked; **ranks exist only inside the watch**, and the sheet, Pool, Compare percentiles and the
+  round's default scope use the watch. "Toda la base" on Pool and La fecha widens to everyone tracked, with a state but no rank;
+  Próximo ciclo keeps the Argentine league in full.
+- **Home (settled 2026-09-08)** is one screen: the squad sheet ("si la lista se anunciara hoy", 26 names from the ranking in
+  the 3/9/8/6 split) with the countdown as the headline; "Los de la semana" (best of the last seven days on the watch, by a
+  printed index: goals ×3, assists ×2, clean sheets ×2 for GK and DEF, one per start, minutes over 90) and "Señales de alarma"
+  (watch players whose club played but who got no minutes, then regulars under thirty minutes; last-squad first); Mi lista.
+  Movers, La fecha, Enfermería, this week's matches, Próximo ciclo and where-the-pool-plays live on their own pages; Home links
+  to them. Supersedes the Home brief below where they differ.
+
 - **Bilingual, Spanish default.** Every page exists under `/es` and `/en`, statically generated. Argentine Spanish is the reference
   copy (arquero, defensor, mediocampista, delantero, convocado, titular, fecha FIFA, la Selección, plantel, juveniles, Enfermería,
   Mi tablero); English is the translation. Dates and numbers format per locale. Event headlines are rendered by the site from

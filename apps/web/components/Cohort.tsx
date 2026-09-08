@@ -117,7 +117,7 @@ export function CohortExplorer({ rows, competitions, locale }: { rows: Trajector
             {d.common.followedOnly}
           </Chip>
           <Chip pressed={abroad === "home"} onClick={() => set({ where: abroad === "home" ? null : "home" })}>
-            {d.pool.lens}
+            {d.pos.UNK === "" ? "" : "Liga argentina"}
           </Chip>
           <Chip pressed={abroad === "abroad"} onClick={() => set({ where: abroad === "abroad" ? null : "abroad" })}>
             {d.home.where.abroad(rows.filter((r) => r.is_abroad).length)}

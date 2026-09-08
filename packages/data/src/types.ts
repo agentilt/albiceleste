@@ -307,6 +307,7 @@ export interface PoolRow {
   eligibility_status: Eligibility;
   has_arg_senior_cap: boolean;
   in_last_squad: boolean;
+  in_watch: boolean;
   last_list_status: string | null;
   state: State;
   pos_rank: number | null;
@@ -545,6 +546,11 @@ export interface RoundRow {
   /** rank within the position as of the week's Monday (null before the ranking starts) */
   pos_rank: number | null;
   in_last_squad: boolean;
+  in_watch: boolean;
+  has_arg_senior_cap: boolean;
+  is_abroad: boolean;
+  /** minutes share over the scoring window at the horizon: who counts as a regular */
+  minutes_share: number | null;
   state: State;
   infirmary_reason: InfirmaryReason | null;
   team: string | null;

@@ -41,7 +41,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
   const inf = boolParam(get("inf"));
   const fol = boolParam(get("fol"));
   const u23 = boolParam(get("u23"));
-  const lens = get("lens") === "all" ? "all" : "focus";
+  const scope = get("scope") === "all" ? "all" : "watch";
   const tiers = new Set(listParam(get("cols") ?? "form") as Tier[]);
   const sort = get("sort") ?? undefined;
   const dir: "asc" | "desc" = get("dir") === "asc" ? "asc" : "desc";
@@ -59,10 +59,10 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
           (!inf || r.infirmary_reason !== null) &&
           (!fol || follows.includes(r.player_key)) &&
           (!u23 || (r.age !== null && r.age <= 23)) &&
-          (lens === "all" || r.is_abroad || r.in_focus) &&
+          (scope === "all" || r.in_watch) &&
           r.state !== "retired",
       ),
-    [rows, pos, comp.selected, ageMin, ageMax, minMinutes, review, squad, inf, fol, u23, lens, follows], // eslint-disable-line react-hooks/exhaustive-deps
+    [rows, pos, comp.selected, ageMin, ageMax, minMinutes, review, squad, inf, fol, u23, scope, follows], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const columns = useMemo<ColumnSpec[]>(() => {
@@ -192,14 +192,14 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
           <Chip pressed={review} onClick={() => set({ review: review ? null : "1" })}>
             {d.pool.review}
           </Chip>
-          <span className="ml-2 text-xs uppercase tracking-wide text-muted">{d.pool.lens}</span>
+          <span className="ml-2 text-xs uppercase tracking-wide text-muted">{d.pool.scope}</span>
           <Segmented
             options={[
-              { value: "focus", label: d.pool.lensFocus },
-              { value: "all", label: d.pool.lensAll },
+              { value: "watch", label: d.pool.scopeWatch },
+              { value: "all", label: d.pool.scopeAll },
             ]}
-            value={lens}
-            onChange={(v) => set({ lens: v === "all" ? "all" : null })}
+            value={scope}
+            onChange={(v) => set({ scope: v === "all" ? "all" : null })}
           />
         </FilterRow>
         <div className="flex flex-wrap items-center gap-5">
@@ -241,7 +241,7 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
         </div>
       )}
       <Note>
-        {d.pool.lensNote} {d.pool.downloadNote(horizon)}
+        {d.pool.scopeNote} {d.pool.downloadNote(horizon)}
       </Note>
     </>
   );

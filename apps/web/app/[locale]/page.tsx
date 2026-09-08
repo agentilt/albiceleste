@@ -1,8 +1,7 @@
-import { Figure, Panel, SquadSheet, Tag } from "@albiceleste/ui";
-import { currentWeekStart, getMovers, getMoversBetween, getPool, getRound, getWeeks, getWindows, inRoundScope, manifest } from "@albiceleste/data";
+import { Panel, SquadSheet, Tag } from "@albiceleste/ui";
+import { getPool, getRound, getWindows, inWatch, manifest, weekIndex, type RoundRow } from "@albiceleste/data";
 import { FollowList } from "@/components/FollowList";
 import { FollowStar } from "@/components/FollowStar";
-import { MoverLine } from "@/components/MoverLine";
 import { countdown, today } from "@/lib/countdown";
 import { eventContext } from "@/lib/ctx";
 import { fmtDate } from "@/lib/fmt";
@@ -21,17 +20,25 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const locale = await readLocale(params);
   const d = t(locale);
   const m = manifest();
-  const [pool, windows, movers, ctx, week] = await Promise.all([getPool(), getWindows(), getMovers(), eventContext(), currentWeekStart()]);
-  const [round, weeks] = await Promise.all([getRound(week), getWeeks()]);
-  const thisWeek = weeks.find((w) => w.week_start === week);
-  const scoped = round.filter(inRoundScope);
-  const roundCounts = {
-    played: scoped.filter((r) => r.category === "played").length,
-    dnp: scoped.filter((r) => r.category === "did_not_play" && !r.infirmary_reason).length,
-    out: scoped.filter((r) => r.infirmary_reason).length,
-    of: scoped.length,
-  };
-  const roundStandouts = thisWeek ? await getMoversBetween(thisWeek.week_start, thisWeek.week_end, 3) : [];
+  const [pool, windows, ctx] = await Promise.all([getPool(), getWindows(), eventContext()]);
+  const last7 = await getRound(addDays(m.data_as_of, -6), 7);
+  const watch = last7.filter(inWatch);
+  const best = watch
+    .filter((r) => r.apps > 0)
+    .sort((a, b) => weekIndex(b) - weekIndex(a))
+    .slice(0, 7);
+  const worry: { r: RoundRow; line: string }[] = [
+    ...watch
+      .filter((r) => r.category === "did_not_play")
+      .sort((a, b) => Number(b.in_last_squad) - Number(a.in_last_squad) || (a.pos_rank ?? 999) - (b.pos_rank ?? 999))
+      .map((r) => ({ r, line: r.infirmary_reason ? `${d.infirmary[r.infirmary_reason]} · ${fmtDate(locale, pool.find((p) => p.player_key === r.player_key)?.last_match_date, false)}` : d.home.week.unused(r.team_matches) })),
+    ...watch
+      .filter((r) => r.category === "played" && r.minutes < 30 && (r.minutes_share ?? 0) >= 0.5)
+      .sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999))
+      .map((r) => ({ r, line: d.home.week.short(r.minutes, r.team_matches) })),
+  ].slice(0, 7);
+  const watchPlayed = watch.filter((r) => r.apps > 0).length;
+  const watchClubPlayed = watch.filter((r) => r.team_matches > 0).length;
 
   const cd = countdown(windows, today());
   const ranked = pool.filter((p) => p.pos_rank !== null);
@@ -48,13 +55,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     cd.kind === "before" ? d.home.sheet.headline(cd.days, cd.expected) : cd.kind === "announced" || cd.kind === "in_window" ? d.home.sheet.headlineWindow(windowLabel(locale, cd.window)) : cd.kind === "next_only" ? d.home.countdown.nextWindowOnly(windowLabel(locale, cd.window), fmtDate(locale, cd.window.starts, false), fmtDate(locale, cd.window.ends)) : d.home.sheet.headlineNone;
   const suggestions = GROUPS.flatMap((g) => ranked.filter((p) => p.pos_group === g).slice(0, 1)).slice(0, 3).map((p) => ({ key: p.player_key, name: p.full_name }));
 
-  const week7 = movers.filter((x) => x.event_date >= addDays(m.data_as_of, -7));
-  const week14 = movers.filter((x) => x.event_date >= addDays(m.data_as_of, -14));
-  const top = (week7.length >= 5 ? week7 : week14).slice(0, 6);
 
-  const infirmary = pool
-    .filter((p) => p.infirmary_reason)
-    .sort((a, b) => Number(b.in_last_squad) - Number(a.in_last_squad) || (a.pos_rank ?? 999) - (b.pos_rank ?? 999) || a.full_name.localeCompare(b.full_name));
 
 
   return (
@@ -76,86 +77,67 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
-        <Panel
-          title={d.round.homeTitle}
-          aside={
-            <AppLink className="link" href={routes.round(locale)}>
-              {thisWeek ? `${fmtDate(locale, thisWeek.week_start, false)} – ${fmtDate(locale, thisWeek.week_end, false)}` : ""} · {d.round.homeAll} →
-            </AppLink>
-          }
-        >
-          <div className="grid grid-cols-3 gap-2">
-            <Figure value={roundCounts.played} label={d.home.dash.played} />
-            <Figure value={roundCounts.dnp} label={d.home.dash.dnp} />
-            <Figure value={roundCounts.out} label={d.home.dash.out} />
-          </div>
-          <p className="mt-1 text-[11px] text-muted">{d.round.homeScope}</p>
-          {roundStandouts.length > 0 && (
-            <ol className="mt-2 border-t border-rule pt-1">
-              {roundStandouts.map((x) => (
-                <MoverLine key={x.event_key} m={x} locale={locale} ctx={ctx} compact />
-              ))}
-            </ol>
-          )}
+        <Panel title={d.home.week.best} aside={d.home.week.last7}>
+          <ol className="text-xs">
+            {best.map((r) => {
+              const cs = r.pos_group === "GK" || r.pos_group === "DEF" ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
+              const last = [...r.matches].reverse().find((x) => x.played);
+              const facts = [
+                r.goals > 0 ? `${r.goals} G` : null,
+                r.assists > 0 ? `${r.assists} A` : null,
+                cs > 0 ? d.home.week.cleanSheet(cs) : null,
+                `${r.minutes}′${r.apps > 1 ? ` · ${r.apps} ${d.common.matches}` : ""}`,
+                last ? `${last.home_team} ${last.home_score ?? ""}–${last.away_score ?? ""} ${last.away_team}` : null,
+              ].filter(Boolean);
+              return (
+                <li key={r.player_key} className="flex flex-wrap items-baseline gap-x-2 border-b border-rule py-1 leading-snug last:border-b-0">
+                  <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
+                    {r.full_name}
+                  </AppLink>
+                  <span className="text-muted">{r.team}</span>
+                  {r.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
+                  <span className="text-ink-2">{facts.join(" · ")}</span>
+                </li>
+              );
+            })}
+          </ol>
         </Panel>
-        <Panel
-          title={d.home.follow.title}
-          aside={
-            <AppLink className="link" href={routes.board(locale)}>
-              {d.home.follow.manage} →
-            </AppLink>
-          }
-        >
-          <FollowList locale={locale} ctx={ctx} suggestions={suggestions} compact />
-        </Panel>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel
-          title={d.home.movers.title}
-          aside={
-            <AppLink className="link" href={routes.movers(locale)}>
-              {d.home.movers.all} →
-            </AppLink>
-          }
-        >
-          {top.length === 0 ? (
-            <p className="text-xs text-muted">{d.home.movers.none}</p>
-          ) : (
-            <ol>
-              {top.map((x) => (
-                <MoverLine key={x.event_key} m={x} locale={locale} ctx={ctx} compact />
-              ))}
-            </ol>
-          )}
-        </Panel>
-        <Panel
-          title={d.home.infirmary.title}
-          aside={
-            <AppLink className="link" href={routes.pool(locale, "?inf=1")}>
-              {infirmary.length} · {d.home.infirmary.all} →
-            </AppLink>
-          }
-        >
-          {infirmary.length === 0 ? (
-            <p className="text-xs text-muted">{d.home.infirmary.none}</p>
+        <Panel title={d.home.week.worry} aside={d.home.week.last7}>
+          {worry.length === 0 ? (
+            <p className="text-xs text-muted">{d.home.week.none}</p>
           ) : (
             <ol className="text-xs">
-              {infirmary.slice(0, 6).map((p) => (
-                <li key={p.player_key} className="flex flex-wrap items-baseline gap-x-2 border-b border-rule py-1 leading-snug last:border-b-0">
-                  <AppLink className="link font-medium" href={routes.player(locale, p.player_key)}>
-                    {p.full_name}
+              {worry.map(({ r, line }) => (
+                <li key={r.player_key} className="flex flex-wrap items-baseline gap-x-2 border-b border-rule py-1 leading-snug last:border-b-0">
+                  <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
+                    {r.full_name}
                   </AppLink>
-                  {p.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
-                  <span className="text-muted">
-                    {d.infirmary[p.infirmary_reason!]} · {fmtDate(locale, p.last_match_date, false)} · {d.home.infirmary.missed(p.team_matches_missed)}
-                  </span>
+                  <span className="text-muted">{r.team}</span>
+                  {r.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
+                  <span className="text-ink-2">{line}</span>
                 </li>
               ))}
             </ol>
           )}
         </Panel>
       </div>
+      <p className="mb-4 text-xs text-muted">
+        {d.home.week.roundLine(watchPlayed, watchClubPlayed)} · {d.home.week.watch} ·{" "}
+        <AppLink className="link" href={routes.round(locale)}>
+          {d.round.homeAll} →
+        </AppLink>
+      </p>
+
+      <Panel
+        title={d.home.follow.title}
+        aside={
+          <AppLink className="link" href={routes.board(locale)}>
+            {d.home.follow.manage} →
+          </AppLink>
+        }
+      >
+        <FollowList locale={locale} ctx={ctx} suggestions={suggestions} compact />
+      </Panel>
     </>
   );
 }
