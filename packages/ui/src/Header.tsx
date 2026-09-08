@@ -84,5 +84,5 @@ export function Footer({ children }: { children: ReactNode }) {
 
 /** Main content container matching the header width. */
 export function Page({ children }: { children: ReactNode }) {
-  return <main className="mx-auto max-w-6xl px-5 py-8">{children}</main>;
+  return <main className="mx-auto max-w-6xl px-5 py-6">{children}</main>;
 }

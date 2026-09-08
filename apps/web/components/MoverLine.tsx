@@ -9,8 +9,18 @@ import { routes } from "@/lib/routes";
 import { stateLabel, stateTone } from "@/lib/state";
 
 /** One mover: date, player linked, the fact from evidence, club, state word, note mark. Works in server and client trees. */
-export function MoverLine({ m, locale, ctx, showDate = true, showClub = true }: { m: MoverRow; locale: Locale; ctx: EventContext; showDate?: boolean; showClub?: boolean }) {
+export function MoverLine({ m, locale, ctx, showDate = true, showClub = true, compact = false }: { m: MoverRow; locale: Locale; ctx: EventContext; showDate?: boolean; showClub?: boolean; compact?: boolean }) {
   const d = t(locale);
+  if (compact) {
+    return (
+      <li className="border-b border-rule py-1 text-xs leading-snug last:border-b-0">
+        <AppLink className="link font-medium" href={routes.player(locale, m.player_key)}>
+          {m.full_name}
+        </AppLink>
+        <span className="text-ink-2"> {renderEvent(locale, m.event_type, m.evidence, ctx)}</span>
+      </li>
+    );
+  }
   return (
     <li className="grid grid-cols-[5.5rem_1fr] items-baseline gap-x-3 border-b border-rule py-2 text-sm">
       <span className="font-mono text-xs text-muted">{showDate ? fmtDate(locale, m.event_date, false) : ""}</span>

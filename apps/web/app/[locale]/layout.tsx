@@ -35,18 +35,13 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   return (
     <html lang={locale} className={`${chivo.variable} ${archivo.variable} ${chivoMono.variable}`}>
       <body>
-        <SiteHeader
-          locale={locale}
-          right={<PlayerSearch locale={locale} />}
-          meta={
-            <>
-              {d.site.dataThrough} {fmtDate(locale, m.data_as_of)} · {d.site.squadsAsOf} {fmtDate(locale, m.squad_as_of)} · {d.site.snapshot} {fmtDateTime(locale, m.exported_at)}
-              {m.git_commit ? ` · ${m.git_commit}` : ""}
-            </>
-          }
-        />
+        <SiteHeader locale={locale} right={<PlayerSearch locale={locale} />} meta={null} />
         <Page>{children}</Page>
         <Footer>
+          <span className="mb-2 block font-mono">
+            {d.site.dataThrough} {fmtDate(locale, m.data_as_of)} · {d.site.squadsAsOf} {fmtDate(locale, m.squad_as_of)} · {d.site.snapshot} {fmtDateTime(locale, m.exported_at)}
+            {m.git_commit ? ` · ${m.git_commit}` : ""}
+          </span>
           {d.site.footer}{" "}
           <AppLink className="link" href={routes.about(locale)}>
             {d.site.aboutData}

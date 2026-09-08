@@ -64,7 +64,7 @@ function LastMatch({ p, locale }: { p: PoolJsonRow; locale: Locale }) {
 }
 
 /** The follow block: one dense line per followed player, sorted by next kickoff. Shared by Home and Mi tablero. */
-export function FollowList({ locale, ctx, suggestions, removable = false }: { locale: Locale; ctx: EventContext; suggestions: { key: string; name: string }[]; removable?: boolean }) {
+export function FollowList({ locale, ctx, suggestions, removable = false, compact = false }: { locale: Locale; ctx: EventContext; suggestions: { key: string; name: string }[]; removable?: boolean; compact?: boolean }) {
   const d = t(locale);
   const rows = usePoolJson();
   const { follows, remove } = useFollows();
@@ -80,9 +80,9 @@ export function FollowList({ locale, ctx, suggestions, removable = false }: { lo
 
   if (follows.length === 0) {
     return (
-      <div className="text-sm text-ink-2">
-        <p>{d.home.follow.empty}</p>
-        <p className="mt-2">
+      <div className={compact ? "text-xs text-ink-2" : "text-sm text-ink-2"}>
+        {!compact && <p>{d.home.follow.empty}</p>}
+        <p className={compact ? "" : "mt-2"}>
           <span className="text-muted">{d.home.follow.suggest} </span>
           {suggestions.map((s, i) => (
             <span key={s.key}>
@@ -98,6 +98,23 @@ export function FollowList({ locale, ctx, suggestions, removable = false }: { lo
     );
   }
   if (!rows) return <p className="text-sm text-muted">…</p>;
+  if (compact) {
+    return (
+      <ul className="text-xs">
+        {list.map((p) => (
+          <li key={p.k} className="flex items-baseline justify-between gap-2 border-b border-rule py-1 last:border-b-0">
+            <span className="min-w-0 truncate">
+              <AppLink className="link font-medium" href={routes.player(locale, p.k)}>
+                {p.n}
+              </AppLink>
+              <span className="text-muted"> {(d.posShort as Record<string, string>)[p.g]} {p.r ?? "–"}</span> <RankArrow change={p.d} className="text-[10px]" />
+            </span>
+            <span className="shrink-0 text-muted">{p.nm ? `${p.nm.h ? d.common.vs : "@"} ${p.nm.o}, ${fmtKickoff(locale, p.nm.k)}` : ""}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <div>
       {list.map((p) => {

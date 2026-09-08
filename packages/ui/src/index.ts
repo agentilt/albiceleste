@@ -26,3 +26,4 @@ export { Segmented } from "./filters";
 export { Radar, Sparkline, RankHistory, AgeScatter } from "./charts";
 export { SquadSheet } from "./SquadSheet";
 export type { SheetColumn, SheetName } from "./SquadSheet";
+export { Panel, Figure } from "./Panel";

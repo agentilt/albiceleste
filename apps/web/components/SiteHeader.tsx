@@ -19,7 +19,7 @@ export function navItems(locale: Locale): NavItem[] {
   ];
 }
 
-export function SiteHeader({ locale, meta, right }: { locale: Locale; meta: ReactNode; right: ReactNode }) {
+export function SiteHeader({ locale, meta, right }: { locale: Locale; meta: ReactNode | null; right: ReactNode }) {
   const path = usePathname() ?? `/${locale}`;
   const other: Locale = locale === "es" ? "en" : "es";
   const d = t(locale);
@@ -27,7 +27,7 @@ export function SiteHeader({ locale, meta, right }: { locale: Locale; meta: Reac
     <Header
       nav={navItems(locale)}
       current={path}
-      meta={meta}
+      meta={meta ?? undefined}
       homeHref={routes.home(locale)}
       LinkComponent={AppLink}
       right={
