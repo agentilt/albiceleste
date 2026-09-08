@@ -7,7 +7,7 @@ html {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-feature-settings: "tnum" 1, "ss01" 1;
+  font-feature-settings: "tnum" 1;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -24,17 +24,44 @@ a {
 h1,
 h2,
 h3 {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
   margin: 0;
+}
+h2 {
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+h3 {
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .num {
   font-variant-numeric: tabular-nums;
 }
 
-/* Tables: dense, hairline rules, numbers right-aligned */
+/* Data set semi-condensed: Archivo's width axis keeps dense tables narrow without a second family. */
+.data,
+.condensed {
+  font-stretch: 87.5%;
+}
+
+/* The albiceleste stripe: three bands, the mark that opens every section and the wordmark. */
+.stripe {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: none;
+  background: linear-gradient(to right, var(--color-celeste) 0 33.3%, var(--color-surface) 33.3% 66.6%, var(--color-celeste) 66.6% 100%);
+  outline: 1px solid var(--color-rule-strong);
+  outline-offset: -1px;
+  vertical-align: -0.05em;
+}
+
+/* Tables: dense, hairline rules, a firm celeste rule under the head, numbers right-aligned */
 table.data {
   width: 100%;
   border-collapse: collapse;
@@ -43,13 +70,14 @@ table.data {
 }
 table.data th {
   text-align: left;
+  font-family: var(--font-mono);
   font-weight: 500;
   color: var(--color-muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   padding: 0.5rem 0.5rem 0.4rem;
-  border-bottom: 1px solid var(--color-rule-strong);
+  border-bottom: 2px solid var(--color-celeste);
   white-space: nowrap;
   vertical-align: bottom;
 }
@@ -99,26 +127,50 @@ table.data th button:hover {
   border: 1px solid var(--color-rule-strong);
   border-radius: var(--radius-xs);
   padding: 0.2rem 0.55rem;
-  font-size: 0.8rem;
   background: var(--color-surface);
   cursor: pointer;
   color: var(--color-ink-2);
   font: inherit;
   font-size: 0.8rem;
+  font-stretch: 87.5%;
 }
 .chip[aria-pressed="true"] {
   background: var(--color-ink);
   border-color: var(--color-ink);
   color: var(--color-paper);
 }
+.chip:focus-visible,
+.link:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-celeste-deep);
+  outline-offset: 2px;
+}
 
 select,
 input[type="search"],
-input[type="number"] {
+input[type="number"],
+textarea {
   font: inherit;
   border: 1px solid var(--color-rule-strong);
   border-radius: var(--radius-xs);
   background: var(--color-surface);
   padding: 0.3rem 0.5rem;
   color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-row {
+    animation: sheet-in 0.5s ease-out both;
+  }
+  @keyframes sheet-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }

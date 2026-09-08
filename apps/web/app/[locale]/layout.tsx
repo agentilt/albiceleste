@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Archivo, Chivo, Chivo_Mono } from "next/font/google";
 import { Footer, Page } from "@albiceleste/ui";
 import { manifest } from "@albiceleste/data";
 import { PlayerSearch } from "@/components/PlayerSearch";
@@ -12,9 +12,9 @@ import { REPO_URL } from "@/lib/site";
 import { AppLink } from "@/lib/link";
 import "../globals.css";
 
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", axes: ["opsz"], display: "swap" });
-const plexSans = IBM_Plex_Sans({ subsets: ["latin", "latin-ext"], weight: ["400", "500", "600"], variable: "--font-plex-sans", display: "swap" });
-const plexMono = IBM_Plex_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-plex-mono", display: "swap" });
+const chivo = Chivo({ subsets: ["latin", "latin-ext"], weight: ["400", "700", "900"], variable: "--font-chivo", display: "swap" });
+const archivo = Archivo({ subsets: ["latin", "latin-ext"], axes: ["wdth"], variable: "--font-archivo", display: "swap" });
+const chivoMono = Chivo_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-chivo-mono", display: "swap" });
 
 export const dynamicParams = false;
 
@@ -33,7 +33,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   const d = t(locale);
   const m = manifest();
   return (
-    <html lang={locale} className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable}`}>
+    <html lang={locale} className={`${chivo.variable} ${archivo.variable} ${chivoMono.variable}`}>
       <body>
         <SiteHeader
           locale={locale}

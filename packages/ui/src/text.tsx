@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** Front-page opener: a large serif statement with a one-paragraph lede. */
+/** Front-page opener: a large display statement with a one-paragraph lede. */
 export function Hero({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
   return (
     <div className="mb-10 max-w-3xl">
@@ -25,7 +25,10 @@ export function Section({ title, children, aside }: { title: string; children: R
   return (
     <section className="mb-10">
       <div className="mb-3 flex items-baseline justify-between gap-4 border-b border-rule-strong pb-1">
-        <h2 className="text-xl">{title}</h2>
+        <h2 className="flex items-center gap-2 text-lg">
+          <span className="stripe" aria-hidden="true" />
+          {title}
+        </h2>
         {aside && <div className="text-xs text-muted">{aside}</div>}
       </div>
       {children}
@@ -43,7 +46,7 @@ export function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-wide text-muted">{label}</div>
-      <div className="num font-serif text-3xl">{value}</div>
+      <div className="num font-display text-3xl font-black">{value}</div>
     </div>
   );
 }

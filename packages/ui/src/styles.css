@@ -1,5 +1,5 @@
 /* Compiled by the Tailwind CLI into dist/styles.css: tokens + base rules + the utilities the components use. */
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Chivo:wght@400;700;900&family=Chivo+Mono:wght@400;500&family=Archivo:wdth,wght@62..125,400..700&display=swap");
 @import "tailwindcss";
 @import "./tokens.css";
 @import "./base.css";
@@ -7,4 +7,4 @@
 
 /* Layout vocabulary shipped for consumers that compose with the components (the design agent, previews). Keep this list
    in sync with .design-sync/conventions.md. */
-@source inline("{flex,inline-flex,grid,block,hidden} flex-wrap flex-col {items,justify}-{start,center,end,between,baseline} gap-{1,2,3,4,5,6,8,10} gap-{x,y}-{1,2,3,4,5,6,8} {mt,mb,my,mx,pt,pb,py,px,p}-{0,1,2,3,4,5,6,8,10,12} ml-auto mx-auto max-w-{xl,3xl,6xl} w-{16,20,56,80,full} space-y-{1,2,3,4} grid-cols-{1,2,3,4,6} {sm,lg}:grid-cols-{2,3,4,6} text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl} font-{sans,serif,mono} font-medium {text,bg,border}-{paper,surface,ink,ink-2,muted,rule,rule-strong,celeste,celeste-deep,celeste-tint} border border-{t,b,y} uppercase tracking-{wide,tight} leading-{tight,relaxed} truncate whitespace-nowrap overflow-{auto,x-auto}");
+@source inline("{flex,inline-flex,grid,block,hidden} flex-wrap flex-col {items,justify}-{start,center,end,between,baseline} gap-{1,2,3,4,5,6,8,10} gap-{x,y}-{1,2,3,4,5,6,8} {mt,mb,my,mx,pt,pb,py,px,p}-{0,1,2,3,4,5,6,8,10,12} ml-auto mx-auto max-w-{xl,3xl,6xl} w-{16,20,56,80,full} space-y-{1,2,3,4} grid-cols-{1,2,3,4,6} {sm,lg}:grid-cols-{2,3,4,6} text-{xs,sm,base,lg,xl,2xl,3xl,4xl,5xl} font-{sans,display,mono} font-medium {text,bg,border}-{paper,surface,ink,ink-2,muted,rule,rule-strong,celeste,celeste-deep,celeste-tint} border border-{t,b,y} uppercase tracking-{wide,tight} leading-{tight,relaxed} truncate whitespace-nowrap overflow-{auto,x-auto}");

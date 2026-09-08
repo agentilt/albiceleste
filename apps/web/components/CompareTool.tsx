@@ -225,7 +225,7 @@ function Row({ label, cells }: { label: string; cells: ReactNode[] }) {
 function SectionRow({ label, n }: { label: string; n: number }) {
   return (
     <tr>
-      <td colSpan={n + 1} className="pt-4 font-serif text-base text-ink">
+      <td colSpan={n + 1} className="pt-4 font-display text-base font-bold text-ink">
         {label}
       </td>
     </tr>

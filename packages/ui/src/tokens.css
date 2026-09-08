@@ -1,21 +1,23 @@
-/* albiceleste design tokens. `@theme static` so every token is emitted as a CSS variable, used or not. */
+/* albiceleste design tokens. `@theme static` so every token is emitted as a CSS variable, used or not.
+   Palette: a cool sky-white ground, navy-black ink, the AFA celeste as the one accent, a muted gold for last-squad marks. */
 @theme static {
-  --color-paper: #f8f7f3;
+  --color-paper: #f4f8fb;
   --color-surface: #ffffff;
-  --color-ink: #17191c;
-  --color-ink-2: #45494f;
-  --color-muted: #7a7f86;
-  --color-rule: #e1dfd7;
-  --color-rule-strong: #c9c6bb;
+  --color-ink: #0f1721;
+  --color-ink-2: #3b4653;
+  --color-muted: #6d7884;
+  --color-rule: #d9e2ea;
+  --color-rule-strong: #b3c2d0;
   --color-celeste: #75aadb;
-  --color-celeste-deep: #2d6fa8;
-  --color-celeste-tint: #eaf2f9;
-  --color-gold: #b8860b;
-  --color-danger: #a83a2e;
+  --color-celeste-deep: #2a6db5;
+  --color-celeste-tint: #e6f0f9;
+  --color-gold: #b8912a;
+  --color-danger: #b23a2f;
 
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-serif: "Fraunces", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Type: Chivo (display), Archivo (text and data, with a width axis), Chivo Mono (labels). All by Omnibus-Type, Buenos Aires. */
+  --font-display: "Chivo", "Archivo", system-ui, sans-serif;
+  --font-sans: "Archivo", system-ui, sans-serif;
+  --font-mono: "Chivo Mono", ui-monospace, monospace;
 
   --radius-xs: 2px;
 }

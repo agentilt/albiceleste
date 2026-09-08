@@ -1,4 +1,4 @@
-import { Bars, Hero, Note, RankList, Section, StateWord, Tag } from "@albiceleste/ui";
+import { Bars, Note, Section, SquadSheet, Tag } from "@albiceleste/ui";
 import { currentWeekStart, getMovers, getMoversBetween, getPool, getPresence, getRound, getTrajectory, getWeekend, getWeeks, getWindows, inRoundScope, manifest } from "@albiceleste/data";
 import { FollowList } from "@/components/FollowList";
 import { FollowStar } from "@/components/FollowStar";
@@ -45,6 +45,17 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   const cd = countdown(windows, today());
   const ranked = pool.filter((p) => p.pos_rank !== null);
+  const SLOTS: Record<(typeof GROUPS)[number], number> = { GK: 3, DEF: 9, MID: 8, FWD: 6 };
+  const sheet = GROUPS.map((g) => ({
+    title: d.pos[g],
+    slots: SLOTS[g],
+    names: ranked
+      .filter((p) => p.pos_group === g && p.state !== "out" && p.state !== "retired")
+      .slice(0, SLOTS[g])
+      .map((p) => ({ key: p.player_key, name: p.full_name, href: routes.player(locale, p.player_key), club: p.team, rank: p.pos_rank, marked: p.in_last_squad })),
+  }));
+  const headline =
+    cd.kind === "before" ? d.home.sheet.headline(cd.days, cd.expected) : cd.kind === "announced" || cd.kind === "in_window" ? d.home.sheet.headlineWindow(windowLabel(locale, cd.window)) : cd.kind === "next_only" ? d.home.countdown.nextWindowOnly(windowLabel(locale, cd.window), fmtDate(locale, cd.window.starts, false), fmtDate(locale, cd.window.ends)) : d.home.sheet.headlineNone;
   const suggestions = GROUPS.flatMap((g) => ranked.filter((p) => p.pos_group === g).slice(0, 1)).slice(0, 3).map((p) => ({ key: p.player_key, name: p.full_name }));
 
   const week7 = movers.filter((x) => x.event_date >= addDays(m.data_as_of, -7));
@@ -70,17 +81,22 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
 
   return (
     <>
-      <Hero
-        title={d.site.tagline}
-        lede={
-          <>
-            <span className="block">{d.site.description}</span>
-            <span className="mt-3 block font-mono text-sm text-ink">
-              <CountdownLine cd={cd} locale={locale} />
-            </span>
-          </>
-        }
-      />
+      <div className="mb-12 grid gap-8 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:items-start">
+        <div>
+          <p className="mb-3 font-mono text-xs uppercase tracking-wide text-celeste-deep">{d.home.sheet.eyebrow}</p>
+          <h1 className="text-4xl sm:text-5xl">{headline}</h1>
+          <p className="mt-4 max-w-md text-base text-ink-2">{d.home.sheet.sub}</p>
+          <p className="mt-4 font-mono text-xs text-muted">
+            <CountdownLine cd={cd} locale={locale} />
+          </p>
+          <p className="mt-6">
+            <AppLink className="link font-medium" href={routes.pool(locale)}>
+              {d.home.sheet.cta} →
+            </AppLink>
+          </p>
+        </div>
+        <SquadSheet columns={sheet} caption={d.home.sheet.caption} LinkComponent={AppLink} />
+      </div>
 
       <Section
         title={d.round.homeTitle}
@@ -114,46 +130,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         }
       >
         <FollowList locale={locale} ctx={ctx} suggestions={suggestions} />
-      </Section>
-
-      <Section
-        title={d.home.glance.title}
-        aside={
-          <>
-            {d.home.glance.aside} ·{" "}
-            <AppLink className="link" href={routes.pool(locale)}>
-              {d.home.glance.all} →
-            </AppLink>
-          </>
-        }
-      >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {GROUPS.map((g) => (
-            <RankList
-              key={g}
-              title={d.pos[g]}
-              LinkComponent={AppLink}
-              rows={ranked
-                .filter((p) => p.pos_group === g)
-                .slice(0, 4)
-                .map((p) => ({
-                  key: p.player_key,
-                  rank: p.pos_rank,
-                  change: p.rank_change,
-                  name: p.full_name,
-                  href: routes.player(locale, p.player_key),
-                  club: p.team,
-                  meta: `${fmtInt(locale, p.season_minutes ?? 0)}′`,
-                  right: (
-                    <>
-                      {p.in_last_squad && <Tag tone="accent">{d.marks.lastSquadShort}</Tag>}
-                      <FollowStar playerKey={p.player_key} locale={locale} />
-                    </>
-                  ),
-                }))}
-            />
-          ))}
-        </div>
       </Section>
 
       <div className="grid gap-10 lg:grid-cols-2">
@@ -322,7 +298,7 @@ function CountdownLine({ cd, locale }: { cd: ReturnType<typeof countdown>; local
   if (cd.kind === "before") {
     return (
       <>
-        {cd.days === 0 ? c.announcementToday(cd.expected) : c.announcementIn(cd.days, cd.expected)} · {span}
+        {c.announcementOn(fmtDate(locale, w.announcement_date, false), cd.expected)} · {span}
         {lastLink(cd.last)}
       </>
     );

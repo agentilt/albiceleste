@@ -24,3 +24,5 @@ export { NoteComposer, NoteList } from "./Notes";
 export type { NoteLike, NoteLabels } from "./Notes";
 export { Segmented } from "./filters";
 export { Radar, Sparkline, RankHistory, AgeScatter } from "./charts";
+export { SquadSheet } from "./SquadSheet";
+export type { SheetColumn, SheetName } from "./SquadSheet";

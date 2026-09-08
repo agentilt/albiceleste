@@ -9,7 +9,8 @@ export interface NavItem {
 /** Site wordmark, set in the serif display face. */
 export function Wordmark({ href = "/", LinkComponent = DefaultLink, text = "albiceleste" }: { href?: string; LinkComponent?: LinkLike; text?: string }) {
   return (
-    <LinkComponent href={href} className="font-serif text-2xl tracking-tight">
+    <LinkComponent href={href} className="inline-flex items-center gap-2 font-display text-xl font-black uppercase tracking-tight">
+      <span className="stripe" aria-hidden="true" />
       {text}
     </LinkComponent>
   );
