@@ -4,7 +4,7 @@ teams as (select * from {{ ref('dim_team') }}),
 comps as (select * from {{ ref('dim_competition') }}),
 hl as (select athlete_id, min(hl_player_id) as hl_player_id from {{ ref('int_player_xref_hl') }} group by athlete_id),
 fpl as (select player_key, element_id from {{ ref('int_player_xref_fpl') }}),
-tmx as (select x.player_key, x.tm_player_id, t.market_value_eur, t.highest_market_value_eur, t.international_caps as tm_international_caps, t.contract_expiration_date from {{ ref('int_player_xref_tm') }} x join {{ ref('stg_tm__players') }} t using (tm_player_id))
+tmx as (select x.player_key, x.tm_player_id, t.market_value_eur, t.highest_market_value_eur, t.international_caps as tm_international_caps, t.contract_expiration_date, t.sub_position from {{ ref('int_player_xref_tm') }} x join {{ ref('stg_tm__players') }} t using (tm_player_id))
 select
     p.player_key,
     coalesce(s.full_name, ath.full_name, p.full_name)                as full_name,
@@ -50,6 +50,23 @@ select
     tmx.highest_market_value_eur,
     tmx.tm_international_caps,
     tmx.contract_expiration_date,
+    -- the detailed role for the pitch depth chart: Transfermarkt's sub-position mapped to eleven slots
+    tmx.sub_position,
+    case tmx.sub_position
+        when 'Goalkeeper' then 'GK'
+        when 'Right-Back' then 'RB'
+        when 'Centre-Back' then 'CB'
+        when 'Left-Back' then 'LB'
+        when 'Defensive Midfield' then 'DM'
+        when 'Central Midfield' then 'CM'
+        when 'Attacking Midfield' then 'AM'
+        when 'Right Winger' then 'RW'
+        when 'Right Midfield' then 'RW'
+        when 'Left Winger' then 'LW'
+        when 'Left Midfield' then 'LW'
+        when 'Centre-Forward' then 'ST'
+        when 'Second Striker' then 'ST'
+    end                                                            as role,
     p.fbref_id,
     p.soccerway_id
 from p

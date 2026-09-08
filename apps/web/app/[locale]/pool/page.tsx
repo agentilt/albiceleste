@@ -4,6 +4,7 @@ import { PageTitle } from "@albiceleste/ui";
 import { getCompetitions, getPool, getWindows, manifest } from "@albiceleste/data";
 import { PoolExplorer } from "@/components/PoolExplorer";
 import { t, windowLabel } from "@/lib/i18n";
+import { routes } from "@/lib/routes";
 import { localeParams, readLocale } from "@/lib/params";
 
 export function generateStaticParams() {
@@ -23,7 +24,7 @@ export default async function PoolPage({ params }: { params: Promise<{ locale: s
   const last = [...windows].reverse().find((w) => w.announcement_date && w.announcement_date <= horizon && w.listed > 0);
   return (
     <>
-      <PageTitle title={d.pool.title} lede={d.pool.lede} />
+      <PageTitle title={d.pool.title} hint={d.pool.hint} hintHref={routes.about(locale, "#watch")} aside={d.pool.count(pool.filter((p) => p.in_watch).length, pool.length)} />
       <Suspense>
         <PoolExplorer rows={pool} competitions={competitions} locale={locale} horizon={horizon} lastListLabel={last ? windowLabel(locale, last) : null} />
       </Suspense>

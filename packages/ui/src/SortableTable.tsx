@@ -1,8 +1,9 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type CSSProperties, Fragment, type ReactNode, useMemo, useState } from "react";
 import { date, dec1, dec2, eur, int, pct } from "./format";
 import { DefaultLink, type LinkLike } from "./link";
+import { priorityClass } from "./priority";
 
 /** Serializable column spec, so a server page can hand a client table its layout. */
 export interface ColumnSpec {
@@ -21,6 +22,10 @@ export interface ColumnSpec {
   title?: string;
   /** header text when the label is an abbreviation that needs no sort affordance change */
   sortable?: boolean;
+  /** 1 (default): always shown; 2: hidden on a phone (under `sm`); 3: hidden under `lg`. The phone keeps what matters. */
+  priority?: 1 | 2 | 3;
+  /** truncate the cell at this CSS width (club and competition names) instead of widening the table */
+  maxWidth?: string;
 }
 
 export type Row = Record<string, string | number | boolean | string[] | null>;
@@ -31,7 +36,8 @@ function numeric(kind: ColumnSpec["kind"]): boolean {
 
 /**
  * Client-side sortable table. Click a header to sort; numeric kinds sort descending first. `kind: "link"` renders the
- * cell as a link built by `hrefFor(row[keyField])`, using `LinkComponent` (a plain anchor by default).
+ * cell as a link built by `hrefFor(row[keyField])`, using `LinkComponent` (a plain anchor by default). The wrapper
+ * scrolls sideways with a shadow on the hidden edge; give secondary columns a `priority` so a phone drops them instead.
  */
 export function SortableTable({
   columns,
@@ -47,6 +53,8 @@ export function SortableTable({
   LinkComponent = DefaultLink,
   rowKey,
   rowClassName,
+  caption,
+  groupBy,
 }: {
   columns: ColumnSpec[];
   rows: Row[];
@@ -62,6 +70,10 @@ export function SortableTable({
   LinkComponent?: LinkLike;
   rowKey?: (row: Row, i: number) => string;
   rowClassName?: (row: Row) => string | undefined;
+  /** accessible table name (visually hidden) */
+  caption?: string;
+  /** group rows under mono sub-headers (position groups); sorting applies within each group, one header for all */
+  groupBy?: { of: (row: Row) => string; order?: string[]; label: (key: string, count: number) => ReactNode };
 }) {
   const [sortState, setSortState] = useState<string | undefined>(initialSort);
   const [dirState, setDirState] = useState<"asc" | "desc">(initialDir);
@@ -85,6 +97,19 @@ export function SortableTable({
     });
     return copy;
   }, [rows, sort, dir, columns]);
+
+  const bodies = useMemo(() => {
+    if (!groupBy) return [{ key: "", rows: sorted }];
+    const map = new Map<string, Row[]>();
+    for (const r of sorted) {
+      const k = groupBy.of(r);
+      if (!map.has(k)) map.set(k, []);
+      map.get(k)!.push(r);
+    }
+    const order = groupBy.order ?? [];
+    const keys = [...order.filter((k) => map.has(k)), ...[...map.keys()].filter((k) => !order.includes(k))];
+    return keys.map((k) => ({ key: k, rows: map.get(k)! }));
+  }, [sorted, groupBy]);
 
   function toggle(key: string, kind: ColumnSpec["kind"]) {
     const next: [string | undefined, "asc" | "desc"] = sort === key ? [key, dir === "asc" ? "desc" : "asc"] : [key, numeric(kind) ? "desc" : "asc"];
@@ -132,17 +157,33 @@ export function SortableTable({
     }
   }
 
+  function clipped(spec: ColumnSpec, content: ReactNode) {
+    if (!spec.maxWidth) return content;
+    return (
+      <span className="clip" style={{ "--cw": spec.maxWidth } as CSSProperties} title={typeof content === "string" ? content : undefined}>
+        {content}
+      </span>
+    );
+  }
+
   return (
-    <div className={`overflow-x-auto ${sticky ? "sticky-head" : ""}`}>
+    <div className={`scroll-x ${sticky ? "sticky-head" : ""}`}>
       <table className="data">
+        {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
           <tr>
             {columns.map((c) => (
-              <th key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : ""} style={c.width ? { width: c.width } : undefined} title={c.title}>
+              <th
+                key={c.key}
+                className={`${numeric(c.kind) || c.align === "r" ? "r" : ""} ${priorityClass(c.priority)}`}
+                style={c.width ? { width: c.width } : undefined}
+                title={c.title}
+                aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}
+              >
                 {c.sortable === false ? (
                   c.label
                 ) : (
-                  <button type="button" onClick={() => toggle(c.key, c.kind)} aria-sort={sort === c.key ? (dir === "asc" ? "ascending" : "descending") : undefined}>
+                  <button type="button" onClick={() => toggle(c.key, c.kind)}>
                     {c.label}
                     {sort === c.key ? (dir === "asc" ? " ↑" : " ↓") : ""}
                   </button>
@@ -159,14 +200,23 @@ export function SortableTable({
               </td>
             </tr>
           )}
-          {sorted.map((r, i) => (
-            <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
-              {columns.map((c) => (
-                <td key={c.key} className={numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""}>
-                  {cell(c, r)}
-                </td>
+          {bodies.map((b) => (
+            <Fragment key={b.key}>
+              {groupBy && (
+                <tr className="group-row">
+                  <td colSpan={columns.length}>{groupBy.label(b.key, b.rows.length)}</td>
+                </tr>
+              )}
+              {b.rows.map((r, i) => (
+                <tr key={rowKey ? rowKey(r, i) : ((r.player_key as string) ?? (r.event_key as string) ?? i)} className={rowClassName?.(r)}>
+                  {columns.map((c) => (
+                    <td key={c.key} className={`${numeric(c.kind) || c.align === "r" ? "r" : c.kind === "link" ? "whitespace-nowrap" : ""} ${priorityClass(c.priority)}`}>
+                      {clipped(c, cell(c, r))}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
+            </Fragment>
           ))}
         </tbody>
       </table>

@@ -54,6 +54,7 @@ export function SearchInput({
     <div ref={box} className="relative inline-block">
       <input
         type="search"
+        name="q"
         placeholder={placeholder}
         aria-label={placeholder}
         className={`${width} text-sm`}

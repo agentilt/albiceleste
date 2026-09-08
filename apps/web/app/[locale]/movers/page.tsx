@@ -6,6 +6,7 @@ import { MoversExplorer } from "@/components/MoversExplorer";
 import { eventContext } from "@/lib/ctx";
 import { t, windowLabel } from "@/lib/i18n";
 import { localeParams, readLocale } from "@/lib/params";
+import { routes } from "@/lib/routes";
 
 export function generateStaticParams() {
   return localeParams();
@@ -24,9 +25,17 @@ export default async function MoversPage({ params }: { params: Promise<{ locale:
   const last = [...windows].reverse().find((w) => w.announcement_date && w.announcement_date <= horizon && w.listed > 0) ?? null;
   return (
     <>
-      <PageTitle title={d.movers.title} lede={d.movers.lede} />
+      <PageTitle title={d.movers.title} hint={d.movers.lede} hintHref={routes.about(locale, "#events")} />
       <Suspense>
-        <MoversExplorer rows={rows} competitions={competitions} locale={locale} ctx={ctx} horizon={horizon} lastAnnouncement={last?.announcement_date ?? null} lastWindowLabel={last ? windowLabel(locale, last) : null} />
+        <MoversExplorer
+          rows={rows}
+          competitions={competitions}
+          locale={locale}
+          ctx={ctx}
+          horizon={horizon}
+          lastAnnouncement={last?.announcement_date ?? null}
+          lastWindowLabel={last ? windowLabel(locale, last) : null}
+        />
       </Suspense>
     </>
   );

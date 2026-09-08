@@ -18,7 +18,7 @@ export type StateTone = "out" | "strong" | "up" | "down" | "quiet" | "new";
 /** The one-word form state. `tone` decides the weight; the label is the caller's, in the reader's language. */
 export function StateWord({ label, tone = "quiet" }: { label: string; tone?: StateTone }) {
   const cls =
-    tone === "out" ? "text-danger" : tone === "strong" ? "font-medium text-ink" : tone === "up" ? "text-celeste-deep" : tone === "down" ? "text-ink-2" : tone === "new" ? "text-gold" : "text-muted";
+    tone === "out" ? "text-danger" : tone === "strong" ? "font-medium text-ink" : tone === "up" ? "text-celeste-deep" : tone === "down" ? "text-ink-2" : tone === "new" ? "text-gold-deep" : "text-muted";
   return <span className={`whitespace-nowrap text-sm ${cls}`}>{label}</span>;
 }
 

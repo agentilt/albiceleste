@@ -291,12 +291,21 @@ export interface MethodParameter {
 }
 
 /** One pool player: the row the Pool list, the depth chart, the follow list and the per-player JSON are built from. */
+export type Role = "GK" | "RB" | "CB" | "LB" | "DM" | "CM" | "AM" | "RW" | "LW" | "ST";
+export const ROLES: Role[] = ["GK", "RB", "CB", "LB", "DM", "CM", "AM", "RW", "LW", "ST"];
+/** The slot a player falls to when the source has no sub-position: the natural centre of his group. */
+export const ROLE_OF_GROUP: Record<string, Role> = { GK: "GK", DEF: "CB", MID: "CM", FWD: "ST" };
+
 export interface PoolRow {
   player_key: string;
   full_name: string;
   age: number | null;
   pos_group: PosGroup | "UNK";
   primary_position: string | null;
+  /** Transfermarkt sub-position ("Centre-Back", "Left Winger"…) */
+  sub_position: string | null;
+  /** the pitch slot derived from it: GK RB CB LB DM CM AM RW LW ST; null when the source has none */
+  role: Role | null;
   team: string | null;
   team_short: string | null;
   competition: string | null;

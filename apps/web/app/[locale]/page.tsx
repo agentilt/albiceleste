@@ -50,24 +50,24 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   const lastWindow = [...windows].reverse().find((w) => w.announcement_date && w.announcement_date <= m.data_as_of && w.listed > 0) ?? null;
   const lastRows = lastWindow ? squads.filter((s) => s.window_id === lastWindow.window_id) : [];
   const isDef = (g: string) => g === "GK" || g === "DEF";
-  const stats = (p: PoolRow | undefined, g: string) => {
+  const stats = (p: PoolRow | undefined, g: string): [number, number] | undefined => {
     const r = p ? seasonOf.get(p.player_key) : undefined;
-    return !r ? "" : `${r.apps} · ${isDef(g) ? cleanSheets(r) : r.goals + r.assists}`;
+    return !r ? undefined : [r.apps, isDef(g) ? cleanSheets(r) : r.goals + r.assists];
   };
+  const figures = (g: string): [string, string] => [d.home.sheet.figApps, isDef(g) ? d.home.sheet.figCs : d.home.sheet.figGa];
   const nameOf = (p: PoolRow | undefined, g: string, fallback: string, key: string | null) => ({
     key: key ?? fallback,
     name: p?.full_name ?? fallback,
     href: key ? routes.player(locale, key) : undefined,
     club: p?.team_short ?? p?.team ?? null,
     rank: p?.pos_rank ?? null,
-    marked: false,
     stats: p && p.state !== "retired" && p.state !== "out" ? stats(p, g) : undefined,
-    note: p && (p.state === "retired" || p.state === "out") ? d.state[p.state] : undefined,
+    note: p && p.state === "retired" ? d.home.sheet.retired : p && p.state === "out" ? d.home.sheet.out : undefined,
   });
   const squadCols = GROUPS.map((g) => {
     const rows = lastRows.filter((s) => s.pos_group === g).map((s) => ({ s, p: s.player_key ? byKey.get(s.player_key) : undefined }));
     rows.sort((a, b) => (a.p?.pos_rank ?? 999) - (b.p?.pos_rank ?? 999) || a.s.player_name.localeCompare(b.s.player_name));
-    return { title: d.pos[g], slots: rows.length, hint: isDef(g) ? d.home.sheet.hintDef : d.home.sheet.hintAtt, names: rows.map(({ s, p }) => nameOf(p, g, s.player_name, s.player_key)) };
+    return { title: d.pos[g], slots: rows.length, figures: figures(g), names: rows.map(({ s, p }) => nameOf(p, g, s.player_name, s.player_key)) };
   });
   const lastKeys = new Set(lastRows.map((s) => s.player_key).filter(Boolean));
 
@@ -77,7 +77,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       .filter((p) => p.pos_group === g && p.in_watch && !lastKeys.has(p.player_key) && p.state !== "out" && p.state !== "retired" && (seasonOf.get(p.player_key)?.minutes ?? 0) > 0)
       .sort((a, b) => seasonIndex(seasonOf.get(b.player_key)!, b.level_rank) - seasonIndex(seasonOf.get(a.player_key)!, a.level_rank))
       .slice(0, 3);
-    return { title: d.pos[g], slots: 3, hint: isDef(g) ? d.home.sheet.hintDef : d.home.sheet.hintAtt, names: rows.map((p) => nameOf(p, g, p.full_name, p.player_key)) };
+    return { title: d.pos[g], slots: 3, figures: figures(g), names: rows.map((p) => nameOf(p, g, p.full_name, p.player_key)) };
   });
 
   // the week on the watch
@@ -98,14 +98,16 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   ].slice(0, 7);
 
   const ranked = pool.filter((p) => p.pos_rank !== null);
-  const suggestions = GROUPS.flatMap((g) => ranked.filter((p) => p.pos_group === g).slice(0, 1)).slice(0, 3).map((p) => ({ key: p.player_key, name: p.full_name }));
+  const suggestions = GROUPS.flatMap((g) => ranked.filter((p) => p.pos_group === g).slice(0, 1))
+    .slice(0, 3)
+    .map((p) => ({ key: p.player_key, name: p.full_name }));
 
   const who = (r: RoundRow) => (
     <>
       <AppLink className="link font-medium" href={routes.player(locale, r.player_key)}>
         {r.full_name}
       </AppLink>
-      <span className="text-muted"> {r.team}</span>
+      <span className="text-muted"> {byKey.get(r.player_key)?.team_short ?? r.team}</span>
       {r.in_last_squad && (
         <>
           {" "}
@@ -151,12 +153,15 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             rows={best.map((r) => {
               const cs = isDef(r.pos_group) ? r.matches.filter((x) => x.played && (x.is_home ? x.away_score : x.home_score) === 0).length : 0;
               const last = [...r.matches].reverse().find((x) => x.played);
+              // what matters first, so a tight row cuts the minutes, never the goals or the score
               const facts = [
                 r.goals > 0 ? `${r.goals} G` : null,
                 r.assists > 0 ? `${r.assists} A` : null,
                 cs > 0 ? d.home.week.cleanSheet(cs) : null,
+                last
+                  ? `${last.is_home ? d.common.vs : "@"} ${last.is_home ? last.away_team : last.home_team} ${last.is_home ? last.home_score : last.away_score}–${last.is_home ? last.away_score : last.home_score}`
+                  : null,
                 `${r.minutes}′${r.apps > 1 ? ` · ${r.apps} ${d.common.matches}` : ""}`,
-                last ? `${last.is_home ? d.common.vs : "@"} ${last.is_home ? last.away_team : last.home_team} ${last.is_home ? last.home_score : last.away_score}–${last.is_home ? last.away_score : last.home_score}` : null,
               ].filter(Boolean);
               return { key: r.player_key, left: who(r), right: facts.join(" · ") };
             })}

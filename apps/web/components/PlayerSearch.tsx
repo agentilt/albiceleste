@@ -51,6 +51,7 @@ export function PlayerSearch({ locale }: { locale: Locale }) {
       onChange={setQ}
       hits={hits}
       align="right"
+      width="w-32 sm:w-56"
       placeholder={t(locale).search.placeholder}
       onSelect={(h) => {
         setQ("");
