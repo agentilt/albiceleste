@@ -102,7 +102,7 @@ export function FollowList({ locale, ctx, suggestions, removable = false, compac
     return (
       <ul className="grid flex-1 auto-rows-fr text-sm">
         {list.map((p) => (
-          <li key={p.k} className="flex min-h-10 items-center justify-between gap-4 border-b border-rule last:border-b-0">
+          <li key={p.k} className="flex min-h-9 items-center justify-between gap-4 border-b border-rule last:border-b-0">
             <span className="min-w-0 truncate">
               <AppLink className="link font-medium" href={routes.player(locale, p.k)}>
                 {p.n}

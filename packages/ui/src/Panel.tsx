@@ -27,9 +27,13 @@ export function PanelRows({ rows }: { rows: { key: string; left: ReactNode; righ
   return (
     <ol className="grid flex-1 auto-rows-fr">
       {rows.map((r) => (
-        <li key={r.key} className="flex min-h-10 items-center gap-4 border-b border-rule text-sm last:border-b-0">
+        <li key={r.key} className="flex min-h-9 items-center gap-4 border-b border-rule text-sm last:border-b-0">
           <span className="min-w-0 flex-1 truncate">{r.left}</span>
-          {r.right !== undefined && <span className="min-w-0 max-w-[60%] shrink-0 truncate text-right text-ink-2">{r.right}</span>}
+          {r.right !== undefined && (
+            <span className="min-w-0 truncate text-right text-ink-2" style={{ flex: "0 1 auto", maxWidth: "58%" }} title={typeof r.right === "string" ? r.right : undefined}>
+              {r.right}
+            </span>
+          )}
         </li>
       ))}
     </ol>
