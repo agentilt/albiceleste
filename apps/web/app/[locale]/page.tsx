@@ -134,21 +134,21 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
         </div>
       </div>
 
-      {lastWindow && (
-        <div className="mb-4">
-          <SquadSheet
-            title={d.home.sheet.lastList(windowLabel(locale, lastWindow))}
-            aside={`${lastRows.length} · ${fmtDate(locale, lastWindow.announcement_date)}`}
-            columns={squadCols}
-            caption={d.home.sheet.lastListCaption(since)}
-            dense
-            LinkComponent={AppLink}
-          />
-        </div>
-      )}
-
       <div className="mb-4">
-        <SquadSheet title={d.home.sheet.challengers} aside={d.home.week.watch} columns={challengerCols} caption={d.home.sheet.challengersCaption(since)} dense LinkComponent={AppLink} />
+        <SquadSheet
+          title={lastWindow ? d.home.sheet.lastList(windowLabel(locale, lastWindow)) : d.home.sheet.challengers}
+          aside={lastWindow ? `${lastRows.length} · ${fmtDate(locale, lastWindow.announcement_date)}` : undefined}
+          columns={lastWindow ? squadCols : challengerCols}
+          secondary={lastWindow ? { title: d.home.sheet.challengers, aside: d.home.week.watch, columns: challengerCols } : undefined}
+          caption={
+            <>
+              {lastWindow ? `${d.home.sheet.lastListCaption(since)} ` : ""}
+              {d.home.sheet.challengersCaption(since)}
+            </>
+          }
+          dense
+          LinkComponent={AppLink}
+        />
       </div>
 
       <div className="mb-4 grid gap-4 lg:grid-cols-2">
