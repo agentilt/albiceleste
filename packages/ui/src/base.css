@@ -257,7 +257,9 @@ table.data th button:focus-visible {
 }
 
 /* A larger hit area for small controls (the "?", the follow star, a × button) without changing their size. */
-.hit {
+.hit,
+table.data th .hit {
+  /* the second selector outranks the `all: unset` on header buttons, so the hit box stays inside the control */
   position: relative;
 }
 .hit::before {

@@ -65,7 +65,7 @@ export function Header({
   LinkComponent?: LinkLike;
 }) {
   return (
-    <header className="border-b border-rule bg-paper">
+    <header className="overflow-x-clip border-b border-rule bg-paper">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-0 px-5 py-1.5 sm:gap-x-8 sm:gap-y-2 sm:py-3">
         <Wordmark href={homeHref} LinkComponent={LinkComponent} />
         {right && <div className="order-2 ml-auto flex min-w-0 items-center sm:order-3">{right}</div>}

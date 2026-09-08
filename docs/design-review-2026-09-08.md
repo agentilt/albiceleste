@@ -4,6 +4,39 @@ Nine page reviews run by a design-review agent against the local production buil
 widths, in both locales. Screenshots live in `.design-sync/.cache/shots/review/` (not committed). Per-page reports follow the
 themes; the fix order at the end is the working plan.
 
+## Outcome (same day, branch `design-pass-2`)
+
+Everything in the fix order below was done on the branch, page by page, verified with screenshots at 1280, 820 and 390:
+
+- **Shared**: muted `#5f6b78` (5.1:1 on paper), `gold-deep` for gold text; `.chip` 32 px with hover and disabled styles, 41 px
+  under a finger; `.hit` hit areas; `.tip` hover-and-focus tooltips (`Hint` is now a button or link); `Segmented` is a real
+  radiogroup with arrow keys and a label; the header is two rows on a phone with a scrolling nav and a short language
+  switch; `.scroll-x` shadowed scrollers and `.clip` truncation for tables; column `priority` drops secondary columns
+  under `sm`/`lg`; `aria-sort` on `th`; `groupBy` puts position sub-rows inside one table; charts take `label`, `locale`
+  and `narrow` (a second render for phones), the radar leaves missing axes out, scatter points are out of the tab order;
+  `FilterBar` folds secondary rows on a phone; `Disclosure` for folded reference blocks; `PageTitle`/`Section` take `hint`;
+  base rules sit in the `components` layer so utilities win; `.grid > *` has `min-width: 0`; league chips fold behind
+  "Ligas ▾"; a prettier config at the codebase width.
+- **Home**: sheet stacks to one column on a phone, two on a tablet; short columns ruled to the same depth; facts ordered so
+  the score survives truncation; compact follow rows truncate the match, never the name, and can be removed with undo.
+- **La fecha**: one table per block with position sub-rows; lede and footnote → hint; players without minutes in three
+  equal-height panels (folded after 12); standouts in a panel; scope switch labelled.
+- **Plantel**: one grouped table; lede → hint; scope hint; own rows for view, columns and scope; input ids; formatted date.
+- **Jugador**: ranking, selection and season panels; folded career, transfers and change log; position from the group
+  (the free-text field is unreliable); height normalised; plural caps; localised chart names and eligibility tokens.
+- **Movimientos**: a sortable table (date, kind, player · club, rank, move, fact, state, star) capped at 60; the squad batch
+  as a panel; one filter group per row; period-neutral empty copy.
+- **Comparar**: radar without phantom zeros; search no longer narrowed by the site filter; the position picker stays until
+  a player is chosen; slots count accepted players; seed message; one hint; group rows as dividers; locale diffs.
+- **Próximo ciclo**: retention, youth and calendar panels; cohort table capped at 40; breakthroughs and the pipeline as
+  panels; countries in Spanish; "otros / sin cobertura".
+- **Mi tablero**: two panels (compact list, notes), inline confirmations next to their controls, undo for removals.
+- **Sobre los datos**: sticky contents rail, ids on the sections (`#watch #home #round #ranking #events #trajectory`) with
+  scroll margin, Spanish parameter descriptions, repo link, mono table captions.
+- **404**: `app/global-not-found.tsx` (experimental `globalNotFound`) renders the site chrome in the reader's language.
+
+Still open: Pool HTML weight (1.8 MB, lazy "Toda la base"); favicon; Claude Design re-sync; the domestic ramp decision.
+
 ## Cross-cutting themes (the shared fixes that clear findings on several pages at once)
 
 1. **Explanations are back on every page except Home.** Ledes under the page title, `Note` footnotes (Movers prints its lede
