@@ -87,7 +87,7 @@ export function getPool(): Promise<PoolRow[]> {
       ),
       focus as (select player_key, in_focus from marts.player_focus_set)
       select
-          s.player_key, s.full_name, d.age, s.pos_group, d.primary_position, d.current_team_name as team, d.current_competition as competition,
+          s.player_key, s.full_name, d.age, s.pos_group, d.primary_position, d.current_team_name as team, coalesce(tsn.short_name, d.current_team_name) as team_short, d.current_competition as competition,
           d.current_league as league, d.current_country as country, c.level_rank, s.is_abroad, coalesce(fo.in_focus, s.is_abroad) as in_focus,
           s.eligibility_status, d.has_arg_senior_cap, coalesce(s.in_last_squad, false) as in_last_squad, coalesce(s.in_watch, false) as in_watch, s.last_list_status, s.state,
           s.pos_rank, s.pos_size, s.rank_change, s.infirmary_reason, s.last_match_date, coalesce(s.team_matches_missed, 0) as team_matches_missed,
@@ -107,6 +107,7 @@ export function getPool(): Promise<PoolRow[]> {
       from marts.player_state s
       join marts.dim_player d using (player_key)
       left join marts.dim_competition c on c.league = d.current_league
+      left join (select espn_team_id, league, min(short_name) as short_name from marts.dim_team where is_current_member group by 1, 2) tsn on tsn.espn_team_id = d.current_espn_team_id and tsn.league = d.current_league
       left join focus fo using (player_key)
       left join season se on se.player_key = s.player_key and se.league = d.current_league
       left join team_season_matches tm on tm.espn_team_id = d.current_espn_team_id and tm.league = d.current_league

@@ -32,29 +32,31 @@ function Columns({ columns, dense, small, offset, LinkComponent }: { columns: Sh
     <div className={`grid grid-cols-2 sm:grid-cols-4 ${dense ? "gap-x-4 gap-y-3 p-3" : "gap-x-6 gap-y-4 p-4 sm:gap-x-8"}`}>
       {columns.map((col) => (
         <div key={col.title} className="min-w-0">
-          <div className={`mb-1 flex items-baseline justify-between gap-2 border-b-2 pb-1 font-mono text-xs uppercase tracking-wide text-muted ${small ? "border-rule-strong" : "border-celeste"}`}>
-            <span>
-              {col.title} <span className="num">{col.slots}</span>
-            </span>
-            {col.hint && <span className="normal-case tracking-normal">{col.hint}</span>}
-          </div>
+          {!small && (
+            <div className="mb-1 flex items-baseline justify-between gap-2 border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted">
+              <span>
+                {col.title} <span className="num">{col.slots}</span>
+              </span>
+              {col.hint && <span className="normal-case tracking-normal">{col.hint}</span>}
+            </div>
+          )}
           <ol>
             {Array.from({ length: col.slots }, (_, k) => {
               const n = col.names[k];
               const delay = `${Math.min(i++, 40) * 20}ms`;
               return (
-                <li key={n ? n.key : `empty-${k}`} className={`sheet-row grid grid-cols-[1.25rem_1fr_auto_auto] items-center gap-x-2 border-b border-rule ${row}`} style={{ animationDelay: delay }} title={dense && n?.club ? n.club : undefined}>
+                <li key={n ? n.key : `empty-${k}`} className={`sheet-row grid grid-cols-[1.25rem_1fr_auto_auto] items-center gap-x-2 border-b border-rule ${row}`} style={{ animationDelay: delay }}>
                   <span className="num font-mono text-[11px] text-muted">{n?.rank ?? ""}</span>
                   {n ? (
-                    <span className={`condensed min-w-0 leading-tight ${dense ? "truncate" : ""}`}>
+                    <span className={`condensed min-w-0 leading-tight ${dense ? "flex items-baseline gap-1.5" : ""}`}>
                       {n.href ? (
-                        <LinkComponent href={n.href} className="font-medium text-ink hover:text-celeste-deep">
+                        <LinkComponent href={n.href} className="shrink-0 font-medium text-ink hover:text-celeste-deep">
                           {n.name}
                         </LinkComponent>
                       ) : (
-                        <span className="font-medium">{n.name}</span>
+                        <span className="shrink-0 font-medium">{n.name}</span>
                       )}
-                      {n.club && !dense && <span className="block truncate text-[11px] text-muted">{n.club}</span>}
+                      {n.club && (dense ? <span className="min-w-0 truncate text-xs text-muted">{n.club}</span> : <span className="block truncate text-[11px] text-muted">{n.club}</span>)}
                     </span>
                   ) : (
                     <span className="text-rule-strong">—</span>

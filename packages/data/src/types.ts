@@ -298,6 +298,7 @@ export interface PoolRow {
   pos_group: PosGroup | "UNK";
   primary_position: string | null;
   team: string | null;
+  team_short: string | null;
   competition: string | null;
   league: string | null;
   country: string | null;

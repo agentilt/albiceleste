@@ -58,7 +58,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
     key: key ?? fallback,
     name: p?.full_name ?? fallback,
     href: key ? routes.player(locale, key) : undefined,
-    club: p?.team ?? null,
+    club: p?.team_short ?? p?.team ?? null,
     rank: p?.pos_rank ?? null,
     marked: false,
     stats: p && p.state !== "retired" && p.state !== "out" ? stats(p, g) : undefined,
