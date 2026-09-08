@@ -27,6 +27,12 @@ the international windows are the heartbeat; "what changed" is the briefing befo
 - **Availability.** Three kinds of absence: injured (club listing, which ESPN does not provide for soccer, so this stays empty
   until a source exists), suspended (red card in the last match), absent (a regular with no minutes for three team matches).
   "Since" is the last match played. Return dates are shown only when a source gives one.
+- **Competition filter, everywhere the same.** One control on every list page (Pool, Movers, Next cycle, La fecha, and the
+  player search on Compare): the fourteen competitions as chips plus three presets (Top 5 de Europa; Sudamérica: Argentina and
+  Brazil; Resto: the other seven). The selection travels in the URL (`comp=`) so a view can be shared, and the last selection is
+  remembered in the browser as the default on the next list page when the URL carries none, with a visible "clear" chip so the
+  narrowing is never silent. Home stays whole (it is the briefing), but every link out of Home carries the current selection.
+  Settled 2026-09-08.
 - **Follow list.** Stored in the browser; follow buttons on player pages and on every list row; a share link encodes the list in the
   URL (replace or merge on open); a "followed" filter on Pool, Movers and Next cycle; the compare page can be seeded from it.
   One compact JSON of every pool player is generated at build so the follow block renders client-side from a single file.
@@ -50,6 +56,7 @@ the international windows are the heartbeat; "what changed" is the briefing befo
 6. **Next cycle** — players aged 23 and under
 7. **Mi tablero** — the personal layer: follow list, notes, export and import
 8. **About the data** — footer only: methodology, sources, attribution, data-quality tables
+9. **La fecha** — the round in review: one calendar week of the pool, who played, who did not, who is out
 
 ## Home
 
@@ -64,6 +71,9 @@ Top to bottom:
 1. **Masthead.** One hand-written sentence of scope in each language, the data horizon, and the countdown line: next squad
    announcement in N days (marked "expected" until official), the window dates, and a link to the last list. During a window the
    line shows the called squad and Argentina's matches instead; between calendars it shows the next window's dates only.
+   Beneath it, **the round so far** (added 2026-09-08): how many of the last squad and the top fifteen per position played this
+   calendar week, how many did not play although their club did, how many are out, and the three or four standout lines of the
+   round; links to La fecha.
 2. **Follow list.** One dense line per followed player: name, club, position, rank and movement, availability, last match line,
    next match with kickoff, latest event in the last fourteen days, latest note excerpt. Sorted by next kickoff. Empty state: an
    invitation with three suggested players from the top of the ranking.
@@ -270,6 +280,43 @@ position group. Empty state: a short explanation of following and notes, with th
 
 Off the page: anything about the pool itself.
 
+## La fecha (The round)
+
+**Settled 2026-09-08.**
+
+Purpose: the round as one picture, so the question "what did the pool do this week?" has an answer that lines players of the same
+position up next to each other, including the ones who did not play. The question it answers: "who played this round, how much,
+with what, and who was missing?"
+
+**A round is a calendar week**, Monday to Sunday in Buenos Aires time, so a midweek league match sits in the same round as the
+weekend. The page opens on the current week (partial, and says so) and steps back week by week through the two seasons of data.
+
+**Row per player per week**, matches as sub-lines. A player with two matches shows both, each with result, role (started, came
+on, unused) and minutes; the row carries the week's totals: minutes, starts out of matches, goals and assists, rating where box
+scores exist. Sorting and side-by-side reading use the totals; a "matches" column keeps 90′ from one match apart from 90′ across
+two. Each position group's header says how many matches each club played.
+
+**Categories, decided for the week:**
+
+1. **Played**: any minutes in the week.
+2. **Did not play although the club played**: bench, unused or absent in every match; the club's results alongside. The quiet
+   signal a squad list depends on.
+3. **Out**: the infirmary as of that week (reason, since, matches missed).
+4. **Club did not play**: a short list, so an empty row is never mistaken for an absence.
+5. **Standouts**: the lines of the round from Movers dated inside the week (braces, debuts, returns, big rank moves).
+
+Grouped by position in rank order; state word and last-squad mark on every row; note affordance per match line.
+
+**Scope and filters.** Default scope: the last squad, the top fifteen of each position, and followed players; widenable to the
+whole pool. Filters: position group, the shared competition filter, last squad, followed; a week picker. URL carries the week
+and the filters.
+
+**Honest limit, printed in the footnote:** the data covers the fourteen domestic leagues. Champions League, Copa Libertadores
+and domestic cups are not ingested, so a midweek continental match does not appear and the player shows one match that week.
+Extending coverage to those competitions is a separate data item; football-data already provides Champions League fixtures.
+
+Off the page: the ranking itself (Pool), the forward look (Home's "this week").
+
 ## About the data
 
 **Settled 2026-09-06.**
@@ -298,3 +345,8 @@ In build order:
 8. Events rendered from evidence in both languages; every label as a dictionary; Argentine Spanish reference copy.
 9. Follow-list JSON and the per-player compact data for Home and Mi tablero; notes and follow storage in the browser.
 10. Published snapshot and the site's data package extended for all of the above.
+11. (Added 2026-09-08) La fecha: a per-player-per-week query over `fct_player_match_stats` and `fct_match` with the week's
+    matches, totals and category, plus the infirmary and the Movers of the week; no new ingestion. Shared competition filter:
+    one client control and one URL parameter across the list pages, with presets and the remembered default.
+12. (Backlog) Continental and domestic cup coverage (Champions League via football-data first; Copa Libertadores needs a source),
+    so a round shows every match a player played.
