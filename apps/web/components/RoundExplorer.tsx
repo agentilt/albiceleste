@@ -1,19 +1,6 @@
 "use client";
 
-import {
-  Chip,
-  type ColumnSpec,
-  FilterBar,
-  FilterRow,
-  NoteComposer,
-  Panel,
-  RankArrow,
-  type Row,
-  Segmented,
-  SortableTable,
-  StateWord,
-  Tag,
-} from "@albiceleste/ui";
+import { Chip, type ColumnSpec, FilterBar, FilterRow, NoteComposer, Panel, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
 import type { Competition, RoundMatch, RoundRow } from "@albiceleste/data";
 import { useEffect, useMemo, useState } from "react";
 import { CompetitionChips } from "@/components/CompetitionChips";
@@ -43,46 +30,23 @@ function loadWeek(week: string): Promise<RoundRow[]> {
 }
 
 /** One match on one line: date, opponent, score, the player's part in it, and the note mark. The composer opens under it. */
-function MatchToken({
-  m,
-  locale,
-  playerKey,
-}: {
-  m: RoundMatch;
-  locale: Locale;
-  playerKey: string;
-}) {
+function MatchToken({ m, locale, playerKey }: { m: RoundMatch; locale: Locale; playerKey: string }) {
   const d = t(locale);
   const { notes, add } = useNotes();
   const [open, setOpen] = useState(false);
-  const mine = notes.filter(
-    (n) => n.player_key === playerKey && n.match_key === m.match_key,
-  );
-  const role =
-    m.played === null
-      ? d.round.role.absent
-      : m.played
-        ? m.is_starter
-          ? d.round.role.start
-          : d.round.role.sub
-        : d.round.role.unused;
+  const mine = notes.filter((n) => n.player_key === playerKey && n.match_key === m.match_key);
+  const role = m.played === null ? d.round.role.absent : m.played ? (m.is_starter ? d.round.role.start : d.round.role.sub) : d.round.role.unused;
   const opp = m.is_home ? m.away_team : m.home_team;
-  const score =
-    m.home_score === null || m.away_score === null
-      ? ""
-      : `${m.is_home ? m.home_score : m.away_score}–${m.is_home ? m.away_score : m.home_score}`;
+  const score = m.home_score === null || m.away_score === null ? "" : `${m.is_home ? m.home_score : m.away_score}–${m.is_home ? m.away_score : m.home_score}`;
   const label = `${fmtDate(locale, m.match_date, false)} ${m.is_home ? d.common.vs : "@"} ${opp} ${score}`;
   const part = m.played
     ? `${m.minutes}′${(m.goals ?? 0) > 0 ? ` · ${m.goals} G` : ""}${(m.assists ?? 0) > 0 ? ` · ${m.assists} A` : ""}${m.rating !== null ? ` · ${fmtDec(locale, m.rating, 1)}` : ""}`
     : role;
   return (
     <span className="inline-flex items-baseline gap-1.5">
-      <span className="font-mono text-[11px] text-muted">
-        {fmtDate(locale, m.match_date, false)}
-      </span>
+      <span className="font-mono text-[11px] text-muted">{fmtDate(locale, m.match_date, false)}</span>
       <span>
-        {m.is_home ? d.common.vs : "@"} {opp}{" "}
-        <span className="num">{score}</span>
+        {m.is_home ? d.common.vs : "@"} {opp} <span className="num">{score}</span>
       </span>
       <span className="num text-muted">· {part}</span>
       <button
@@ -99,10 +63,7 @@ function MatchToken({
         <span className="block w-80 max-w-full whitespace-normal border-l-2 border-celeste pl-3 text-sm">
           {mine.map((n) => (
             <span key={n.id} className="mb-1 block">
-              <span className="font-mono text-xs text-muted">
-                {fmtDate(locale, n.date)}
-              </span>{" "}
-              {n.text}
+              <span className="font-mono text-xs text-muted">{fmtDate(locale, n.date)}</span> {n.text}
             </span>
           ))}
           <NoteComposer
@@ -127,30 +88,12 @@ function MatchToken({
 }
 
 /** Name, club, marks and state on one line. In a tight list the club gives way first, then the state; the name stays whole. */
-function Who({
-  r,
-  locale,
-  current,
-  reasonOnly = false,
-  showState = true,
-}: {
-  r: RoundRow;
-  locale: Locale;
-  current: boolean;
-  reasonOnly?: boolean;
-  showState?: boolean;
-}) {
+function Who({ r, locale, current, reasonOnly = false, showState = true }: { r: RoundRow; locale: Locale; current: boolean; reasonOnly?: boolean; showState?: boolean }) {
   const d = t(locale);
-  const state =
-    reasonOnly && r.infirmary_reason
-      ? d.infirmary[r.infirmary_reason]
-      : stateLabel(d, r.state, r.infirmary_reason);
+  const state = reasonOnly && r.infirmary_reason ? d.infirmary[r.infirmary_reason] : stateLabel(d, r.state, r.infirmary_reason);
   return (
     <span className="flex min-w-0 items-baseline gap-2 whitespace-nowrap">
-      <AppLink
-        className="link shrink-0 font-medium"
-        href={routes.player(locale, r.player_key)}
-      >
+      <AppLink className="link shrink-0 font-medium" href={routes.player(locale, r.player_key)}>
         {r.full_name}
       </AppLink>
       <span className="min-w-0 truncate text-muted">{r.team}</span>
@@ -161,10 +104,7 @@ function Who({
       )}
       {current && showState && (reasonOnly || r.state !== "steady") && (
         <span className="hidden min-w-0 truncate sm:inline">
-          <StateWord
-            label={state}
-            tone={reasonOnly ? "out" : stateTone(r.state)}
-          />
+          <StateWord label={state} tone={reasonOnly ? "out" : stateTone(r.state)} />
         </span>
       )}
     </span>
@@ -192,24 +132,9 @@ function Lines({
 }) {
   const d = t(locale);
   const [open, setOpen] = useState(false);
-  const ordered = GROUPS.flatMap((g) =>
-    rows
-      .filter((r) => r.pos_group === g)
-      .sort(
-        (a, b) =>
-          (a.pos_rank ?? 999) - (b.pos_rank ?? 999) ||
-          a.full_name.localeCompare(b.full_name),
-      ),
-  );
+  const ordered = GROUPS.flatMap((g) => rows.filter((r) => r.pos_group === g).sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999) || a.full_name.localeCompare(b.full_name)));
   const visible = open ? ordered : ordered.slice(0, limit);
-  const role = (m: RoundMatch) =>
-    m.played === null
-      ? d.round.role.absent
-      : m.played
-        ? m.is_starter
-          ? d.round.role.start
-          : d.round.role.sub
-        : d.round.role.unused;
+  const role = (m: RoundMatch) => (m.played === null ? d.round.role.absent : m.played ? (m.is_starter ? d.round.role.start : d.round.role.sub) : d.round.role.unused);
   const line = (m: RoundMatch) =>
     `${fmtDate(locale, m.match_date, false)} ${m.is_home ? d.common.vs : "@"} ${m.is_home ? m.away_team : m.home_team} ${m.home_score ?? ""}–${m.away_score ?? ""} · ${role(m)}`;
   return (
@@ -225,27 +150,13 @@ function Lines({
               </div>
               <ol>
                 {gr.map((r) => (
-                  <li
-                    key={r.player_key}
-                    className="flex min-h-9 min-w-0 items-center gap-3 border-b border-rule"
-                  >
-                    <span className="num w-6 shrink-0 text-right font-mono text-[11px] text-muted">
-                      {r.pos_rank ?? ""}
-                    </span>
+                  <li key={r.player_key} className="flex min-h-9 min-w-0 items-center gap-3 border-b border-rule">
+                    <span className="num w-6 shrink-0 text-right font-mono text-[11px] text-muted">{r.pos_rank ?? ""}</span>
                     <span className="min-w-0 flex-1">
-                      <Who
-                        r={r}
-                        locale={locale}
-                        current={current}
-                        reasonOnly={reasonOnly}
-                        showState={!showMatches}
-                      />
+                      <Who r={r} locale={locale} current={current} reasonOnly={reasonOnly} showState={!showMatches} />
                     </span>
                     {showMatches && r.matches.length > 0 && (
-                      <span
-                        className="hidden shrink-0 text-xs text-ink-2 sm:inline"
-                        title={r.matches.map(line).join("\n")}
-                      >
+                      <span className="hidden shrink-0 text-xs text-ink-2 sm:inline" title={r.matches.map(line).join("\n")}>
                         {r.matches.map(role).join(" · ")}
                       </span>
                     )}
@@ -258,34 +169,15 @@ function Lines({
         })}
       </ol>
       {ordered.length > limit && (
-        <button
-          type="button"
-          className="hit mt-2 self-start text-xs text-celeste-deep hover:underline"
-          aria-expanded={open}
-          onClick={() => setOpen(!open)}
-        >
-          {open
-            ? d.common.showFewer
-            : d.common.showMore(ordered.length - limit)}
+        <button type="button" className="hit mt-2 self-start text-xs text-celeste-deep hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {open ? d.common.showFewer : d.common.showMore(ordered.length - limit)}
         </button>
       )}
     </>
   );
 }
 
-export function RoundExplorer({
-  rows: scoped,
-  week,
-  current,
-  competitions,
-  locale,
-}: {
-  rows: RoundRow[];
-  week: string;
-  current: boolean;
-  competitions: Competition[];
-  locale: Locale;
-}) {
+export function RoundExplorer({ rows: scoped, week, current, competitions, locale }: { rows: RoundRow[]; week: string; current: boolean; competitions: Competition[]; locale: Locale }) {
   const d = t(locale);
   const { get, set } = useUrlState();
   const comp = useCompetitionFilter();
@@ -299,40 +191,19 @@ export function RoundExplorer({
     if (scope === "all" || fol) loadWeek(week).then(setAll);
   }, [scope, fol, week]);
 
-  const base =
-    scope === "all"
-      ? (all ?? scoped)
-      : all && fol
-        ? mergeFollowed(scoped, all, follows)
-        : scoped;
+  const base = scope === "all" ? (all ?? scoped) : all && fol ? mergeFollowed(scoped, all, follows) : scoped;
   const shown = useMemo(
-    () =>
-      base.filter(
-        (r) =>
-          (pos.length === 0 || pos.includes(r.pos_group)) &&
-          comp.matches(r.league) &&
-          (!squad || r.in_last_squad) &&
-          (!fol || follows.includes(r.player_key)),
-      ),
+    () => base.filter((r) => (pos.length === 0 || pos.includes(r.pos_group)) && comp.matches(r.league) && (!squad || r.in_last_squad) && (!fol || follows.includes(r.player_key))),
     [base, pos, comp.selected, squad, fol, follows], // eslint-disable-line react-hooks/exhaustive-deps
   );
   const toggle = (key: string, list: string[], v: string) =>
     set({
-      [key]: (list.includes(v)
-        ? list.filter((x) => x !== v)
-        : [...list, v]
-      ).join(","),
+      [key]: (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]).join(","),
     });
 
   const out = current ? shown.filter((r) => r.infirmary_reason) : [];
   const rest = current ? shown.filter((r) => !r.infirmary_reason) : shown;
-  const played = rest
-    .filter((r) => r.category === "played")
-    .sort(
-      (a, b) =>
-        (a.pos_rank ?? 999) - (b.pos_rank ?? 999) ||
-        a.full_name.localeCompare(b.full_name),
-    );
+  const played = rest.filter((r) => r.category === "played").sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999) || a.full_name.localeCompare(b.full_name));
   const dnp = rest.filter((r) => r.category === "did_not_play");
   const idle = rest.filter((r) => r.category === "club_idle");
 
@@ -344,11 +215,7 @@ export function RoundExplorer({
         label: d.common.player,
         render: (r) => (
           <span className="inline-block max-w-[22rem] align-baseline">
-            <Who
-              r={r as unknown as RoundRow}
-              locale={locale}
-              current={current}
-            />
+            <Who r={r as unknown as RoundRow} locale={locale} current={current} />
           </span>
         ),
       },
@@ -362,11 +229,7 @@ export function RoundExplorer({
             {(r as unknown as RoundRow).matches.map((m, i) => (
               <span key={m.match_key}>
                 {i > 0 && <span className="text-rule-strong"> | </span>}
-                <MatchToken
-                  m={m}
-                  locale={locale}
-                  playerKey={r.player_key as string}
-                />
+                <MatchToken m={m} locale={locale} playerKey={r.player_key as string} />
               </span>
             ))}
           </span>
@@ -386,10 +249,7 @@ export function RoundExplorer({
         label: d.round.cols.ga,
         kind: "int",
         sortValue: (r) => (r.goals as number) + (r.assists as number),
-        render: (r) =>
-          (r.goals as number) + (r.assists as number) > 0
-            ? `${r.goals}+${r.assists}`
-            : DASH,
+        render: (r) => ((r.goals as number) + (r.assists as number) > 0 ? `${r.goals}+${r.assists}` : DASH),
       },
       {
         key: "rating",
@@ -402,19 +262,15 @@ export function RoundExplorer({
         key: "follow",
         label: "",
         sortable: false,
-        render: (r) => (
-          <FollowStar playerKey={r.player_key as string} locale={locale} />
-        ),
+        render: (r) => <FollowStar playerKey={r.player_key as string} locale={locale} />,
       },
     ],
     [d, locale, current],
   );
 
-  const panels = [
-    { key: "did_not_play", rows: dnp, matches: true },
-    { key: "club_idle", rows: idle, matches: false },
-    ...(out.length > 0 ? [{ key: "out", rows: out, matches: false }] : []),
-  ].filter((p) => p.rows.length > 0) as {
+  const panels = [{ key: "did_not_play", rows: dnp, matches: true }, { key: "club_idle", rows: idle, matches: false }, ...(out.length > 0 ? [{ key: "out", rows: out, matches: false }] : [])].filter(
+    (p) => p.rows.length > 0,
+  ) as {
     key: RoundRow["category"] | "out";
     rows: RoundRow[];
     matches: boolean;
@@ -435,42 +291,27 @@ export function RoundExplorer({
               value={scope}
               onChange={(v) => set({ scope: v === "all" ? "all" : null })}
             />
-            {scope === "all" && !all && (
-              <span className="text-xs text-muted">{d.round.loading}</span>
-            )}
+            {scope === "all" && !all && <span className="text-xs text-muted">{d.round.loading}</span>}
           </FilterRow>
         }
       >
         <FilterRow label={d.common.filters}>
           {GROUPS.map((g) => (
-            <Chip
-              key={g}
-              pressed={pos.includes(g)}
-              onClick={() => toggle("pos", pos, g)}
-            >
+            <Chip key={g} pressed={pos.includes(g)} onClick={() => toggle("pos", pos, g)}>
               {d.pos[g]}
             </Chip>
           ))}
-          <Chip
-            pressed={squad}
-            onClick={() => set({ squad: squad ? null : "1" })}
-          >
+          <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
             {d.pool.lastSquad}
           </Chip>
           <Chip pressed={fol} onClick={() => set({ fol: fol ? null : "1" })}>
             {d.common.followedOnly}
           </Chip>
         </FilterRow>
-        <CompetitionChips
-          competitions={competitions}
-          locale={locale}
-          filter={comp}
-        />
+        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
       </FilterBar>
 
-      {shown.length === 0 && (
-        <p className="text-sm text-muted">{d.round.none}</p>
-      )}
+      {shown.length === 0 && <p className="text-sm text-muted">{d.round.none}</p>}
 
       {played.length > 0 && (
         <section className="mb-6">
@@ -479,9 +320,7 @@ export function RoundExplorer({
               <span className="stripe" aria-hidden="true" />
               {d.round.categories.played}
             </h2>
-            <span className="num font-mono text-xs text-muted">
-              {played.length}
-            </span>
+            <span className="num font-mono text-xs text-muted">{played.length}</span>
           </div>
           <SortableTable
             columns={columns}
@@ -499,24 +338,10 @@ export function RoundExplorer({
       )}
 
       {panels.length > 0 && (
-        <div
-          className={`grid gap-4 ${panels.length >= 3 ? "lg:grid-cols-3" : panels.length === 2 ? "lg:grid-cols-2" : ""}`}
-        >
+        <div className={`grid gap-4 ${panels.length >= 3 ? "lg:grid-cols-3" : panels.length === 2 ? "lg:grid-cols-2" : ""}`}>
           {panels.map((p) => (
-            <Panel
-              key={p.key}
-              title={d.round.categories[p.key]}
-              aside={
-                <span className="num font-mono text-xs">{p.rows.length}</span>
-              }
-            >
-              <Lines
-                rows={p.rows}
-                locale={locale}
-                current={current}
-                showMatches={p.matches}
-                reasonOnly={p.key === "out"}
-              />
+            <Panel key={p.key} title={d.round.categories[p.key]} aside={<span className="num font-mono text-xs">{p.rows.length}</span>}>
+              <Lines rows={p.rows} locale={locale} current={current} showMatches={p.matches} reasonOnly={p.key === "out"} />
             </Panel>
           ))}
         </div>
@@ -525,16 +350,7 @@ export function RoundExplorer({
   );
 }
 
-function mergeFollowed(
-  scoped: RoundRow[],
-  all: RoundRow[],
-  follows: string[],
-): RoundRow[] {
+function mergeFollowed(scoped: RoundRow[], all: RoundRow[], follows: string[]): RoundRow[] {
   const have = new Set(scoped.map((r) => r.player_key));
-  return [
-    ...scoped,
-    ...all.filter(
-      (r) => follows.includes(r.player_key) && !have.has(r.player_key),
-    ),
-  ];
+  return [...scoped, ...all.filter((r) => follows.includes(r.player_key) && !have.has(r.player_key))];
 }

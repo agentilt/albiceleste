@@ -29,3 +29,4 @@ export { SquadSheet } from "./SquadSheet";
 export type { SheetColumn, SheetName } from "./SquadSheet";
 export { Panel, PanelRows, Figure } from "./Panel";
 export { Hint } from "./Hint";
+export { Disclosure } from "./Disclosure";

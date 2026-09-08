@@ -9,7 +9,15 @@ import { useNotes } from "@/lib/store";
 
 export function noteLabels(locale: Locale): NoteLabels {
   const n = t(locale).notes;
-  return { placeholder: n.placeholder, save: n.save, cancel: n.cancel, edit: n.edit, remove: n.remove, verdictNone: n.verdictNone, verdicts: n.verdicts };
+  return {
+    placeholder: n.placeholder,
+    save: n.save,
+    cancel: n.cancel,
+    edit: n.edit,
+    remove: n.remove,
+    verdictNone: n.verdictNone,
+    verdicts: n.verdicts,
+  };
 }
 
 /** The player's note trail with the compose box. Match notes appear here too, labelled with their match. */
@@ -22,7 +30,14 @@ export function PlayerNotesSection({ playerKey, locale }: { playerKey: string; l
       <NoteComposer labels={labels} onSave={(text, verdict) => add({ player_key: playerKey, text, verdict })} />
       <div className="mt-4">
         <NoteList
-          notes={notes.map((n) => ({ id: n.id, date: n.date, text: n.text, verdict: n.verdict, match: n.match_key, matchLabel: n.match_label }))}
+          notes={notes.map((n) => ({
+            id: n.id,
+            date: n.date,
+            text: n.text,
+            verdict: n.verdict,
+            match: n.match_key,
+            matchLabel: n.match_label,
+          }))}
           labels={labels}
           onEdit={edit}
           onRemove={remove}
@@ -48,23 +63,71 @@ export function RecentMatches({ matches, playerKey, locale }: { matches: MatchLi
         rows={matches}
         rowKey={(r) => r.match_key}
         empty={d.common.empty}
+        caption={d.player.recent}
         cols={[
-          { label: d.common.date, render: (r) => fmtDate(locale, r.match_date, false) },
-          { label: d.common.match, render: (r) => `${r.home_team_name} ${r.home_score ?? ""}–${r.away_score ?? ""} ${r.away_team_name}` },
-          { label: d.common.competition, render: (r) => r.competition_name },
-          { label: "", render: (r) => (r.is_starter ? d.player.role.start : r.played ? d.player.role.sub : d.player.role.bench) },
-          { label: d.common.min, align: "r", render: (r) => fmtInt(locale, r.minutes_played) },
-          { label: d.common.goals, align: "r", render: (r) => fmtInt(locale, r.goals) },
-          { label: d.common.assists, align: "r", render: (r) => fmtInt(locale, r.assists) },
-          { label: "xG", align: "r", render: (r) => fmtDec(locale, r.xg) },
-          { label: d.common.rating, align: "r", render: (r) => fmtDec(locale, r.match_rating, 1) },
+          {
+            label: d.common.date,
+            render: (r) => fmtDate(locale, r.match_date, false),
+          },
+          {
+            label: d.common.match,
+            maxWidth: "18rem",
+            render: (r) => `${r.home_team_name} ${r.home_score ?? ""}–${r.away_score ?? ""} ${r.away_team_name}`,
+          },
+          {
+            label: d.common.competition,
+            priority: 3,
+            maxWidth: "10rem",
+            render: (r) => r.competition_name,
+          },
+          {
+            label: d.player.roleCol,
+            priority: 2,
+            render: (r) => (r.is_starter ? d.player.role.start : r.played ? d.player.role.sub : d.player.role.bench),
+          },
+          {
+            label: d.common.min,
+            align: "r",
+            render: (r) => fmtInt(locale, r.minutes_played),
+          },
+          {
+            label: d.common.goals,
+            align: "r",
+            render: (r) => fmtInt(locale, r.goals),
+          },
+          {
+            label: d.common.assists,
+            align: "r",
+            priority: 2,
+            render: (r) => fmtInt(locale, r.assists),
+          },
+          {
+            label: "xG",
+            align: "r",
+            priority: 3,
+            render: (r) => fmtDec(locale, r.xg),
+          },
+          {
+            label: d.common.rating,
+            align: "r",
+            priority: 2,
+            render: (r) => fmtDec(locale, r.match_rating, 1),
+          },
           {
             label: "",
             render: (r) => {
               const n = byMatch.get(r.match_key) ?? [];
+              const isOpen = open === r.match_key;
               return (
-                <button type="button" className="link text-xs" onClick={() => setOpen(open === r.match_key ? null : r.match_key)}>
-                  {n.length ? `✎ ${n.length}` : `+ ${d.player.noteOnMatch}`}
+                <button
+                  type="button"
+                  className={`hit text-xs ${n.length || isOpen ? "text-celeste-deep" : "text-muted hover:text-ink"}`}
+                  aria-label={d.player.noteOnMatch}
+                  title={d.player.noteOnMatch}
+                  aria-expanded={isOpen}
+                  onClick={() => setOpen(isOpen ? null : r.match_key)}
+                >
+                  ✎{n.length ? ` ${n.length}` : ""}
                 </button>
               );
             },
@@ -84,7 +147,13 @@ export function RecentMatches({ matches, playerKey, locale }: { matches: MatchLi
             onCancel={() => setOpen(null)}
             onSave={(text, verdict) => {
               const m = matches.find((x) => x.match_key === open)!;
-              add({ player_key: playerKey, match_key: open, match_label: label(m), text, verdict });
+              add({
+                player_key: playerKey,
+                match_key: open,
+                match_label: label(m),
+                text,
+                verdict,
+              });
               setOpen(null);
             }}
           />

@@ -173,6 +173,20 @@ table.data th button:focus-visible {
   }
 }
 
+/* Folded sections: no native marker, a small caret that flips when open */
+.disclosure > summary {
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure > summary .marker::after {
+  content: "▾";
+}
+.disclosure[open] > summary .marker::after {
+  content: "▴";
+}
+
 .link {
   color: var(--color-celeste-deep);
 }

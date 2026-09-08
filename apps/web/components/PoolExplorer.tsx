@@ -1,34 +1,13 @@
 "use client";
 
-import {
-  Chip,
-  type ColumnSpec,
-  Field,
-  FilterBar,
-  FilterRow,
-  Hint,
-  RankArrow,
-  type Row,
-  Segmented,
-  SortableTable,
-  StateWord,
-  Tag,
-} from "@albiceleste/ui";
+import { Chip, type ColumnSpec, Field, FilterBar, FilterRow, Hint, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
 import type { Competition, PoolRow } from "@albiceleste/data";
 import { useMemo } from "react";
 import { CompetitionChips } from "@/components/CompetitionChips";
 import { FollowStar } from "@/components/FollowStar";
 import { useCompetitionFilter } from "@/lib/compfilter";
 import { downloadText, toCsv } from "@/lib/download";
-import {
-  fmtDate,
-  fmtDec,
-  fmtEur,
-  fmtInt,
-  fmtKickoff,
-  fmtPct,
-  shareToPct,
-} from "@/lib/fmt";
+import { fmtDate, fmtDec, fmtEur, fmtInt, fmtKickoff, fmtPct, shareToPct } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
 import { routes } from "@/lib/routes";
@@ -40,19 +19,7 @@ const GROUPS = ["GK", "DEF", "MID", "FWD"] as const;
 type Tier = "form" | "production" | "support" | "next";
 const TIERS: Tier[] = ["form", "production", "support", "next"];
 
-export function PoolExplorer({
-  rows,
-  competitions,
-  locale,
-  horizon,
-  lastListLabel,
-}: {
-  rows: PoolRow[];
-  competitions: Competition[];
-  locale: Locale;
-  horizon: string;
-  lastListLabel: string | null;
-}) {
+export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabel }: { rows: PoolRow[]; competitions: Competition[]; locale: Locale; horizon: string; lastListLabel: string | null }) {
   const d = t(locale);
   const { get, set } = useUrlState();
   const comp = useCompetitionFilter();
@@ -95,21 +62,7 @@ export function PoolExplorer({
           (scope === "all" || r.in_watch) &&
           r.state !== "retired",
       ),
-    [
-      rows,
-      pos,
-      comp.selected,
-      ageMin,
-      ageMax,
-      minMinutes,
-      review,
-      squad,
-      inf,
-      fol,
-      u23,
-      scope,
-      follows,
-    ], // eslint-disable-line react-hooks/exhaustive-deps
+    [rows, pos, comp.selected, ageMin, ageMax, minMinutes, review, squad, inf, fol, u23, scope, follows], // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   const columns = useMemo<ColumnSpec[]>(() => {
@@ -120,22 +73,14 @@ export function PoolExplorer({
         key: "rank_change",
         label: d.pool.cols.arrow,
         kind: "int",
-        render: (r) => (
-          <RankArrow
-            change={r.rank_change as number | null}
-            className="text-xs"
-          />
-        ),
+        render: (r) => <RankArrow change={r.rank_change as number | null} className="text-xs" />,
       },
       {
         key: "full_name",
         label: d.common.player,
         render: (r) => (
           <span className="inline-flex items-baseline gap-2 whitespace-nowrap">
-            <AppLink
-              className="link font-medium"
-              href={routes.player(locale, r.player_key as string)}
-            >
+            <AppLink className="link font-medium" href={routes.player(locale, r.player_key as string)}>
               {r.full_name as string}
             </AppLink>
             {r.in_last_squad ? (
@@ -143,12 +88,8 @@ export function PoolExplorer({
                 {d.marks.lastSquadShort}
               </Tag>
             ) : null}
-            {r.eligibility_status === "review" ? (
-              <Tag>{d.marks.review}</Tag>
-            ) : null}
-            {noteCounts.get(r.player_key as string) ? (
-              <Tag>✎ {noteCounts.get(r.player_key as string)}</Tag>
-            ) : null}
+            {r.eligibility_status === "review" ? <Tag>{d.marks.review}</Tag> : null}
+            {noteCounts.get(r.player_key as string) ? <Tag>✎ {noteCounts.get(r.player_key as string)}</Tag> : null}
           </span>
         ),
       },
@@ -158,8 +99,7 @@ export function PoolExplorer({
             {
               key: "pos_group",
               label: d.common.position,
-              render: (r: Row) =>
-                (d.posShort as Record<string, string>)[r.pos_group as string],
+              render: (r: Row) => (d.posShort as Record<string, string>)[r.pos_group as string],
             } as ColumnSpec,
           ]
         : []),
@@ -168,16 +108,7 @@ export function PoolExplorer({
         key: "state",
         label: d.common.state,
         priority: 2,
-        render: (r) => (
-          <StateWord
-            label={stateLabel(
-              d,
-              r.state as PoolRow["state"],
-              r.infirmary_reason as PoolRow["infirmary_reason"],
-            )}
-            tone={stateTone(r.state as PoolRow["state"])}
-          />
-        ),
+        render: (r) => <StateWord label={stateLabel(d, r.state as PoolRow["state"], r.infirmary_reason as PoolRow["infirmary_reason"])} tone={stateTone(r.state as PoolRow["state"])} />,
       },
       {
         key: "competition",
@@ -199,16 +130,14 @@ export function PoolExplorer({
         title: d.pool.cols.shareTitle,
         kind: "int",
         priority: 3,
-        render: (r) =>
-          fmtPct(locale, shareToPct(r.season_minutes_share as number | null)),
+        render: (r) => fmtPct(locale, shareToPct(r.season_minutes_share as number | null)),
       },
       {
         key: "season_starts",
         label: d.pool.cols.startsApps,
         kind: "int",
         priority: 2,
-        render: (r) =>
-          `${fmtInt(locale, r.season_starts as number | null)} / ${fmtInt(locale, r.season_apps as number | null)}`,
+        render: (r) => `${fmtInt(locale, r.season_starts as number | null)} / ${fmtInt(locale, r.season_apps as number | null)}`,
       },
       { key: "min_28", label: d.pool.cols.minutes28, kind: "int", priority: 2 },
       {
@@ -319,10 +248,7 @@ export function PoolExplorer({
         label: d.pool.cols.nextMatch,
         priority: 2,
         maxWidth: "11rem",
-        render: (r) =>
-          r.next_opponent
-            ? `${r.next_is_home ? d.common.vs : "@"} ${r.next_opponent}`
-            : "",
+        render: (r) => (r.next_opponent ? `${r.next_is_home ? d.common.vs : "@"} ${r.next_opponent}` : ""),
       },
       {
         key: "next_kickoff",
@@ -336,19 +262,10 @@ export function PoolExplorer({
         key: "follow",
         label: "",
         sortable: false,
-        render: (r) => (
-          <FollowStar playerKey={r.player_key as string} locale={locale} />
-        ),
+        render: (r) => <FollowStar playerKey={r.player_key as string} locale={locale} />,
       },
     ];
-    return [
-      ...base,
-      ...(tiers.has("form") ? form : []),
-      ...(tiers.has("production") ? production : []),
-      ...(tiers.has("support") ? support : []),
-      ...(tiers.has("next") ? next : []),
-      ...tail,
-    ];
+    return [...base, ...(tiers.has("form") ? form : []), ...(tiers.has("production") ? production : []), ...(tiers.has("support") ? support : []), ...(tiers.has("next") ? next : []), ...tail];
   }, [d, locale, view, tiers, pos, noteCounts, lastListLabel]);
 
   function toggleList(key: string, list: string[], v: string) {
@@ -357,15 +274,9 @@ export function PoolExplorer({
   }
 
   function csv() {
-    const cols = columns
-      .filter((c) => c.key !== "follow")
-      .map((c) => ({ key: c.key, label: c.label || c.key }));
+    const cols = columns.filter((c) => c.key !== "follow").map((c) => ({ key: c.key, label: c.label || c.key }));
     const body = toCsv(shown as unknown as Record<string, unknown>[], cols);
-    downloadText(
-      `albiceleste-pool-${horizon}.csv`,
-      `# ${d.pool.downloadNote(fmtDate(locale, horizon))}\n${body}`,
-      "text/csv",
-    );
+    downloadText(`albiceleste-pool-${horizon}.csv`, `# ${d.pool.downloadNote(fmtDate(locale, horizon))}\n${body}`, "text/csv");
   }
   function json() {
     downloadText(
@@ -387,8 +298,7 @@ export function PoolExplorer({
     columns,
     sort,
     dir,
-    onSortChange: (s: string | undefined, dd: "asc" | "desc") =>
-      set({ sort: s ?? null, dir: dd }),
+    onSortChange: (s: string | undefined, dd: "asc" | "desc") => set({ sort: s ?? null, dir: dd }),
     emptyText: d.common.empty,
     LinkComponent: AppLink,
   };
@@ -409,9 +319,7 @@ export function PoolExplorer({
               onChange={(v) => set({ scope: v === "all" ? "all" : null })}
             />
             <Hint text={d.pool.scopeNote} />
-            <span className="ml-2 font-mono text-[11px] uppercase tracking-wide text-muted">
-              {d.common.view}
-            </span>
+            <span className="ml-2 font-mono text-[11px] uppercase tracking-wide text-muted">{d.common.view}</span>
             <Segmented
               label={d.common.view}
               options={[
@@ -431,11 +339,7 @@ export function PoolExplorer({
               pressed={tiers.has(tier)}
               onClick={() =>
                 set({
-                  cols:
-                    (tiers.has(tier)
-                      ? TIERS.filter((x) => tiers.has(x) && x !== tier)
-                      : [...TIERS.filter((x) => tiers.has(x)), tier]
-                    ).join(",") || "none",
+                  cols: (tiers.has(tier) ? TIERS.filter((x) => tiers.has(x) && x !== tier) : [...TIERS.filter((x) => tiers.has(x)), tier]).join(",") || "none",
                 })
               }
             >
@@ -445,25 +349,14 @@ export function PoolExplorer({
         </FilterRow>
         <FilterRow label={d.common.position}>
           {GROUPS.map((g) => (
-            <Chip
-              key={g}
-              pressed={pos.includes(g)}
-              onClick={() => toggleList("pos", pos, g)}
-            >
+            <Chip key={g} pressed={pos.includes(g)} onClick={() => toggleList("pos", pos, g)}>
               {d.pos[g]}
             </Chip>
           ))}
         </FilterRow>
-        <CompetitionChips
-          competitions={competitions}
-          locale={locale}
-          filter={comp}
-        />
+        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
         <FilterRow label={d.common.filters}>
-          <Chip
-            pressed={squad}
-            onClick={() => set({ squad: squad ? null : "1" })}
-          >
+          <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
             {d.pool.lastSquad}
           </Chip>
           <Chip pressed={inf} onClick={() => set({ inf: inf ? null : "1" })}>
@@ -475,52 +368,20 @@ export function PoolExplorer({
           <Chip pressed={u23} onClick={() => set({ u23: u23 ? null : "1" })}>
             {d.pool.u23}
           </Chip>
-          <Chip
-            pressed={review}
-            onClick={() => set({ review: review ? null : "1" })}
-          >
+          <Chip pressed={review} onClick={() => set({ review: review ? null : "1" })}>
             {d.pool.review}
           </Chip>
         </FilterRow>
         <div className="flex flex-wrap items-center gap-5">
           <Field label={d.pool.ageRange}>
-            <input
-              type="number"
-              id="age-min"
-              name="age-min"
-              min={15}
-              max={45}
-              value={ageMin}
-              onChange={(e) => set({ amin: e.target.value })}
-              className="w-16"
-            />
+            <input type="number" id="age-min" name="age-min" min={15} max={45} value={ageMin} onChange={(e) => set({ amin: e.target.value })} className="w-16" />
             <span className="text-muted">–</span>
-            <input
-              type="number"
-              id="age-max"
-              name="age-max"
-              min={15}
-              max={45}
-              value={ageMax}
-              onChange={(e) => set({ amax: e.target.value })}
-              className="w-16"
-            />
+            <input type="number" id="age-max" name="age-max" min={15} max={45} value={ageMax} onChange={(e) => set({ amax: e.target.value })} className="w-16" />
           </Field>
           <Field label={d.pool.minMinutes}>
-            <input
-              type="number"
-              id="min-minutes"
-              name="min-minutes"
-              min={0}
-              step={90}
-              value={minMinutes}
-              onChange={(e) => set({ min: e.target.value })}
-              className="w-20"
-            />
+            <input type="number" id="min-minutes" name="min-minutes" min={0} step={90} value={minMinutes} onChange={(e) => set({ min: e.target.value })} className="w-20" />
           </Field>
-          <span className="text-sm text-muted">
-            {d.pool.count(shown.length, rows.length)}
-          </span>
+          <span className="text-sm text-muted">{d.pool.count(shown.length, rows.length)}</span>
           <span className="ml-auto flex gap-2 text-sm">
             <button type="button" className="chip" onClick={csv}>
               {d.common.csv}
@@ -533,23 +394,11 @@ export function PoolExplorer({
       </FilterBar>
 
       {view === "flat" ? (
-        <SortableTable
-          {...tableProps}
-          rows={shown as unknown as Row[]}
-          initialSort="pos_rank"
-          initialDir="asc"
-          caption={d.pool.title}
-        />
+        <SortableTable {...tableProps} rows={shown as unknown as Row[]} initialSort="pos_rank" initialDir="asc" caption={d.pool.title} />
       ) : (
         <SortableTable
           {...tableProps}
-          rows={
-            [...shown].sort(
-              (a, b) =>
-                (a.pos_rank ?? 9999) - (b.pos_rank ?? 9999) ||
-                a.full_name.localeCompare(b.full_name),
-            ) as unknown as Row[]
-          }
+          rows={[...shown].sort((a, b) => (a.pos_rank ?? 9999) - (b.pos_rank ?? 9999) || a.full_name.localeCompare(b.full_name)) as unknown as Row[]}
           caption={d.pool.title}
           groupBy={{
             of: (r) => r.pos_group as string,
