@@ -1,6 +1,6 @@
 "use client";
 
-import { type KeyboardEvent, type ReactNode, useState } from "react";
+import { type KeyboardEvent, type ReactNode } from "react";
 
 /** Toggle chip for multi-select filters. Pressed state inverts to ink. */
 export function Chip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: ReactNode }) {
@@ -21,23 +21,9 @@ export function FilterRow({ label, children }: { label: string; children: ReactN
   );
 }
 
-/**
- * Stack of FilterRows with the spacing the explorer pages use. With `always` (the one row that must stay in view, e.g.
- * the scope switch), a phone folds the other rows behind a toggle so the data starts within the first screen.
- */
-export function FilterBar({ children, always, toggleLabel = "Filters" }: { children: ReactNode; always?: ReactNode; toggleLabel?: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="mb-6 flex flex-col gap-3 text-sm">
-      {always}
-      {always && (
-        <button type="button" className="chip self-start sm:hidden" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {toggleLabel} {open ? "▴" : "▾"}
-        </button>
-      )}
-      <div className={`${always && !open ? "hidden sm:flex" : "flex"} flex-col gap-3`}>{children}</div>
-    </div>
-  );
+/** Stack of filter rows with the spacing the explorer pages use: the switches on the first line, the facet menus on the next. */
+export function FilterBar({ children }: { children: ReactNode }) {
+  return <div className="mb-6 flex flex-col gap-3 text-sm">{children}</div>;
 }
 
 /** Inline labelled control (select or number input) for a FilterRow. */

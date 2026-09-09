@@ -304,3 +304,7 @@ Top 3: (1) Panel/PanelRows + compact FollowList; (2) remove lede + Note, one hin
 
 Top 3: (1) anchor landing; (2) real bilingual 404; (3) localize the method parameter descriptions.
 
+### 2026-09-09 · Filter bars as facet menus
+
+The chip rows above the lists (seven on Plantel, six on Movimientos, the twelve-chip "Tipo" row wrapping) were the last clutter the review had left standing. Every explorer now has the same two-line bar: the primary switches on the first line (scope and view, or period and sort), and one `Menu` chip per facet on the second (Puesto, Competencia, Filtros, and Tipo or Columnas where the page has them). A closed chip reads `Facet · value` and inverts while the facet narrows the data, so the state of the list is legible without opening anything. The panel holds checks for multi-choice facets, radios for the presets, an eyebrow-labelled section where a facet has sub-groups (Dirección on Movimientos, Dónde juega on Próximo ciclo), the age and minutes inputs on Plantel, and the "remembered" note under the leagues. Esc, an outside click, or focus leaving closes it; the arrow keys walk the items; the panel flips to the edge that fits and hugs the viewport on a phone. The phone fold behind a "Filtros ▾" toggle is gone, since the bar is short enough to stay in view.
+

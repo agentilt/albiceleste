@@ -1,13 +1,14 @@
 "use client";
 
-import { Chip, type ColumnSpec, Field, FilterBar, FilterRow, Hint, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
+import { type ColumnSpec, Field, FilterBar, FilterRow, Hint, Menu, MenuCheck, MenuField, MenuRule, RankArrow, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
 import type { Competition, PoolRow } from "@albiceleste/data";
 import { useMemo } from "react";
-import { CompetitionChips } from "@/components/CompetitionChips";
+import { CompetitionMenu } from "@/components/CompetitionMenu";
 import { FollowStar } from "@/components/FollowStar";
 import { PitchDepth } from "@/components/PitchDepth";
 import { useCompetitionFilter } from "@/lib/compfilter";
 import { downloadText, toCsv } from "@/lib/download";
+import { facetValue } from "@/lib/facet";
 import { fmtDate, fmtDec, fmtEur, fmtInt, fmtKickoff, fmtPct, shareToPct } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
@@ -295,6 +296,17 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
     );
   }
 
+  const filterNames = [
+    squad && d.pool.lastSquad,
+    inf && d.pool.infirmary,
+    fol && d.common.followedOnly,
+    u23 && d.pool.u23,
+    review && d.pool.review,
+    (ageMin !== 15 || ageMax !== 45) && `${d.pool.ageRange} ${ageMin}–${ageMax}`,
+    minMinutes > 0 && `≥ ${fmtInt(locale, minMinutes)}′`,
+  ].filter((x): x is string => typeof x === "string");
+  const tierNames = TIERS.filter((x) => tiers.has(x)).map((x) => d.pool.tiers[x]);
+
   const tableProps = {
     columns,
     sort,
@@ -306,90 +318,102 @@ export function PoolExplorer({ rows, competitions, locale, horizon, lastListLabe
 
   return (
     <>
-      <FilterBar
-        toggleLabel={d.common.filters}
-        always={
-          <FilterRow label={d.pool.scope}>
-            <Segmented
-              label={d.pool.scope}
-              options={[
-                { value: "watch", label: d.pool.scopeWatch },
-                { value: "all", label: d.pool.scopeAll },
-              ]}
-              value={scope}
-              onChange={(v) => set({ scope: v === "all" ? "all" : null })}
-            />
-            <Hint text={d.pool.scopeNote} />
-            <span className="ml-2 font-mono text-[11px] uppercase tracking-wide text-muted">{d.common.view}</span>
-            <Segmented
-              label={d.common.view}
-              options={[
-                { value: "depth", label: d.pool.depth },
-                { value: "pitch", label: d.pool.pitch },
-                { value: "flat", label: d.pool.flat },
-              ]}
-              value={view}
-              onChange={(v) => set({ v: v === "depth" ? null : v, slot: null })}
-            />
-          </FilterRow>
-        }
-      >
-        <FilterRow label={d.common.columns}>
-          {TIERS.map((tier) => (
-            <Chip
-              key={tier}
-              pressed={tiers.has(tier)}
-              onClick={() =>
-                set({
-                  cols: (tiers.has(tier) ? TIERS.filter((x) => tiers.has(x) && x !== tier) : [...TIERS.filter((x) => tiers.has(x)), tier]).join(",") || "none",
-                })
-              }
-            >
-              {d.pool.tiers[tier]}
-            </Chip>
-          ))}
+      <FilterBar>
+        <FilterRow label={d.pool.scope}>
+          <Segmented
+            label={d.pool.scope}
+            options={[
+              { value: "watch", label: d.pool.scopeWatch },
+              { value: "all", label: d.pool.scopeAll },
+            ]}
+            value={scope}
+            onChange={(v) => set({ scope: v === "all" ? "all" : null })}
+          />
+          <Hint text={d.pool.scopeNote} />
+          <span className="ml-2 font-mono text-[11px] uppercase tracking-wide text-muted">{d.common.view}</span>
+          <Segmented
+            label={d.common.view}
+            options={[
+              { value: "depth", label: d.pool.depth },
+              { value: "pitch", label: d.pool.pitch },
+              { value: "flat", label: d.pool.flat },
+            ]}
+            value={view}
+            onChange={(v) => set({ v: v === "depth" ? null : v, slot: null })}
+          />
         </FilterRow>
-        <FilterRow label={d.common.position}>
-          {GROUPS.map((g) => (
-            <Chip key={g} pressed={pos.includes(g)} onClick={() => toggleList("pos", pos, g)}>
-              {d.pos[g]}
-            </Chip>
-          ))}
-        </FilterRow>
-        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
-        <FilterRow label={d.common.filters}>
-          <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
-            {d.pool.lastSquad}
-          </Chip>
-          <Chip pressed={inf} onClick={() => set({ inf: inf ? null : "1" })}>
-            {d.pool.infirmary}
-          </Chip>
-          <Chip pressed={fol} onClick={() => set({ fol: fol ? null : "1" })}>
-            {d.common.followedOnly}
-          </Chip>
-          <Chip pressed={u23} onClick={() => set({ u23: u23 ? null : "1" })}>
-            {d.pool.u23}
-          </Chip>
-          <Chip pressed={review} onClick={() => set({ review: review ? null : "1" })}>
-            {d.pool.review}
-          </Chip>
-        </FilterRow>
-        <div className="flex flex-wrap items-center gap-5">
-          <Field label={d.pool.ageRange}>
-            <input type="number" id="age-min" name="age-min" min={15} max={45} value={ageMin} onChange={(e) => set({ amin: e.target.value })} className="w-16" />
-            <span className="text-muted">–</span>
-            <input type="number" id="age-max" name="age-max" min={15} max={45} value={ageMax} onChange={(e) => set({ amax: e.target.value })} className="w-16" />
-          </Field>
-          <Field label={d.pool.minMinutes}>
-            <input type="number" id="min-minutes" name="min-minutes" min={0} step={90} value={minMinutes} onChange={(e) => set({ min: e.target.value })} className="w-20" />
-          </Field>
-          <span className="text-sm text-muted">{d.pool.count(shown.length, rows.length)}</span>
-          <span className="ml-auto flex gap-2 text-sm">
-            <button type="button" className="chip" onClick={csv}>
-              {d.common.csv}
+        <div className="flex flex-wrap items-center gap-2">
+          <Menu
+            label={d.common.position}
+            value={facetValue(
+              pos.map((g) => d.pos[g as (typeof GROUPS)[number]]),
+              d.common.nPositions,
+            )}
+            active={pos.length > 0}
+          >
+            {GROUPS.map((g) => (
+              <MenuCheck key={g} checked={pos.includes(g)} onChange={() => toggleList("pos", pos, g)}>
+                {d.pos[g]}
+              </MenuCheck>
+            ))}
+          </Menu>
+          <CompetitionMenu competitions={competitions} locale={locale} filter={comp} />
+          <Menu label={d.common.filters} value={facetValue(filterNames, String)} active={filterNames.length > 0}>
+            <MenuCheck checked={squad} onChange={() => set({ squad: squad ? null : "1" })}>
+              {d.pool.lastSquad}
+            </MenuCheck>
+            <MenuCheck checked={inf} onChange={() => set({ inf: inf ? null : "1" })}>
+              {d.pool.infirmary}
+            </MenuCheck>
+            <MenuCheck checked={fol} onChange={() => set({ fol: fol ? null : "1" })}>
+              {d.common.followedOnly}
+            </MenuCheck>
+            <MenuCheck checked={u23} onChange={() => set({ u23: u23 ? null : "1" })}>
+              {d.pool.u23}
+            </MenuCheck>
+            <MenuCheck checked={review} onChange={() => set({ review: review ? null : "1" })}>
+              {d.pool.review}
+            </MenuCheck>
+            <MenuRule />
+            <MenuField>
+              <Field label={d.pool.ageRange}>
+                <input type="number" id="age-min" name="age-min" min={15} max={45} value={ageMin} onChange={(e) => set({ amin: e.target.value })} className="w-16" />
+                <span className="text-muted">–</span>
+                <input type="number" id="age-max" name="age-max" min={15} max={45} value={ageMax} onChange={(e) => set({ amax: e.target.value })} className="w-16" />
+              </Field>
+            </MenuField>
+            <MenuField>
+              <Field label={d.pool.minMinutes}>
+                <input type="number" id="min-minutes" name="min-minutes" min={0} step={90} value={minMinutes} onChange={(e) => set({ min: e.target.value })} className="w-20" />
+              </Field>
+            </MenuField>
+          </Menu>
+          <span className="num font-mono text-xs text-muted">{d.pool.count(shown.length, rows.length)}</span>
+          <span className="ml-auto flex flex-wrap items-center gap-2">
+            {view !== "pitch" && (
+              <Menu label={d.common.columns} value={facetValue(tierNames, String) ?? d.common.none} active={!(tiers.size === 1 && tiers.has("form"))} align="right">
+                {TIERS.map((tier) => (
+                  <MenuCheck
+                    key={tier}
+                    checked={tiers.has(tier)}
+                    onChange={() =>
+                      set({
+                        cols: (tiers.has(tier) ? TIERS.filter((x) => tiers.has(x) && x !== tier) : [...TIERS.filter((x) => tiers.has(x)), tier]).join(",") || "none",
+                      })
+                    }
+                  >
+                    {d.pool.tiers[tier]}
+                  </MenuCheck>
+                ))}
+              </Menu>
+            )}
+            <button type="button" className="chip" onClick={csv} title={d.common.csv}>
+              <span className="sm:hidden">CSV</span>
+              <span className="hidden sm:inline">{d.common.csv}</span>
             </button>
-            <button type="button" className="chip" onClick={json}>
-              {d.common.json}
+            <button type="button" className="chip" onClick={json} title={d.common.json}>
+              <span className="sm:hidden">JSON</span>
+              <span className="hidden sm:inline">{d.common.json}</span>
             </button>
           </span>
         </div>

@@ -1,13 +1,14 @@
 "use client";
 
-import { Chip, type ColumnSpec, FilterBar, FilterRow, Panel, PanelRows, type Row, Segmented, SortableTable, StateWord } from "@albiceleste/ui";
+import { type ColumnSpec, FilterBar, FilterRow, Menu, MenuCheck, MenuGroup, MenuRule, Panel, PanelRows, type Row, Segmented, SortableTable, StateWord } from "@albiceleste/ui";
 import type { Competition, MoverRow } from "@albiceleste/data";
 import { useMemo, useState } from "react";
-import { CompetitionChips } from "@/components/CompetitionChips";
+import { CompetitionMenu } from "@/components/CompetitionMenu";
 import { FollowStar } from "@/components/FollowStar";
 import { MoverMark, MoverWho, moverChange, moverFact } from "@/components/MoverLine";
 import { useCompetitionFilter } from "@/lib/compfilter";
 import type { EventContext } from "@/lib/events";
+import { facetValue } from "@/lib/facet";
 import { fmtDate } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
@@ -70,20 +71,23 @@ export function MoversExplorer({
   const since = period === "window" && lastAnnouncement ? lastAnnouncement : addDays(horizon, -Number(period === "window" ? 28 : period));
   const [all, setAll] = useState(false);
 
-  const shown = useMemo(() => {
-    const f = rows.filter(
-      (r) =>
-        r.event_date >= since &&
-        (pos.length === 0 || (r.pos_group !== null && pos.includes(r.pos_group))) &&
-        comp.matches(r.league) &&
-        (kinds.length === 0 || kinds.includes(r.event_type)) &&
-        (dirs.length === 0 || dirs.includes(r.direction)) &&
-        (!squad || r.in_last_squad) &&
-        (!fol || follows.includes(r.player_key)),
-    );
-    return order === "date"
-      ? [...f].sort((a, b) => b.event_date.localeCompare(a.event_date) || b.importance - a.importance)
-      : [...f].sort((a, b) => b.importance - a.importance || b.event_date.localeCompare(a.event_date));
+  const { shown, kindCounts } = useMemo(() => {
+    const ok = (r: MoverRow) =>
+      r.event_date >= since &&
+      (pos.length === 0 || (r.pos_group !== null && pos.includes(r.pos_group))) &&
+      comp.matches(r.league) &&
+      (dirs.length === 0 || dirs.includes(r.direction)) &&
+      (!squad || r.in_last_squad) &&
+      (!fol || follows.includes(r.player_key));
+    const pre = rows.filter(ok);
+    const kindCounts = new Map<string, number>();
+    for (const r of pre) kindCounts.set(r.event_type, (kindCounts.get(r.event_type) ?? 0) + 1);
+    const f = kinds.length === 0 ? pre : pre.filter((r) => kinds.includes(r.event_type));
+    const shown =
+      order === "date"
+        ? [...f].sort((a, b) => b.event_date.localeCompare(a.event_date) || b.importance - a.importance)
+        : [...f].sort((a, b) => b.importance - a.importance || b.event_date.localeCompare(a.event_date));
+    return { shown, kindCounts };
   }, [rows, since, pos, comp.selected, kinds, dirs, squad, fol, follows, order]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isBatch = (r: MoverRow) => r.event_type === "selection_called" || r.event_type === "selection_left_out";
@@ -91,6 +95,13 @@ export function MoversExplorer({
   const rest = shown.filter((r) => !isBatch(r));
   const visible = all ? rest : rest.slice(0, LIMIT);
   const toggle = (key: string, list: string[], v: string) => set({ [key]: (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]).join(",") });
+
+  const kindName = d.movers.kinds as Record<string, string>;
+  const filterNames = [
+    ...dirs.filter((x): x is "up" | "down" | "neutral" => x === "up" || x === "down" || x === "neutral").map((x) => d.common[x]),
+    squad && d.pool.lastSquad,
+    fol && d.common.followedOnly,
+  ].filter((x): x is string => typeof x === "string");
 
   const columns = useMemo<ColumnSpec[]>(
     () => [
@@ -123,25 +134,20 @@ export function MoversExplorer({
 
   return (
     <>
-      <FilterBar
-        toggleLabel={d.common.filters}
-        always={
-          <FilterRow label={d.common.period}>
-            <Segmented<Period>
-              label={d.common.period}
-              options={[
-                { value: "7", label: d.movers.periods["7"] },
-                { value: "14", label: d.movers.periods["14"] },
-                { value: "28", label: d.movers.periods["28"] },
-                ...(lastAnnouncement ? [{ value: "window" as Period, label: d.movers.periods.window }] : []),
-              ]}
-              value={period}
-              onChange={(v) => set({ period: v === "28" ? null : v })}
-            />
-          </FilterRow>
-        }
-      >
-        <FilterRow label={d.common.sortBy}>
+      <FilterBar>
+        <FilterRow label={d.common.period}>
+          <Segmented<Period>
+            label={d.common.period}
+            options={[
+              { value: "7", label: d.movers.periods["7"] },
+              { value: "14", label: d.movers.periods["14"] },
+              { value: "28", label: d.movers.periods["28"] },
+              ...(lastAnnouncement ? [{ value: "window" as Period, label: d.movers.periods.window }] : []),
+            ]}
+            value={period}
+            onChange={(v) => set({ period: v === "28" ? null : v })}
+          />
+          <span className="ml-2 font-mono text-[11px] uppercase tracking-wide text-muted">{d.common.sortBy}</span>
           <Segmented
             label={d.common.sortBy}
             options={[
@@ -152,34 +158,53 @@ export function MoversExplorer({
             onChange={(v) => set({ order: v === "date" ? "date" : null })}
           />
         </FilterRow>
-        <FilterRow label={d.common.kind}>
-          {KINDS.map((k) => (
-            <Chip key={k} pressed={kinds.includes(k)} onClick={() => toggle("kind", kinds, k)}>
-              {(d.movers.kinds as Record<string, string>)[k]}
-            </Chip>
-          ))}
-        </FilterRow>
-        <FilterRow label={d.common.position}>
-          {GROUPS.map((g) => (
-            <Chip key={g} pressed={pos.includes(g)} onClick={() => toggle("pos", pos, g)}>
-              {d.pos[g]}
-            </Chip>
-          ))}
-        </FilterRow>
-        <FilterRow label={d.common.filters}>
-          {(["up", "down", "neutral"] as const).map((x) => (
-            <Chip key={x} pressed={dirs.includes(x)} onClick={() => toggle("dir", dirs, x)}>
-              {d.common[x]}
-            </Chip>
-          ))}
-          <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
-            {d.pool.lastSquad}
-          </Chip>
-          <Chip pressed={fol} onClick={() => set({ fol: fol ? null : "1" })}>
-            {d.common.followedOnly}
-          </Chip>
-        </FilterRow>
-        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Menu
+            label={d.common.kind}
+            value={facetValue(
+              kinds.map((k) => kindName[k] ?? k),
+              d.movers.nKinds,
+            )}
+            active={kinds.length > 0}
+          >
+            {KINDS.map((k) => (
+              <MenuCheck key={k} checked={kinds.includes(k)} onChange={() => toggle("kind", kinds, k)} aside={kindCounts.get(k) ?? 0}>
+                {kindName[k]}
+              </MenuCheck>
+            ))}
+          </Menu>
+          <Menu
+            label={d.common.position}
+            value={facetValue(
+              pos.map((g) => d.pos[g as (typeof GROUPS)[number]]),
+              d.common.nPositions,
+            )}
+            active={pos.length > 0}
+          >
+            {GROUPS.map((g) => (
+              <MenuCheck key={g} checked={pos.includes(g)} onChange={() => toggle("pos", pos, g)}>
+                {d.pos[g]}
+              </MenuCheck>
+            ))}
+          </Menu>
+          <CompetitionMenu competitions={competitions} locale={locale} filter={comp} />
+          <Menu label={d.common.filters} value={facetValue(filterNames, String)} active={filterNames.length > 0}>
+            <MenuGroup label={d.common.direction}>
+              {(["up", "down", "neutral"] as const).map((x) => (
+                <MenuCheck key={x} checked={dirs.includes(x)} onChange={() => toggle("dir", dirs, x)}>
+                  {d.common[x]}
+                </MenuCheck>
+              ))}
+            </MenuGroup>
+            <MenuRule />
+            <MenuCheck checked={squad} onChange={() => set({ squad: squad ? null : "1" })}>
+              {d.pool.lastSquad}
+            </MenuCheck>
+            <MenuCheck checked={fol} onChange={() => set({ fol: fol ? null : "1" })}>
+              {d.common.followedOnly}
+            </MenuCheck>
+          </Menu>
+        </div>
       </FilterBar>
 
       <p className="num mb-3 font-mono text-xs text-muted">

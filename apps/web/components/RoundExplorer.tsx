@@ -1,14 +1,15 @@
 "use client";
 
-import { Chip, type ColumnSpec, FilterBar, FilterRow, NoteComposer, Panel, PanelRows, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
+import { type ColumnSpec, FilterBar, FilterRow, Menu, MenuCheck, NoteComposer, Panel, PanelRows, type Row, Segmented, SortableTable, StateWord, Tag } from "@albiceleste/ui";
 import type { Competition, MoverRow, RoundMatch, RoundRow } from "@albiceleste/data";
 import { useEffect, useMemo, useState } from "react";
-import { CompetitionChips } from "@/components/CompetitionChips";
+import { CompetitionMenu } from "@/components/CompetitionMenu";
 import { FollowStar } from "@/components/FollowStar";
 import { MoverWho, moverFact } from "@/components/MoverLine";
 import type { EventContext } from "@/lib/events";
 import { noteLabels } from "@/components/PlayerNotes";
 import { useCompetitionFilter } from "@/lib/compfilter";
+import { facetValue } from "@/lib/facet";
 import { DASH, fmtDate, fmtDec, fmtInt } from "@/lib/fmt";
 import { t, type Locale } from "@/lib/i18n";
 import { AppLink } from "@/lib/link";
@@ -219,6 +220,7 @@ export function RoundExplorer({
       [key]: (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]).join(","),
     });
 
+  const filterNames = [squad && d.pool.lastSquad, fol && d.common.followedOnly].filter((x): x is string => typeof x === "string");
   const out = current ? shown.filter((r) => r.infirmary_reason) : [];
   const rest = current ? shown.filter((r) => !r.infirmary_reason) : shown;
   const played = rest.filter((r) => r.category === "played").sort((a, b) => (a.pos_rank ?? 999) - (b.pos_rank ?? 999) || a.full_name.localeCompare(b.full_name));
@@ -296,37 +298,44 @@ export function RoundExplorer({
 
   return (
     <>
-      <FilterBar
-        toggleLabel={d.common.filters}
-        always={
-          <FilterRow label={d.round.scope}>
-            <Segmented
-              label={d.round.scope}
-              options={[
-                { value: "default", label: d.round.scopeDefault },
-                { value: "all", label: d.round.scopeAll },
-              ]}
-              value={scope}
-              onChange={(v) => set({ scope: v === "all" ? "all" : null })}
-            />
-            {scope === "all" && !all && <span className="text-xs text-muted">{d.round.loading}</span>}
-          </FilterRow>
-        }
-      >
-        <FilterRow label={d.common.filters}>
-          {GROUPS.map((g) => (
-            <Chip key={g} pressed={pos.includes(g)} onClick={() => toggle("pos", pos, g)}>
-              {d.pos[g]}
-            </Chip>
-          ))}
-          <Chip pressed={squad} onClick={() => set({ squad: squad ? null : "1" })}>
-            {d.pool.lastSquad}
-          </Chip>
-          <Chip pressed={fol} onClick={() => set({ fol: fol ? null : "1" })}>
-            {d.common.followedOnly}
-          </Chip>
+      <FilterBar>
+        <FilterRow label={d.round.scope}>
+          <Segmented
+            label={d.round.scope}
+            options={[
+              { value: "default", label: d.round.scopeDefault },
+              { value: "all", label: d.round.scopeAll },
+            ]}
+            value={scope}
+            onChange={(v) => set({ scope: v === "all" ? "all" : null })}
+          />
+          {scope === "all" && !all && <span className="text-xs text-muted">{d.round.loading}</span>}
         </FilterRow>
-        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Menu
+            label={d.common.position}
+            value={facetValue(
+              pos.map((g) => d.pos[g as (typeof GROUPS)[number]]),
+              d.common.nPositions,
+            )}
+            active={pos.length > 0}
+          >
+            {GROUPS.map((g) => (
+              <MenuCheck key={g} checked={pos.includes(g)} onChange={() => toggle("pos", pos, g)}>
+                {d.pos[g]}
+              </MenuCheck>
+            ))}
+          </Menu>
+          <CompetitionMenu competitions={competitions} locale={locale} filter={comp} />
+          <Menu label={d.common.filters} value={facetValue(filterNames, String)} active={filterNames.length > 0}>
+            <MenuCheck checked={squad} onChange={() => set({ squad: squad ? null : "1" })}>
+              {d.pool.lastSquad}
+            </MenuCheck>
+            <MenuCheck checked={fol} onChange={() => set({ fol: fol ? null : "1" })}>
+              {d.common.followedOnly}
+            </MenuCheck>
+          </Menu>
+        </div>
       </FilterBar>
 
       {shown.length === 0 && <p className="text-sm text-muted">{d.round.none}</p>}

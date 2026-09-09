@@ -8,6 +8,7 @@ export type { Col } from "./StaticTable";
 export { SortableTable } from "./SortableTable";
 export type { ColumnSpec, Row } from "./SortableTable";
 export { Chip, FilterRow, FilterBar, Field } from "./filters";
+export { Menu, MenuCheck, MenuRadio, MenuGroup, MenuColumns, MenuRule, MenuNote, MenuField } from "./Menu";
 export { SearchInput } from "./SearchInput";
 export type { SearchHit } from "./SearchInput";
 export { EventList, Severity, EVENT_LABELS } from "./EventList";

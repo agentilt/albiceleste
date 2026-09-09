@@ -1,11 +1,12 @@
 "use client";
 
-import { AgeScatter, Chip, type ColumnSpec, FilterBar, FilterRow, type Row, SortableTable, Tag } from "@albiceleste/ui";
+import { AgeScatter, type ColumnSpec, FilterBar, Menu, MenuCheck, MenuGroup, MenuRadio, MenuRule, type Row, SortableTable, Tag } from "@albiceleste/ui";
 import type { AgeBand, Competition, TrajectoryRow } from "@albiceleste/data";
 import { useMemo, useState } from "react";
-import { CompetitionChips } from "@/components/CompetitionChips";
+import { CompetitionMenu } from "@/components/CompetitionMenu";
 import { FollowStar } from "@/components/FollowStar";
 import { useCompetitionFilter } from "@/lib/compfilter";
+import { facetValue } from "@/lib/facet";
 import { fmtDate, fmtDec, fmtInt, fmtPct, shareToPct } from "@/lib/fmt";
 import { countryName } from "@/lib/geo";
 import { t, type Locale } from "@/lib/i18n";
@@ -128,36 +129,50 @@ export function CohortExplorer({ rows, competitions, locale }: { rows: Trajector
     },
     { key: "follow", label: "", sortable: false, render: (r) => <FollowStar playerKey={r.player_key as string} locale={locale} /> },
   ];
+  const filterNames = [u21 && d.next.u21, fol && d.common.followedOnly, abroad === "home" && d.next.home, abroad === "abroad" && d.next.abroad].filter((x): x is string => typeof x === "string");
   const toggle = (key: string, list: string[], v: string) => set({ [key]: (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]).join(",") });
 
   return (
     <>
-      <FilterBar
-        toggleLabel={d.common.filters}
-        always={
-          <FilterRow label={d.common.filters}>
+      <FilterBar>
+        <div className="flex flex-wrap items-center gap-2">
+          <Menu
+            label={d.common.position}
+            value={facetValue(
+              pos.map((g) => d.pos[g as (typeof GROUPS)[number]]),
+              d.common.nPositions,
+            )}
+            active={pos.length > 0}
+          >
             {GROUPS.map((g) => (
-              <Chip key={g} pressed={pos.includes(g)} onClick={() => toggle("pos", pos, g)}>
+              <MenuCheck key={g} checked={pos.includes(g)} onChange={() => toggle("pos", pos, g)}>
                 {d.pos[g]}
-              </Chip>
+              </MenuCheck>
             ))}
-            <Chip pressed={u21} onClick={() => set({ u21: u21 ? null : "1" })}>
+          </Menu>
+          <CompetitionMenu competitions={competitions} locale={locale} filter={comp} />
+          <Menu label={d.common.filters} value={facetValue(filterNames, String)} active={filterNames.length > 0}>
+            <MenuCheck checked={u21} onChange={() => set({ u21: u21 ? null : "1" })}>
               {d.next.u21}
-            </Chip>
-            <Chip pressed={fol} onClick={() => set({ fol: fol ? null : "1" })}>
+            </MenuCheck>
+            <MenuCheck checked={fol} onChange={() => set({ fol: fol ? null : "1" })}>
               {d.common.followedOnly}
-            </Chip>
-            <Chip pressed={abroad === "home"} onClick={() => set({ where: abroad === "home" ? null : "home" })}>
-              {d.next.home}
-            </Chip>
-            <Chip pressed={abroad === "abroad"} onClick={() => set({ where: abroad === "abroad" ? null : "abroad" })}>
-              {d.next.abroad}
-            </Chip>
-            <span className="num font-mono text-xs text-muted">{d.pool.count(shown.length, rows.length)}</span>
-          </FilterRow>
-        }
-      >
-        <CompetitionChips competitions={competitions} locale={locale} filter={comp} />
+            </MenuCheck>
+            <MenuRule />
+            <MenuGroup radio label={d.next.whereLabel}>
+              <MenuRadio checked={abroad === null} close={false} onSelect={() => set({ where: null })}>
+                {d.common.all}
+              </MenuRadio>
+              <MenuRadio checked={abroad === "home"} close={false} onSelect={() => set({ where: "home" })}>
+                {d.next.home}
+              </MenuRadio>
+              <MenuRadio checked={abroad === "abroad"} close={false} onSelect={() => set({ where: "abroad" })}>
+                {d.next.abroad}
+              </MenuRadio>
+            </MenuGroup>
+          </Menu>
+          <span className="num font-mono text-xs text-muted">{d.pool.count(shown.length, rows.length)}</span>
+        </div>
       </FilterBar>
       <SortableTable columns={columns} rows={visible as unknown as Row[]} emptyText={d.common.empty} LinkComponent={AppLink} caption={d.next.list} />
       {shown.length > LIMIT && (
