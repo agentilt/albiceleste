@@ -122,7 +122,7 @@ export function SquadSheet({
           const [f0, f1] = figuresOf(col);
           const sec = secondary?.columns[ci];
           return (
-            <div key={col.title} className="min-w-0">
+            <div key={col.title} className="flex min-w-0 flex-col">
               <div className={`grid ${COLS} items-baseline gap-x-1.5 border-b-2 border-celeste pb-1 font-mono text-xs uppercase tracking-wide text-muted`}>
                 <span />
                 <span className="truncate">
@@ -131,13 +131,13 @@ export function SquadSheet({
                 <span className="text-right">{f0}</span>
                 <span className="text-right">{f1}</span>
               </div>
-              <ol>
+              <ol className="mb-2">
                 {col.names.slice(0, col.slots).map((n) => (
                   <Row key={n.key} n={n} LinkComponent={LinkComponent} />
                 ))}
               </ol>
               {sec && sec.names.length > 0 && (
-                <div className="-mx-2 mt-2 bg-celeste-tint px-2 pb-1">
+                <div className="-mx-2 mt-auto bg-celeste-tint px-2 pb-1 pt-0" style={{ marginTop: "auto" }}>
                   <div className="border-b border-rule-strong pb-0.5 pt-1.5 font-mono text-[10px] uppercase tracking-wide text-muted">{secondary!.title}</div>
                   <ol>
                     {sec.names.slice(0, sec.slots).map((n) => (
